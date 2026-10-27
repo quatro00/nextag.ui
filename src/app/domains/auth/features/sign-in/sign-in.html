@@ -1,0 +1,46 @@
+<div class="flex min-h-dvh flex-auto items-center justify-center bg-neutral-50 p-6 dark:bg-neutral-950">
+  <div class="w-full max-w-md rounded-2xl border bg-white p-8 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
+    <div class="flex size-12 items-center justify-center rounded-xl bg-primary text-on-primary">
+      <mat-icon svgIcon="blocks" />
+    </div>
+    <div class="mt-8 text-3xl font-bold tracking-tight">Iniciar sesión</div>
+    <div class="mt-2 text-neutral-500">Base de aplicación. Conecta aquí la autenticación de cada proyecto.</div>
+
+    <form class="mt-8" (submit)="signIn($event)">
+      <div class="flex flex-col gap-y-4">
+        <mat-form-field class="w-full">
+          <mat-label>Correo electrónico</mat-label>
+          <input matInput type="email" autocomplete="email" [formField]="signInForm.email" />
+          <mat-error>
+            @if (signInForm.email().touched() && signInForm.email().invalid()) {
+            @for (error of signInForm.email().errors(); track error) { {{ error.message }} }
+            }
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field class="w-full">
+          <mat-label>Contraseña</mat-label>
+          <input matInput type="password" autocomplete="current-password" [formField]="signInForm.password"
+            #passwordField />
+          <button matIconButton type="button" matSuffix
+            (click)="passwordField.type = passwordField.type === 'password' ? 'text' : 'password'">
+            <mat-icon class="size-5" [svgIcon]="passwordField.type === 'password' ? 'eye' : 'eye-off'" />
+          </button>
+          <mat-error>
+            @if (signInForm.password().touched() && signInForm.password().invalid()) {
+            @for (error of signInForm.password().errors(); track error) { {{ error.message }} }
+            }
+          </mat-error>
+        </mat-form-field>
+      </div>
+      @if (errorMessage()) {
+      <div class="mt-2 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300">
+        {{ errorMessage() }}
+      </div>
+      }
+      <button type="submit" matButton="filled" class="mt-4 w-full" [disabled]="signInForm().invalid() || loading()">
+        {{ loading() ? 'Ingresando...' : 'Entrar' }}
+      </button>
+    </form>
+  </div>
+</div>

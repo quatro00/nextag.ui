@@ -1,0 +1,198 @@
+<div class="mx-auto flex w-full max-w-7xl flex-auto flex-col p-6 sm:p-8">
+
+  <!-- Encabezado -->
+  <div class="mb-8 flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+    <div class="flex items-center gap-4">
+      <div class="flex size-12 items-center justify-center rounded-xl bg-primary text-on-primary shadow-sm">
+        <mat-icon svgIcon="users" />
+      </div>
+
+      <div>
+        <div class="text-3xl font-bold tracking-tight">Usuarios</div>
+        <div class="mt-1 text-on-surface-variant">
+          Administra usuarios, accesos y roles de NexTAG.
+        </div>
+      </div>
+    </div>
+
+    <button mat-flat-button (click)="nuevo()">
+      <mat-icon svgIcon="user-plus" />
+      <span class="ml-2">Nuevo usuario</span>
+    </button>
+  </div>
+
+  <!-- Resumen -->
+  <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+    <div class="flex items-center gap-4 rounded-2xl border bg-surface p-5 shadow-sm">
+      <div class="flex size-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
+        <mat-icon svgIcon="users" />
+      </div>
+      <div>
+        <div class="text-2xl font-bold">{{ total() }}</div>
+        <div class="text-sm text-on-surface-variant">Usuarios totales</div>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-4 rounded-2xl border bg-surface p-5 shadow-sm">
+      <div class="flex size-11 items-center justify-center rounded-xl bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+        <mat-icon svgIcon="user-check" />
+      </div>
+      <div>
+        <div class="text-2xl font-bold">{{ activos() }}</div>
+        <div class="text-sm text-on-surface-variant">Usuarios activos</div>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-4 rounded-2xl border bg-surface p-5 shadow-sm">
+      <div class="flex size-11 items-center justify-center rounded-xl bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
+        <mat-icon svgIcon="user-x" />
+      </div>
+      <div>
+        <div class="text-2xl font-bold">{{ inactivos() }}</div>
+        <div class="text-sm text-on-surface-variant">Usuarios inactivos</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabla -->
+  <div class="overflow-hidden rounded-2xl border bg-surface shadow-sm">
+
+    <div class="flex flex-col gap-4 border-b p-5 sm:flex-row sm:items-center sm:justify-between">
+      <div>
+        <div class="text-lg font-semibold">Usuarios registrados</div>
+        <div class="text-sm text-on-surface-variant">
+          Consulta y administra los accesos al sistema.
+        </div>
+      </div>
+
+      <mat-form-field class="w-full sm:w-80">
+        <mat-icon matPrefix svgIcon="search" />
+        <mat-label>Buscar</mat-label>
+        <input
+          matInput
+          placeholder="Nombre, correo o rol"
+          (input)="cambiarBusqueda($event)"
+        >
+      </mat-form-field>
+    </div>
+
+    @if (errorMessage()) {
+      <div class="m-5 flex items-center gap-3 rounded-xl bg-red-50 p-4 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-400">
+        <mat-icon svgIcon="circle-alert" />
+        {{ errorMessage() }}
+      </div>
+    }
+
+    @if (loading()) {
+      <div class="flex flex-col items-center justify-center gap-4 p-12">
+        <mat-spinner diameter="36" />
+        <div class="text-sm text-on-surface-variant">Cargando usuarios...</div>
+      </div>
+    } @else {
+      <div class="overflow-x-auto">
+        <table class="w-full text-left">
+          <thead class="border-b bg-neutral-50/80 dark:bg-neutral-900/50">
+            <tr class="text-sm">
+              <th class="px-6 py-4 font-semibold">Usuario</th>
+              <th class="px-6 py-4 font-semibold">Roles</th>
+              <th class="px-6 py-4 font-semibold">Estatus</th>
+              <th class="px-6 py-4 font-semibold">Último acceso</th>
+              <th class="px-6 py-4 text-right font-semibold">Acciones</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            @for (usuario of usuariosFiltrados(); track usuario.id) {
+              <tr class="border-b transition hover:bg-neutral-50/70 last:border-b-0 dark:hover:bg-neutral-900/40">
+
+                <td class="px-6 py-4">
+                  <div class="flex items-center gap-3">
+                    <div class="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/10 font-semibold text-primary">
+                      {{ usuario.nombre.charAt(0) }}{{ usuario.apellidos.charAt(0) }}
+                    </div>
+
+                    <div class="min-w-0">
+                      <div class="font-semibold">
+                        {{ usuario.nombre }} {{ usuario.apellidos }}
+                      </div>
+
+                      <div class="mt-0.5 flex items-center gap-1 text-sm text-on-surface-variant">
+                        <mat-icon class="size-3.5" svgIcon="mail" />
+                        {{ usuario.email }}
+                      </div>
+                    </div>
+                  </div>
+                </td>
+
+                <td class="px-6 py-4">
+                  <div class="flex flex-wrap gap-1.5">
+                    @for (rol of usuario.roles; track rol) {
+                      <span class="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
+                        <mat-icon class="size-3" svgIcon="shield-check" />
+                        {{ rol }}
+                      </span>
+                    }
+                  </div>
+                </td>
+
+                <td class="px-6 py-4">
+                  <app-usuario-estatus [activo]="usuario.activo" />
+                </td>
+
+                <td class="px-6 py-4">
+                  <div class="flex items-center gap-2 text-sm">
+                    <mat-icon class="size-4 text-on-surface-variant" svgIcon="clock-3" />
+
+                    @if (usuario.fechaUltimoAcceso) {
+                      {{ usuario.fechaUltimoAcceso | date:'dd/MM/yyyy HH:mm' }}
+                    } @else {
+                      <span class="text-on-surface-variant">Nunca</span>
+                    }
+                  </div>
+                </td>
+
+                <td class="px-6 py-4">
+                  <div class="flex justify-end gap-1">
+
+                    <button
+                      matIconButton
+                      matTooltip="Editar usuario"
+                      (click)="editar(usuario.id)"
+                    >
+                      <mat-icon svgIcon="pencil" />
+                    </button>
+
+                    <button
+                      matIconButton
+                      [matTooltip]="usuario.activo ? 'Desactivar usuario' : 'Activar usuario'"
+                      (click)="cambiarEstatus(usuario)"
+                    >
+                      <mat-icon [svgIcon]="usuario.activo ? 'user-x' : 'user-check'" />
+                    </button>
+
+                  </div>
+                </td>
+
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="5" class="p-12">
+                  <div class="flex flex-col items-center justify-center text-center">
+                    <div class="mb-4 flex size-14 items-center justify-center rounded-full bg-neutral-100 dark:bg-neutral-800">
+                      <mat-icon svgIcon="search-x" />
+                    </div>
+
+                    <div class="font-semibold">No se encontraron usuarios</div>
+                    <div class="mt-1 text-sm text-on-surface-variant">
+                      Intenta utilizar otro criterio de búsqueda.
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+</div>

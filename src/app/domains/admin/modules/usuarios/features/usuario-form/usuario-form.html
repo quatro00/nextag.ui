@@ -1,0 +1,247 @@
+<div class="mx-auto flex w-full max-w-5xl flex-auto flex-col p-6 sm:p-8">
+
+  <!-- Header -->
+  <div class="mb-8 flex items-center gap-4">
+    <button matIconButton (click)="cancelar()">
+      <mat-icon svgIcon="arrow-left" />
+    </button>
+
+    <div class="flex size-12 items-center justify-center rounded-xl bg-primary text-on-primary shadow-sm">
+      <mat-icon [svgIcon]="esEdicion ? 'user-round-pen' : 'user-plus'" />
+    </div>
+
+    <div>
+      <div class="text-3xl font-bold tracking-tight">
+        {{ esEdicion ? 'Editar usuario' : 'Nuevo usuario' }}
+      </div>
+
+      <div class="mt-1 text-on-surface-variant">
+        {{ esEdicion
+          ? 'Actualiza la información y los roles asignados.'
+          : 'Registra un nuevo usuario para acceder a NexTAG.' }}
+      </div>
+    </div>
+  </div>
+
+  @if (errorMessage()) {
+    <div class="mb-6 flex items-center gap-3 rounded-xl bg-red-50 p-4 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-400">
+      <mat-icon svgIcon="circle-alert" />
+      {{ errorMessage() }}
+    </div>
+  }
+
+  <form
+    class="flex flex-col gap-6"
+    [formGroup]="form"
+    (ngSubmit)="guardar()"
+  >
+
+    <!-- Datos generales -->
+    <div class="overflow-hidden rounded-2xl border bg-surface shadow-sm">
+
+      <div class="flex items-center gap-3 border-b p-5">
+        <div class="flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+          <mat-icon svgIcon="user-round" />
+        </div>
+
+        <div>
+          <div class="font-semibold">Información general</div>
+          <div class="text-sm text-on-surface-variant">
+            Datos principales del usuario.
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 gap-5 p-6 md:grid-cols-2">
+
+        <mat-form-field>
+          <mat-icon matPrefix svgIcon="user-round" />
+          <mat-label>Nombre</mat-label>
+          <input matInput formControlName="nombre">
+
+          @if (form.controls.nombre.hasError('required')) {
+            <mat-error>El nombre es requerido.</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field>
+          <mat-icon matPrefix svgIcon="user-round" />
+          <mat-label>Apellidos</mat-label>
+          <input matInput formControlName="apellidos">
+
+          @if (form.controls.apellidos.hasError('required')) {
+            <mat-error>Los apellidos son requeridos.</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field>
+          <mat-icon matPrefix svgIcon="mail" />
+          <mat-label>Correo electrónico</mat-label>
+          <input matInput type="email" formControlName="email">
+
+          @if (form.controls.email.hasError('required')) {
+            <mat-error>El correo es requerido.</mat-error>
+          }
+
+          @if (form.controls.email.hasError('email')) {
+            <mat-error>Ingresa un correo válido.</mat-error>
+          }
+        </mat-form-field>
+
+        @if (!esEdicion) {
+          <mat-form-field>
+            <mat-icon matPrefix svgIcon="key-round" />
+            <mat-label>Contraseña</mat-label>
+            <input matInput type="password" formControlName="password">
+
+            @if (form.controls.password.hasError('required')) {
+              <mat-error>La contraseña es requerida.</mat-error>
+            }
+
+            @if (form.controls.password.hasError('minlength')) {
+              <mat-error>Debe contener al menos 6 caracteres.</mat-error>
+            }
+          </mat-form-field>
+        }
+
+      </div>
+    </div>
+
+    <!-- Contacto -->
+    <div class="overflow-hidden rounded-2xl border bg-surface shadow-sm">
+
+      <div class="flex items-center gap-3 border-b p-5">
+        <div class="flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+          <mat-icon svgIcon="phone" />
+        </div>
+
+        <div>
+          <div class="font-semibold">Contacto</div>
+          <div class="text-sm text-on-surface-variant">
+            Información de contacto del usuario.
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 gap-5 p-6 md:grid-cols-2">
+
+        <mat-form-field>
+          <mat-icon matPrefix svgIcon="phone" />
+          <mat-label>Teléfono</mat-label>
+          <input matInput formControlName="telefono">
+        </mat-form-field>
+
+        <mat-form-field>
+          <mat-icon matPrefix svgIcon="smartphone" />
+          <mat-label>Celular</mat-label>
+          <input matInput formControlName="celular">
+        </mat-form-field>
+
+      </div>
+    </div>
+
+    <!-- Organización -->
+    <div class="overflow-hidden rounded-2xl border bg-surface shadow-sm">
+
+      <div class="flex items-center gap-3 border-b p-5">
+        <div class="flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+          <mat-icon svgIcon="building-2" />
+        </div>
+
+        <div>
+          <div class="font-semibold">Organización</div>
+          <div class="text-sm text-on-surface-variant">
+            Datos relacionados con la empresa.
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 gap-5 p-6 md:grid-cols-2">
+
+        <mat-form-field>
+          <mat-icon matPrefix svgIcon="building-2" />
+          <mat-label>Empresa</mat-label>
+          <input matInput formControlName="empresa">
+        </mat-form-field>
+
+        <mat-form-field>
+          <mat-icon matPrefix svgIcon="globe-2" />
+          <mat-label>Dominio principal</mat-label>
+          <input
+            matInput
+            placeholder="empresa.com"
+            formControlName="dominioPrincipal"
+          >
+        </mat-form-field>
+
+        <mat-form-field>
+          <mat-icon matPrefix svgIcon="map-pin" />
+          <mat-label>País</mat-label>
+          <input matInput formControlName="pais">
+        </mat-form-field>
+
+        <mat-form-field>
+          <mat-icon matPrefix svgIcon="flag" />
+          <mat-label>Código de país</mat-label>
+          <input matInput formControlName="codigoPais">
+        </mat-form-field>
+
+      </div>
+    </div>
+
+    <!-- Roles -->
+    <div class="overflow-hidden rounded-2xl border bg-surface shadow-sm">
+
+      <div class="flex items-center gap-3 border-b p-5">
+        <div class="flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+          <mat-icon svgIcon="shield-check" />
+        </div>
+
+        <div>
+          <div class="font-semibold">Roles y permisos</div>
+          <div class="text-sm text-on-surface-variant">
+            Define qué funciones podrá utilizar dentro de NexTAG.
+          </div>
+        </div>
+      </div>
+
+      <div class="p-6">
+        <app-usuario-roles
+          [rolesDisponibles]="rolesDisponibles"
+          [seleccionados]="rolesSeleccionados()"
+          (seleccionadosChange)="cambiarRoles($event)"
+        />
+      </div>
+    </div>
+
+    <!-- Botones -->
+    <div class="flex justify-end gap-3">
+      <button
+        type="button"
+        mat-button
+        [disabled]="loading()"
+        (click)="cancelar()"
+      >
+        <mat-icon svgIcon="x" />
+        <span class="ml-2">Cancelar</span>
+      </button>
+
+      <button
+        type="submit"
+        mat-flat-button
+        [disabled]="loading()"
+      >
+        @if (loading()) {
+          <mat-spinner class="mr-2" diameter="18" />
+        } @else {
+          <mat-icon svgIcon="save" />
+        }
+
+        <span class="ml-2">
+          {{ loading() ? 'Guardando...' : 'Guardar usuario' }}
+        </span>
+      </button>
+    </div>
+
+  </form>
+</div>

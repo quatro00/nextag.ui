@@ -1,0 +1,31 @@
+<div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+  @for (rol of rolesDisponibles; track rol) {
+    <div
+      role="button"
+      tabindex="0"
+      class="flex cursor-pointer items-center gap-3 rounded-xl border p-4 transition hover:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-primary/40 dark:hover:bg-neutral-900"
+      [class.border-primary]="estaSeleccionado(rol)"
+      [class.bg-primary/5]="estaSeleccionado(rol)"
+      (click)="cambiarRol(rol, !estaSeleccionado(rol))"
+      (keydown.enter)="cambiarRol(rol, !estaSeleccionado(rol))"
+      (keydown.space)="$event.preventDefault(); cambiarRol(rol, !estaSeleccionado(rol))"
+    >
+      <div class="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+        <mat-icon svgIcon="shield-check" />
+      </div>
+
+      <div class="min-w-0 flex-auto">
+        <div class="font-semibold">{{ rol }}</div>
+        <div class="text-xs text-on-surface-variant">
+          Permisos asignados al usuario
+        </div>
+      </div>
+
+      <mat-checkbox
+        [checked]="estaSeleccionado(rol)"
+        (click)="$event.stopPropagation()"
+        (change)="cambiarRol(rol, $event.checked)"
+      />
+    </div>
+  }
+</div>

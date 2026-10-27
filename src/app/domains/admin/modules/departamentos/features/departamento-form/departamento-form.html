@@ -1,0 +1,169 @@
+<div class="mx-auto flex w-full max-w-4xl flex-auto flex-col p-6 sm:p-8">
+
+  <div class="mb-8 flex items-center gap-4">
+
+    <button matIconButton (click)="cancelar()">
+      <mat-icon svgIcon="arrow-left" />
+    </button>
+
+    <div class="flex size-12 items-center justify-center rounded-xl bg-primary text-on-primary shadow-sm">
+      <mat-icon [svgIcon]="esEdicion ? 'building-2' : 'plus'" />
+    </div>
+
+    <div>
+      <div class="text-3xl font-bold tracking-tight">
+        {{ esEdicion ? 'Editar departamento' : 'Nuevo departamento' }}
+      </div>
+
+      <div class="mt-1 text-on-surface-variant">
+        {{ esEdicion
+          ? 'Actualiza la información del departamento.'
+          : 'Registra un nuevo departamento dentro de la estructura organizacional.' }}
+      </div>
+    </div>
+
+  </div>
+
+  @if (errorMessage()) {
+    <div class="mb-6 flex items-center gap-3 rounded-xl bg-red-50 p-4 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-400">
+      <mat-icon svgIcon="circle-alert" />
+      {{ errorMessage() }}
+    </div>
+  }
+
+  <form
+    class="overflow-hidden rounded-2xl border bg-surface shadow-sm"
+    [formGroup]="form"
+    (ngSubmit)="guardar()"
+  >
+
+    <div class="flex items-center gap-3 border-b p-5">
+
+      <div class="flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+        <mat-icon svgIcon="building-2" />
+      </div>
+
+      <div>
+        <div class="font-semibold">
+          Información del departamento
+        </div>
+
+        <div class="text-sm text-on-surface-variant">
+          Define el área, clave, nombre y descripción.
+        </div>
+      </div>
+
+    </div>
+
+    <div class="grid grid-cols-1 gap-5 p-6 md:grid-cols-2">
+
+      <mat-form-field class="md:col-span-2">
+        <mat-icon matPrefix svgIcon="folder-kanban" />
+        <mat-label>Área</mat-label>
+
+        <mat-select formControlName="areaId">
+
+          @for (area of areas(); track area.id) {
+            <mat-option
+              [value]="area.id"
+              [disabled]="!area.activo && area.id !== form.controls.areaId.value"
+            >
+              {{ area.nombre }} ({{ area.clave }})
+            </mat-option>
+          }
+
+        </mat-select>
+
+        @if (form.controls.areaId.hasError('required')) {
+          <mat-error>El área es requerida.</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field>
+        <mat-icon matPrefix svgIcon="hash" />
+        <mat-label>Clave</mat-label>
+
+        <input
+          matInput
+          maxlength="30"
+          placeholder="Ej. CONT"
+          formControlName="clave"
+        >
+
+        @if (form.controls.clave.hasError('required')) {
+          <mat-error>La clave es requerida.</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field>
+        <mat-icon matPrefix svgIcon="building-2" />
+        <mat-label>Nombre</mat-label>
+
+        <input
+          matInput
+          maxlength="150"
+          placeholder="Ej. Contabilidad"
+          formControlName="nombre"
+        >
+
+        @if (form.controls.nombre.hasError('required')) {
+          <mat-error>El nombre es requerido.</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field class="md:col-span-2">
+
+        <mat-icon matPrefix svgIcon="text-align-start" />
+        <mat-label>Descripción</mat-label>
+
+        <textarea
+          matInput
+          rows="4"
+          maxlength="500"
+          placeholder="Describe brevemente el propósito del departamento"
+          formControlName="descripcion"
+        ></textarea>
+
+        <mat-hint align="end">
+          {{ form.controls.descripcion.value.length }}/500
+        </mat-hint>
+
+      </mat-form-field>
+
+    </div>
+
+    <div class="flex justify-end gap-3 border-t p-5">
+
+      <button
+        type="button"
+        mat-button
+        [disabled]="loading()"
+        (click)="cancelar()"
+      >
+        <mat-icon svgIcon="x" />
+        <span class="ml-2">Cancelar</span>
+      </button>
+
+      <button
+        type="submit"
+        mat-flat-button
+        [disabled]="loading()"
+      >
+
+        @if (loading()) {
+          <mat-spinner class="mr-2" diameter="18" />
+        } @else {
+          <mat-icon svgIcon="save" />
+        }
+
+        <span class="ml-2">
+          {{ loading() ? 'Guardando...' : 'Guardar departamento' }}
+        </span>
+
+      </button>
+
+    </div>
+
+  </form>
+
+</div>
