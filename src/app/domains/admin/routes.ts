@@ -13,8 +13,6 @@ const routes: Routes = [
       { path: '', pathMatch: 'full', redirectTo: 'inicio' },
       { path: 'inicio', canActivate: [roleGuard], data: { roles: [AUTH_ROLES.ADMINISTRADOR] }, loadChildren: () => import('./modules/home/routes') },
       { path: 'usuarios', canActivate: [roleGuard], data: { roles: [AUTH_ROLES.ADMINISTRADOR], }, loadChildren: () => import('./modules/usuarios/routes'), },
-      { path: 'areas', canActivate: [roleGuard], data: { roles: [AUTH_ROLES.ADMINISTRADOR], }, loadChildren: () => import('./modules/areas/routes'), },
-      { path: 'departamentos', canActivate: [roleGuard], data: { roles: [AUTH_ROLES.ADMINISTRADOR], }, loadChildren: () => import('./modules/departamentos/routes'), },
       { path: '**', redirectTo: 'inicio' },
     ],
   },
