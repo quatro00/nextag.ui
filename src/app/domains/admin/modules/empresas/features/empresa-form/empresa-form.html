@@ -1,0 +1,145 @@
+<div class="mx-auto flex w-full max-w-5xl flex-auto flex-col p-6 sm:p-8">
+  <!-- Encabezado -->
+  <div class="mb-8 flex items-center gap-4">
+    <button matIconButton (click)="cancelar()">
+      <mat-icon svgIcon="arrow-left" />
+    </button>
+    <div class="flex size-12 items-center justify-center rounded-xl bg-primary text-on-primary shadow-sm">
+      <mat-icon svgIcon="building-2" />
+    </div>
+    <div>
+      <div class="text-3xl font-bold tracking-tight">
+        {{ esEdicion ? 'Editar empresa' : 'Nueva empresa' }}
+      </div>
+      <div class="mt-1 text-on-surface-variant">
+        {{ esEdicion ? 'Actualiza la información de la empresa.' : 'Registra una nueva empresa en NexTag.' }}
+      </div>
+    </div>
+  </div>
+
+  @if (errorMessage()) {
+    <div class="mb-6 flex items-center gap-3 rounded-xl bg-red-50 p-4 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-400">
+      <mat-icon svgIcon="circle-alert" />
+      {{ errorMessage() }}
+    </div>
+  }
+
+  @if (loading()) {
+    <div class="flex justify-center p-12"><mat-spinner diameter="36" /></div>
+  } @else if (detalleCargado()) {
+    <form class="flex flex-col gap-6" [formGroup]="form" (ngSubmit)="guardar()">
+
+      <!-- Información general -->
+      <div class="overflow-hidden rounded-2xl border bg-surface shadow-sm">
+        <div class="flex items-center gap-3 border-b p-5">
+          <div class="flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+            <mat-icon svgIcon="building-2" />
+          </div>
+          <div>
+            <div class="font-semibold">Información general</div>
+            <div class="text-sm text-on-surface-variant">Datos principales de la empresa.</div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 gap-5 p-6 md:grid-cols-2">
+          <mat-form-field>
+            <mat-label>Clave</mat-label>
+            <input matInput formControlName="clave" maxlength="50">
+            @if (form.controls.clave.hasError('required')) {
+              <mat-error>La clave es requerida.</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field>
+            <mat-label>Nombre</mat-label>
+            <input matInput formControlName="nombre" maxlength="200">
+            @if (form.controls.nombre.hasError('required')) {
+              <mat-error>El nombre es requerido.</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field>
+            <mat-label>Razón social</mat-label>
+            <input matInput formControlName="razonSocial" maxlength="250">
+          </mat-form-field>
+
+          <mat-form-field>
+            <mat-label>RFC</mat-label>
+            <input matInput formControlName="rfc" maxlength="20">
+          </mat-form-field>
+        </div>
+      </div>
+
+      <!-- Contacto -->
+      <div class="overflow-hidden rounded-2xl border bg-surface shadow-sm">
+        <div class="flex items-center gap-3 border-b p-5">
+          <div class="flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+            <mat-icon svgIcon="phone" />
+          </div>
+          <div>
+            <div class="font-semibold">Información de contacto</div>
+            <div class="text-sm text-on-surface-variant">Datos para contactar a la empresa.</div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 gap-5 p-6 md:grid-cols-2">
+          <mat-form-field>
+            <mat-label>Correo electrónico</mat-label>
+            <input matInput type="email" formControlName="correo" maxlength="256">
+            @if (form.controls.correo.hasError('email')) {
+              <mat-error>Ingresa un correo válido.</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field>
+            <mat-label>Teléfono</mat-label>
+            <input matInput formControlName="telefono" maxlength="30">
+          </mat-form-field>
+
+          <mat-form-field class="md:col-span-2">
+            <mat-label>Sitio web</mat-label>
+            <input matInput formControlName="sitioWeb" maxlength="250" placeholder="https://empresa.com">
+          </mat-form-field>
+        </div>
+      </div>
+
+      <!-- Identidad -->
+      <div class="overflow-hidden rounded-2xl border bg-surface shadow-sm">
+        <div class="flex items-center gap-3 border-b p-5">
+          <div class="flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+            <mat-icon svgIcon="image" />
+          </div>
+          <div>
+            <div class="font-semibold">Identidad de la empresa</div>
+            <div class="text-sm text-on-surface-variant">Personalización visual de la empresa.</div>
+          </div>
+        </div>
+        <div class="p-6">
+          <mat-form-field class="w-full">
+            <mat-label>URL del logotipo</mat-label>
+            <input matInput formControlName="logoUrl" maxlength="500" placeholder="https://empresa.com/logo.png">
+          </mat-form-field>
+          <div class="mt-3 text-sm text-on-surface-variant">
+            Posteriormente podremos permitir cargar el logotipo directamente.
+          </div>
+        </div>
+      </div>
+
+      <!-- Acciones -->
+      <div class="flex justify-end gap-3">
+        <button type="button" mat-button [disabled]="guardando()" (click)="cancelar()">
+          <mat-icon svgIcon="x" />
+          <span class="ml-2">Cancelar</span>
+        </button>
+        <button type="submit" mat-flat-button [disabled]="guardando() || form.invalid">
+          @if (guardando()) {
+            <mat-spinner class="mr-2" diameter="18" />
+          } @else {
+            <mat-icon svgIcon="save" />
+          }
+          <span class="ml-2">{{ guardando() ? 'Guardando...' : 'Guardar empresa' }}</span>
+        </button>
+      </div>
+    </form>
+  }
+</div>
