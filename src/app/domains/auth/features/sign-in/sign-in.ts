@@ -70,16 +70,6 @@ export default class AuthSignIn {
           })
         );
 
-        if (!this.authService.hasRole('ADMINISTRADOR')) {
-          this.authService.logout();
-
-          this.errorMessage.set(
-            'El usuario no tiene acceso al portal de administración.'
-          );
-
-          return;
-        }
-
         await this.router.navigateByUrl('/admin/inicio');
       } catch (error) {
         if (error instanceof HttpErrorResponse) {

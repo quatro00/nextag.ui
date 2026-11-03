@@ -44,7 +44,7 @@ export default class UsuariosList implements OnInit {
     if (!value) return this.usuarios();
 
     return this.usuarios().filter(x =>
-      `${x.nombre} ${x.apellidos} ${x.email} ${x.roles.join(' ')}`
+      `${x.nombre} ${x.apellidos} ${x.email} ${x.roles.join(' ')} ${x.empresas.join(' ')}`
         .toLowerCase()
         .includes(value)
     );

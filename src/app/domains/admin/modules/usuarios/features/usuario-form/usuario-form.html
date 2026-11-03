@@ -17,24 +17,21 @@
 
       <div class="mt-1 text-on-surface-variant">
         {{ esEdicion
-          ? 'Actualiza la información y los roles asignados.'
-          : 'Registra un nuevo usuario para acceder a NexTAG.' }}
+        ? 'Actualiza la información y los roles asignados.'
+        : 'Registra un nuevo usuario para acceder a NexTAG.' }}
       </div>
     </div>
   </div>
 
   @if (errorMessage()) {
-    <div class="mb-6 flex items-center gap-3 rounded-xl bg-red-50 p-4 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-400">
-      <mat-icon svgIcon="circle-alert" />
-      {{ errorMessage() }}
-    </div>
+  <div
+    class="mb-6 flex items-center gap-3 rounded-xl bg-red-50 p-4 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-400">
+    <mat-icon svgIcon="circle-alert" />
+    {{ errorMessage() }}
+  </div>
   }
 
-  <form
-    class="flex flex-col gap-6"
-    [formGroup]="form"
-    (ngSubmit)="guardar()"
-  >
+  <form class="flex flex-col gap-6" [formGroup]="form" (ngSubmit)="guardar()">
 
     <!-- Datos generales -->
     <div class="overflow-hidden rounded-2xl border bg-surface shadow-sm">
@@ -60,7 +57,7 @@
           <input matInput formControlName="nombre">
 
           @if (form.controls.nombre.hasError('required')) {
-            <mat-error>El nombre es requerido.</mat-error>
+          <mat-error>El nombre es requerido.</mat-error>
           }
         </mat-form-field>
 
@@ -70,7 +67,7 @@
           <input matInput formControlName="apellidos">
 
           @if (form.controls.apellidos.hasError('required')) {
-            <mat-error>Los apellidos son requeridos.</mat-error>
+          <mat-error>Los apellidos son requeridos.</mat-error>
           }
         </mat-form-field>
 
@@ -80,28 +77,28 @@
           <input matInput type="email" formControlName="email">
 
           @if (form.controls.email.hasError('required')) {
-            <mat-error>El correo es requerido.</mat-error>
+          <mat-error>El correo es requerido.</mat-error>
           }
 
           @if (form.controls.email.hasError('email')) {
-            <mat-error>Ingresa un correo válido.</mat-error>
+          <mat-error>Ingresa un correo válido.</mat-error>
           }
         </mat-form-field>
 
         @if (!esEdicion) {
-          <mat-form-field>
-            <mat-icon matPrefix svgIcon="key-round" />
-            <mat-label>Contraseña</mat-label>
-            <input matInput type="password" formControlName="password">
+        <mat-form-field>
+          <mat-icon matPrefix svgIcon="key-round" />
+          <mat-label>Contraseña</mat-label>
+          <input matInput type="password" formControlName="password">
 
-            @if (form.controls.password.hasError('required')) {
-              <mat-error>La contraseña es requerida.</mat-error>
-            }
+          @if (form.controls.password.hasError('required')) {
+          <mat-error>La contraseña es requerida.</mat-error>
+          }
 
-            @if (form.controls.password.hasError('minlength')) {
-              <mat-error>Debe contener al menos 6 caracteres.</mat-error>
-            }
-          </mat-form-field>
+          @if (form.controls.password.hasError('minlength')) {
+          <mat-error>Debe contener al menos 6 caracteres.</mat-error>
+          }
+        </mat-form-field>
         }
 
       </div>
@@ -140,38 +137,38 @@
       </div>
     </div>
 
-    <!-- Organización -->
+    <!-- Empresas -->
     <div class="overflow-hidden rounded-2xl border bg-surface shadow-sm">
-
       <div class="flex items-center gap-3 border-b p-5">
         <div class="flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
           <mat-icon svgIcon="building-2" />
         </div>
-
         <div>
-          <div class="font-semibold">Organización</div>
+          <div class="font-semibold">Empresas asignadas</div>
           <div class="text-sm text-on-surface-variant">
-            Datos relacionados con la empresa.
+            Selecciona las empresas a las que tendrá acceso el usuario.
           </div>
         </div>
       </div>
 
       <div class="grid grid-cols-1 gap-5 p-6 md:grid-cols-2">
-
-        <mat-form-field>
-          <mat-icon matPrefix svgIcon="building-2" />
-          <mat-label>Empresa</mat-label>
-          <input matInput formControlName="empresa">
+        <mat-form-field class="md:col-span-2">
+          <mat-label>Empresas</mat-label>
+          <mat-select formControlName="empresaIds" multiple>
+            @for (empresa of empresas(); track empresa.id) {
+            @if (empresa.activo) {
+            <mat-option [value]="empresa.id">
+              {{ empresa.nombre }} ({{ empresa.clave }})
+            </mat-option>
+            }
+            }
+          </mat-select>
         </mat-form-field>
 
         <mat-form-field>
           <mat-icon matPrefix svgIcon="globe-2" />
           <mat-label>Dominio principal</mat-label>
-          <input
-            matInput
-            placeholder="empresa.com"
-            formControlName="dominioPrincipal"
-          >
+          <input matInput formControlName="dominioPrincipal">
         </mat-form-field>
 
         <mat-form-field>
@@ -185,56 +182,50 @@
           <mat-label>Código de país</mat-label>
           <input matInput formControlName="codigoPais">
         </mat-form-field>
-
       </div>
     </div>
 
-    <!-- Roles -->
+    <!-- Rol -->
     <div class="overflow-hidden rounded-2xl border bg-surface shadow-sm">
-
       <div class="flex items-center gap-3 border-b p-5">
         <div class="flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
           <mat-icon svgIcon="shield-check" />
         </div>
-
         <div>
-          <div class="font-semibold">Roles y permisos</div>
+          <div class="font-semibold">Rol del usuario</div>
           <div class="text-sm text-on-surface-variant">
-            Define qué funciones podrá utilizar dentro de NexTAG.
+            El usuario tendrá el mismo rol en todas sus empresas.
           </div>
         </div>
       </div>
 
       <div class="p-6">
-        <app-usuario-roles
-          [rolesDisponibles]="rolesDisponibles"
-          [seleccionados]="rolesSeleccionados()"
-          (seleccionadosChange)="cambiarRoles($event)"
-        />
+        <mat-form-field class="w-full md:w-80">
+          <mat-label>Rol</mat-label>
+          <mat-select formControlName="rol">
+            @for (rol of rolesDisponibles; track rol) {
+            <mat-option [value]="rol">{{ rol }}</mat-option>
+            }
+          </mat-select>
+          @if (form.controls.rol.hasError('required')) {
+          <mat-error>Selecciona un rol.</mat-error>
+          }
+        </mat-form-field>
       </div>
     </div>
 
     <!-- Botones -->
     <div class="flex justify-end gap-3">
-      <button
-        type="button"
-        mat-button
-        [disabled]="loading()"
-        (click)="cancelar()"
-      >
+      <button type="button" mat-button [disabled]="loading()" (click)="cancelar()">
         <mat-icon svgIcon="x" />
         <span class="ml-2">Cancelar</span>
       </button>
 
-      <button
-        type="submit"
-        mat-flat-button
-        [disabled]="loading()"
-      >
+      <button type="submit" mat-flat-button [disabled]="guardando() || loading() || !cargado() || form.invalid">
         @if (loading()) {
-          <mat-spinner class="mr-2" diameter="18" />
+        <mat-spinner class="mr-2" diameter="18" />
         } @else {
-          <mat-icon svgIcon="save" />
+        <mat-icon svgIcon="save" />
         }
 
         <span class="ml-2">

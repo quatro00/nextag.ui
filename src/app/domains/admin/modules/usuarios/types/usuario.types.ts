@@ -7,6 +7,7 @@ export interface UsuarioList {
   activo: boolean;
   fechaUltimoAcceso: string | null;
   roles: string[];
+  empresas: string[];
 }
 
 export interface UsuarioDetalle {
@@ -26,6 +27,7 @@ export interface UsuarioDetalle {
   fechaCreacion: string;
   fechaActualizacion: string | null;
   roles: string[];
+  empresaIds: string[];
 }
 
 export interface UsuarioCreate {
@@ -40,6 +42,7 @@ export interface UsuarioCreate {
   empresa: string | null;
   dominioPrincipal: string | null;
   roles: string[];
+  empresaIds: string[];
 }
 
 export interface UsuarioUpdate {
@@ -52,6 +55,7 @@ export interface UsuarioUpdate {
   codigoPais: string | null;
   empresa: string | null;
   dominioPrincipal: string | null;
+  empresaIds: string[];
 }
 
 export interface UsuarioEstatus {

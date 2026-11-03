@@ -26,7 +26,6 @@ export const NAVIGATION: NavigationItem[] = [
         label: 'Inicio',
         icon: 'house',
         route: '/admin/inicio',
-        roles: [AUTH_ROLES.ADMINISTRADOR],
       },
     ],
   },

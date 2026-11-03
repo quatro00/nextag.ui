@@ -1,4 +1,4 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, OnInit, computed, inject } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
@@ -9,6 +9,7 @@ import {
 } from '@angular/material/sidenav';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { Router, RouterOutlet } from '@angular/router';
+import { EmpresaContextoService } from '@/app/core/empresa-contexto.service';
 import { Media } from '@/app/core/media';
 import { AuthService } from '@/app/domains/auth/services/auth.services';
 import { SchemeSwitcher } from './ui/scheme-switcher';
@@ -55,7 +56,30 @@ import { AdminSidebar } from './ui/sidebar';
           <div class="font-semibold">NEXTAG</div>
 
           <div class="flex-auto"></div>
+@if (empresaContexto.cargando()) {
+  <span class="text-sm text-on-surface-variant">Cargando empresas...</span>
+} @else if (empresaContexto.empresas().length) {
+  <button mat-button [matMenuTriggerFor]="empresaMenu">
+    <mat-icon svgIcon="building-2" />
+    <span class="ml-2 max-w-24 truncate sm:max-w-48">
+      {{ empresaContexto.seleccionada()?.nombre }}
+    </span>
+    <mat-icon svgIcon="chevron-down" />
+  </button>
 
+  <mat-menu #empresaMenu="matMenu">
+    @for (empresa of empresaContexto.empresas(); track empresa.id) {
+      <button mat-menu-item (click)="cambiarEmpresa(empresa.id)">
+        <mat-icon [svgIcon]="empresa.id === empresaContexto.empresaId ? 'check' : 'building-2'" />
+        <span>{{ empresa.nombre }}</span>
+      </button>
+    }
+  </mat-menu>
+} @else {
+  <span class="text-xs text-on-surface-variant">
+    {{ empresaContexto.error() || 'Sin empresas asignadas' }}
+  </span>
+}
           <scheme-switcher />
 
           <div class="mx-3 h-6 border-l"></div>
@@ -119,11 +143,22 @@ import { AdminSidebar } from './ui/sidebar';
     </mat-sidenav-container>
   `,
 })
-export class AdminLayout {
+export class AdminLayout implements OnInit {
   private media = inject(Media);
   private router = inject(Router);
 
   protected authService = inject(AuthService);
+  protected empresaContexto = inject(EmpresaContextoService);
+
+  ngOnInit(): void {
+    void this.empresaContexto.cargar();
+  }
+
+  protected cambiarEmpresa(id: string): void {
+    if (this.empresaContexto.seleccionar(id)) {
+      void this.router.navigateByUrl('/admin/inicio');
+    }
+  }
 
   protected isMobile = computed(() =>
     this.media.match('(max-width: 1023px)')()
@@ -145,8 +180,8 @@ export class AdminLayout {
   });
 
   protected logout(): void {
+    this.empresaContexto.limpiar();
     this.authService.logout();
-
     void this.router.navigateByUrl('/auth/sign-in');
   }
 }

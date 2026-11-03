@@ -6,38 +6,34 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSelectModule } from '@angular/material/select';
 import { ActivatedRoute, Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { AUTH_ROLES } from '@/app/domains/auth/constants/auth.roles';
-import { UsuarioRoles } from '../../components/usuario-roles/usuario-roles';
+import { EmpresasService } from '../../../empresas/services/empresas.service';
+import { EmpresaList } from '../../../empresas/types/empresa.types';
 import { UsuariosService } from '../../services/usuarios.service';
 import { UsuarioCreate, UsuarioUpdate } from '../../types/usuario.types';
-
 
 @Component({
   selector: 'app-usuario-form',
   templateUrl: './usuario-form.html',
-  imports: [
-     ReactiveFormsModule,
-  MatButtonModule,
-  MatFormFieldModule,
-  MatInputModule,
-  MatIconModule,
-  MatProgressSpinnerModule,
-  UsuarioRoles,
-  ],
+  imports: [ReactiveFormsModule, MatButtonModule, MatFormFieldModule, MatInputModule, MatIconModule, MatProgressSpinnerModule, MatSelectModule],
 })
 export default class UsuarioForm implements OnInit {
   private fb = inject(FormBuilder);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private service = inject(UsuariosService);
+  private empresasService = inject(EmpresasService);
 
   protected id = this.route.snapshot.paramMap.get('id');
   protected esEdicion = !!this.id;
   protected loading = signal(false);
+  protected guardando = signal(false);
+  protected cargado = signal(false);
   protected errorMessage = signal<string | null>(null);
-  protected rolesSeleccionados = signal<string[]>([]);
+  protected empresas = signal<EmpresaList[]>([]);
   protected rolesDisponibles = Object.values(AUTH_ROLES);
 
   protected form = this.fb.nonNullable.group({
@@ -49,107 +45,94 @@ export default class UsuarioForm implements OnInit {
     celular: [''],
     pais: [''],
     codigoPais: [''],
-    empresa: [''],
     dominioPrincipal: [''],
+    empresaIds: this.fb.nonNullable.control<string[]>([]),
+    rol: ['', Validators.required],
   });
 
   ngOnInit(): void {
     if (!this.esEdicion) {
-      this.form.controls.password.setValidators([
-        Validators.required,
-        Validators.minLength(6),
-      ]);
+      this.form.controls.password.setValidators([Validators.required, Validators.minLength(6)]);
       this.form.controls.password.updateValueAndValidity();
-      return;
     }
-
     void this.cargar();
   }
 
   private async cargar(): Promise<void> {
-    if (!this.id) return;
-
     this.loading.set(true);
     this.errorMessage.set(null);
 
     try {
-      const usuario = await firstValueFrom(
-        this.service.getById(this.id)
-      );
+      const empresas = await firstValueFrom(this.empresasService.getAll());
+      this.empresas.set(empresas);
 
-      this.form.patchValue({
-        nombre: usuario.nombre,
-        apellidos: usuario.apellidos,
-        email: usuario.email,
-        telefono: usuario.telefono ?? '',
-        celular: usuario.celular ?? '',
-        pais: usuario.pais ?? '',
-        codigoPais: usuario.codigoPais ?? '',
-        empresa: usuario.empresa ?? '',
-        dominioPrincipal: usuario.dominioPrincipal ?? '',
-      });
+      if (this.id) {
+        const usuario = await firstValueFrom(this.service.getById(this.id));
+        this.form.patchValue({
+          nombre: usuario.nombre,
+          apellidos: usuario.apellidos,
+          email: usuario.email,
+          telefono: usuario.telefono ?? '',
+          celular: usuario.celular ?? '',
+          pais: usuario.pais ?? '',
+          codigoPais: usuario.codigoPais ?? '',
+          dominioPrincipal: usuario.dominioPrincipal ?? '',
+          empresaIds: usuario.empresaIds.filter(id => empresas.some(e => e.id === id && e.activo)),
+          rol: usuario.roles[0] ?? '',
+        });
+      }
 
-      this.rolesSeleccionados.set(usuario.roles);
+      this.cargado.set(true);
     } catch {
-      this.errorMessage.set('No fue posible cargar el usuario.');
+      this.errorMessage.set('No fue posible cargar la información del usuario.');
     } finally {
       this.loading.set(false);
     }
   }
 
-  protected cambiarRoles(roles: string[]): void {
-    this.rolesSeleccionados.set(roles);
-  }
-
   protected async guardar(): Promise<void> {
+    if (this.guardando() || !this.cargado()) return;
+
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
     }
 
-    if (!this.rolesSeleccionados().length) {
-      this.errorMessage.set('Selecciona al menos un rol.');
+    const value = this.form.getRawValue();
+    const rol = value.rol.trim();
+
+    if (rol !== AUTH_ROLES.ADMINISTRADOR && value.empresaIds.length === 0) {
+      this.errorMessage.set('Selecciona al menos una empresa para el usuario.');
       return;
     }
 
-    this.loading.set(true);
+    this.guardando.set(true);
     this.errorMessage.set(null);
 
     try {
-      const value = this.form.getRawValue();
+      const datos = {
+        nombre: value.nombre.trim(),
+        apellidos: value.apellidos.trim(),
+        email: value.email.trim(),
+        telefono: this.nullIfEmpty(value.telefono),
+        celular: this.nullIfEmpty(value.celular),
+        pais: this.nullIfEmpty(value.pais),
+        codigoPais: this.nullIfEmpty(value.codigoPais),
+        empresa: null,
+        dominioPrincipal: this.nullIfEmpty(value.dominioPrincipal),
+        empresaIds: value.empresaIds,
+      };
 
       if (this.esEdicion && this.id) {
-        const dto: UsuarioUpdate = {
-          nombre: value.nombre.trim(),
-          apellidos: value.apellidos.trim(),
-          email: value.email.trim(),
-          telefono: this.nullIfEmpty(value.telefono),
-          celular: this.nullIfEmpty(value.celular),
-          pais: this.nullIfEmpty(value.pais),
-          codigoPais: this.nullIfEmpty(value.codigoPais),
-          empresa: this.nullIfEmpty(value.empresa),
-          dominioPrincipal: this.nullIfEmpty(value.dominioPrincipal),
-        };
-
+        const dto: UsuarioUpdate = datos;
         await firstValueFrom(this.service.update(this.id, dto));
-        await firstValueFrom(
-          this.service.updateRoles(this.id, this.rolesSeleccionados())
-        );
+        await firstValueFrom(this.service.updateRoles(this.id, [rol]));
       } else {
         const dto: UsuarioCreate = {
-          nombre: value.nombre.trim(),
-          apellidos: value.apellidos.trim(),
-          email: value.email.trim(),
+          ...datos,
           password: value.password,
-          telefono: this.nullIfEmpty(value.telefono),
-          celular: this.nullIfEmpty(value.celular),
-          pais: this.nullIfEmpty(value.pais),
-          codigoPais: this.nullIfEmpty(value.codigoPais),
-          empresa: this.nullIfEmpty(value.empresa),
-          dominioPrincipal: this.nullIfEmpty(value.dominioPrincipal),
-          roles: this.rolesSeleccionados(),
+          roles: [rol],
         };
-
         await firstValueFrom(this.service.create(dto));
       }
 
@@ -157,7 +140,7 @@ export default class UsuarioForm implements OnInit {
     } catch (error) {
       this.errorMessage.set(this.getErrorMessage(error));
     } finally {
-      this.loading.set(false);
+      this.guardando.set(false);
     }
   }
 
@@ -166,14 +149,12 @@ export default class UsuarioForm implements OnInit {
   }
 
   private nullIfEmpty(value: string): string | null {
-    const result = value.trim();
-    return result ? result : null;
+    return value.trim() || null;
   }
 
   private getErrorMessage(error: unknown): string {
-    if (error instanceof HttpErrorResponse)
-      return error.error?.message ?? 'No fue posible guardar el usuario.';
-
+    if (error instanceof HttpErrorResponse && typeof error.error?.message === 'string')
+      return error.error.message;
     return 'No fue posible guardar el usuario.';
   }
 }
