@@ -222,15 +222,12 @@
       </button>
 
       <button type="submit" mat-flat-button [disabled]="guardando() || loading() || !cargado() || form.invalid">
-        @if (loading()) {
+        @if (guardando()) {
         <mat-spinner class="mr-2" diameter="18" />
         } @else {
         <mat-icon svgIcon="save" />
         }
-
-        <span class="ml-2">
-          {{ loading() ? 'Guardando...' : 'Guardar usuario' }}
-        </span>
+        <span class="ml-2">{{ guardando() ? 'Guardando...' : 'Guardar usuario' }}</span>
       </button>
     </div>
 

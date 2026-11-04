@@ -6,28 +6,32 @@ import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { catchError, throwError } from 'rxjs';
 import { API_URL } from '@/app/core/config/api.config';
+import { EmpresaContextoService } from '@/app/core/empresa-contexto.service';
 import { AuthService } from '@/app/domains/auth/services/auth.services';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
   const router = inject(Router);
   const apiUrl = inject(API_URL);
+  const empresaContexto = inject(EmpresaContextoService);
 
   const isApiRequest = req.url.startsWith(apiUrl);
   const token = authService.accessToken;
 
   let request = req;
 
-  if (
-    isApiRequest &&
-    token &&
-    !authService.isTokenExpired()
-  ) {
-    request = req.clone({
-      setHeaders: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+  if (isApiRequest && token && !authService.isTokenExpired()) {
+    const headers: Record<string, string> = {
+      Authorization: `Bearer ${token}`,
+    };
+
+    const empresaId = empresaContexto.empresaId;
+
+    if (empresaId) {
+      headers['X-Empresa-Id'] = empresaId;
+    }
+
+    request = req.clone({ setHeaders: headers });
   }
 
   return next(request).pipe(
