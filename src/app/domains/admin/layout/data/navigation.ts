@@ -30,6 +30,24 @@ export const NAVIGATION: NavigationItem[] = [
     ],
   },
   {
+    id: 'catalogos',
+    label: 'Catálogos',
+    children: [
+      {
+        id: 'catalogos/sucursales',
+        label: 'Sucursales',
+        icon: 'building-2',
+        route: '/admin/sucursales',
+        roles: [
+          AUTH_ROLES.ADMINISTRADOR,
+          AUTH_ROLES.ADMIN_EMPRESA,
+          AUTH_ROLES.OPERADOR,
+          AUTH_ROLES.CONSULTA,
+        ],
+      },
+    ],
+  },
+  {
     id: 'administracion',
     label: 'Administración',
     children: [
