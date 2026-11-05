@@ -57,6 +57,18 @@ export const NAVIGATION: NavigationItem[] = [
           AUTH_ROLES.CONSULTA,
         ],
       },
+      {
+        id: 'catalogos/ubicaciones',
+        label: 'Ubicaciones',
+        icon: 'map-pin',
+        route: '/admin/ubicaciones',
+        roles: [
+          AUTH_ROLES.ADMINISTRADOR,
+          AUTH_ROLES.ADMIN_EMPRESA,
+          AUTH_ROLES.OPERADOR,
+          AUTH_ROLES.CONSULTA,
+        ],
+      },
     ],
   },
   {

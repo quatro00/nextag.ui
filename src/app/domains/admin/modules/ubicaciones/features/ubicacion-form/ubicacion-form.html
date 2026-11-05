@@ -1,0 +1,396 @@
+<div class="mx-auto flex w-full max-w-5xl flex-auto flex-col p-6 sm:p-8">
+
+  <!-- ENCABEZADO -->
+  <div class="mb-8 flex items-center gap-4">
+
+    <button
+      matIconButton
+      (click)="cancelar()"
+    >
+      <mat-icon svgIcon="arrow-left" />
+    </button>
+
+    <div class="flex size-12 items-center justify-center rounded-xl bg-primary text-on-primary shadow-sm">
+      <mat-icon svgIcon="map-pin" />
+    </div>
+
+    <div>
+
+      <div class="text-3xl font-bold tracking-tight">
+        {{ esEdicion ? 'Editar ubicación' : 'Nueva ubicación' }}
+      </div>
+
+      <div class="mt-1 text-on-surface-variant">
+        Empresa:
+        <strong>
+          {{ empresaContexto.seleccionada()?.nombre || 'Sin seleccionar' }}
+        </strong>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- MENSAJES -->
+  @if (errorMessage()) {
+
+    <div class="mb-6 flex items-center gap-3 rounded-xl bg-red-50 p-4 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-400">
+
+      <mat-icon svgIcon="circle-alert" />
+
+      {{ errorMessage() }}
+
+    </div>
+
+  }
+
+  @if (loading() || empresaContexto.cargando()) {
+
+    <div class="flex justify-center p-12">
+      <mat-spinner diameter="36" />
+    </div>
+
+  } @else if (!empresaContexto.empresaId) {
+
+    <div class="rounded-2xl border bg-surface p-8 text-center text-on-surface-variant">
+      Selecciona una empresa para administrar sus ubicaciones.
+    </div>
+
+  } @else if (detalleCargado()) {
+
+    <form
+      class="flex flex-col gap-6"
+      [formGroup]="form"
+      (ngSubmit)="guardar()"
+    >
+
+      <!-- ===================================== -->
+      <!-- SUCURSAL Y RELACIONES -->
+      <!-- ===================================== -->
+
+      <div class="overflow-hidden rounded-2xl border bg-surface shadow-sm">
+
+        <div class="flex items-center gap-3 border-b p-5">
+
+          <div class="flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+            <mat-icon svgIcon="network" />
+          </div>
+
+          <div>
+
+            <div class="font-semibold">
+              Organización de la ubicación
+            </div>
+
+            <div class="text-sm text-on-surface-variant">
+              Define a qué sucursal pertenece y su posición dentro de la estructura física.
+            </div>
+
+          </div>
+
+        </div>
+
+        <div class="grid grid-cols-1 gap-5 p-6 md:grid-cols-2">
+
+          <!-- SUCURSAL -->
+          <mat-form-field>
+
+            <mat-label>Sucursal</mat-label>
+
+            <mat-select
+              formControlName="sucursalId"
+              (selectionChange)="cambiarSucursal($event.value)"
+            >
+
+              <mat-option value="" disabled>
+                Selecciona una sucursal
+              </mat-option>
+
+              @for (sucursal of sucursales(); track sucursal.id) {
+
+                <mat-option
+                  [value]="sucursal.id"
+                  [disabled]="!sucursal.activo && !(esEdicion && sucursal.id === sucursalSeleccionada())"
+                >
+                  {{ sucursal.nombre }}
+
+                  @if (!sucursal.activo) {
+                    (Inactiva)
+                  }
+
+                </mat-option>
+
+              }
+
+            </mat-select>
+
+            @if (form.controls.sucursalId.hasError('required')) {
+              <mat-error>
+                La sucursal es obligatoria.
+              </mat-error>
+            }
+
+            @if (esEdicion) {
+              <mat-hint>
+                No se puede cambiar la sucursal de una ubicación existente.
+              </mat-hint>
+            }
+
+          </mat-form-field>
+
+          <!-- TIPO DE UBICACION -->
+          <mat-form-field>
+
+            <mat-label>Tipo de ubicación</mat-label>
+
+            <mat-select formControlName="tipoUbicacionId">
+
+              <mat-option value="">
+                Sin tipo
+              </mat-option>
+
+              @for (tipo of tiposDisponibles(); track tipo.id) {
+
+                <mat-option [value]="tipo.id">
+
+                  {{ tipo.nombre }}
+
+                  @if (!tipo.activo) {
+                    (Inactivo)
+                  }
+
+                </mat-option>
+
+              }
+
+            </mat-select>
+
+            <mat-hint>
+              Ejemplo: Almacén, Oficina, Taller o Piso.
+            </mat-hint>
+
+          </mat-form-field>
+
+          <!-- UBICACION PADRE -->
+          <mat-form-field class="md:col-span-2">
+
+            <mat-label>Ubicación padre</mat-label>
+
+            <mat-select formControlName="ubicacionPadreId">
+
+              <mat-option value="">
+                Sin ubicación padre (primer nivel)
+              </mat-option>
+
+              @for (ubicacion of padresDisponibles(); track ubicacion.id) {
+
+                <mat-option [value]="ubicacion.id">
+                  {{ ubicacion.nombre }}
+                  ({{ ubicacion.clave }})
+                </mat-option>
+
+              }
+
+            </mat-select>
+
+            <mat-hint>
+              @if (sucursalSeleccionada()) {
+                Selecciona la ubicación superior o deja el campo vacío para crear una ubicación principal.
+              } @else {
+                Primero selecciona una sucursal para consultar las ubicaciones disponibles.
+              }
+            </mat-hint>
+
+          </mat-form-field>
+
+        </div>
+
+      </div>
+
+      <!-- ===================================== -->
+      <!-- INFORMACION GENERAL -->
+      <!-- ===================================== -->
+
+      <div class="overflow-hidden rounded-2xl border bg-surface shadow-sm">
+
+        <div class="flex items-center gap-3 border-b p-5">
+
+          <div class="flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+            <mat-icon svgIcon="map-pin" />
+          </div>
+
+          <div>
+
+            <div class="font-semibold">
+              Información general
+            </div>
+
+            <div class="text-sm text-on-surface-variant">
+              Datos principales de la ubicación física.
+            </div>
+
+          </div>
+
+        </div>
+
+        <div class="grid grid-cols-1 gap-5 p-6 md:grid-cols-2">
+
+          <!-- CLAVE -->
+          <mat-form-field>
+
+            <mat-label>Clave</mat-label>
+
+            <input
+              matInput
+              formControlName="clave"
+              maxlength="50"
+              placeholder="ALM001"
+            >
+
+            @if (form.controls.clave.hasError('required')) {
+              <mat-error>
+                La clave es obligatoria.
+              </mat-error>
+            }
+
+            @if (form.controls.clave.hasError('maxlength')) {
+              <mat-error>
+                La clave no puede superar los 50 caracteres.
+              </mat-error>
+            }
+
+          </mat-form-field>
+
+          <!-- NOMBRE -->
+          <mat-form-field>
+
+            <mat-label>Nombre</mat-label>
+
+            <input
+              matInput
+              formControlName="nombre"
+              maxlength="200"
+              placeholder="Almacén Principal"
+            >
+
+            @if (form.controls.nombre.hasError('required')) {
+              <mat-error>
+                El nombre es obligatorio.
+              </mat-error>
+            }
+
+            @if (form.controls.nombre.hasError('maxlength')) {
+              <mat-error>
+                El nombre no puede superar los 200 caracteres.
+              </mat-error>
+            }
+
+          </mat-form-field>
+
+          <!-- DESCRIPCION -->
+          <mat-form-field class="md:col-span-2">
+
+            <mat-label>Descripción</mat-label>
+
+            <textarea
+              matInput
+              formControlName="descripcion"
+              maxlength="500"
+              rows="3"
+              placeholder="Ubicación destinada al almacenamiento de equipos"
+            ></textarea>
+
+            <mat-hint align="end">
+              {{ form.controls.descripcion.value.length }}/500
+            </mat-hint>
+
+          </mat-form-field>
+
+        </div>
+
+      </div>
+
+      <!-- ===================================== -->
+      <!-- INFORMACION DE JERARQUIA -->
+      <!-- ===================================== -->
+
+      <div class="rounded-xl border border-blue-200 bg-blue-50 p-5 text-sm text-blue-800 dark:border-blue-900 dark:bg-blue-900/20 dark:text-blue-300">
+
+        <div class="flex items-start gap-3">
+
+          <mat-icon svgIcon="info" />
+
+          <div>
+
+            <div class="font-semibold">
+              Organización jerárquica
+            </div>
+
+            <div class="mt-1">
+              Si seleccionas una ubicación padre, el nuevo registro quedará dentro de ella.
+              Si dejas ese campo vacío, la ubicación se registrará en el primer nivel de la sucursal.
+            </div>
+
+            <div class="mt-2">
+              Las ubicaciones padre deben pertenecer a la misma sucursal y encontrarse activas.
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- ===================================== -->
+      <!-- BOTONES -->
+      <!-- ===================================== -->
+
+      <div class="flex justify-end gap-3">
+
+        <button
+          type="button"
+          mat-button
+          [disabled]="guardando()"
+          (click)="cancelar()"
+        >
+
+          <mat-icon svgIcon="x" />
+
+          <span class="ml-2">
+            Cancelar
+          </span>
+
+        </button>
+
+        <button
+          type="submit"
+          mat-flat-button
+          [disabled]="guardando() || loading() || !detalleCargado() || form.invalid"
+        >
+
+          @if (guardando()) {
+
+            <mat-spinner
+              class="mr-2"
+              diameter="18"
+            />
+
+          } @else {
+
+            <mat-icon svgIcon="save" />
+
+          }
+
+          <span class="ml-2">
+            {{ guardando() ? 'Guardando...' : 'Guardar ubicación' }}
+          </span>
+
+        </button>
+
+      </div>
+
+    </form>
+
+  }
+
+</div>
