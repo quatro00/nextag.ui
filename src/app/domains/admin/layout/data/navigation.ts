@@ -45,6 +45,18 @@ export const NAVIGATION: NavigationItem[] = [
           AUTH_ROLES.CONSULTA,
         ],
       },
+      {
+        id: 'catalogos/tipos-ubicacion',
+        label: 'Tipos de ubicación',
+        icon: 'tags',
+        route: '/admin/tipos-ubicacion',
+        roles: [
+          AUTH_ROLES.ADMINISTRADOR,
+          AUTH_ROLES.ADMIN_EMPRESA,
+          AUTH_ROLES.OPERADOR,
+          AUTH_ROLES.CONSULTA,
+        ],
+      },
     ],
   },
   {
