@@ -81,6 +81,30 @@ export const NAVIGATION: NavigationItem[] = [
           AUTH_ROLES.CONSULTA,
         ],
       },
+      {
+        id: 'catalogos/marcas',
+        label: 'Marcas',
+        icon: 'tags',
+        route: '/admin/marcas',
+        roles: [
+          AUTH_ROLES.ADMINISTRADOR,
+          AUTH_ROLES.ADMIN_EMPRESA,
+          AUTH_ROLES.OPERADOR,
+          AUTH_ROLES.CONSULTA,
+        ],
+      },
+      {
+        id: 'catalogos/modelos-activo',
+        label: 'Modelos de activos',
+        icon: 'package',
+        route: '/admin/modelos-activo',
+        roles: [
+          AUTH_ROLES.ADMINISTRADOR,
+          AUTH_ROLES.ADMIN_EMPRESA,
+          AUTH_ROLES.OPERADOR,
+          AUTH_ROLES.CONSULTA,
+        ],
+      },
     ],
   },
   {

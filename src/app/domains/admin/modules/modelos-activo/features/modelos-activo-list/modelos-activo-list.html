@@ -1,0 +1,123 @@
+<div class="mx-auto flex w-full max-w-7xl flex-auto flex-col p-6 sm:p-8">
+  <div class="mb-8 flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+    <div class="flex items-center gap-4">
+      <div class="flex size-12 items-center justify-center rounded-xl bg-primary text-on-primary shadow-sm">
+        <mat-icon svgIcon="package" />
+      </div>
+      <div>
+        <h1 class="text-3xl font-bold tracking-tight">Modelos de activos</h1>
+        <p class="mt-1 text-on-surface-variant">Modelos para <strong>{{ empresaContexto.seleccionada()?.nombre || 'la empresa seleccionada' }}</strong>.</p>
+      </div>
+    </div>
+    @if (puedeGestionar()) {
+      <button mat-flat-button [disabled]="!empresaContexto.empresaId || loading()" (click)="nuevo()">
+        <mat-icon svgIcon="plus" /> <span class="ml-2">Nuevo modelo</span>
+      </button>
+    }
+  </div>
+
+  <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+    <div class="flex items-center gap-4 rounded-2xl border bg-surface p-5 shadow-sm">
+      <div class="flex size-11 items-center justify-center rounded-xl bg-primary/10 text-primary"><mat-icon svgIcon="package" /></div>
+      <div><div class="text-2xl font-bold">{{ total() }}</div><div class="text-sm text-on-surface-variant">Modelos según filtros</div></div>
+    </div>
+    <div class="flex items-center gap-4 rounded-2xl border bg-surface p-5 shadow-sm">
+      <div class="flex size-11 items-center justify-center rounded-xl bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"><mat-icon svgIcon="circle-check" /></div>
+      <div><div class="text-2xl font-bold">{{ activos() }}</div><div class="text-sm text-on-surface-variant">Activos</div></div>
+    </div>
+    <div class="flex items-center gap-4 rounded-2xl border bg-surface p-5 shadow-sm">
+      <div class="flex size-11 items-center justify-center rounded-xl bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"><mat-icon svgIcon="circle-x" /></div>
+      <div><div class="text-2xl font-bold">{{ inactivos() }}</div><div class="text-sm text-on-surface-variant">Inactivos</div></div>
+    </div>
+  </div>
+
+  <div class="overflow-hidden rounded-2xl border bg-surface shadow-sm">
+    <div class="border-b p-5">
+      <div class="mb-4"><div class="text-lg font-semibold">Modelos registrados</div><div class="text-sm text-on-surface-variant">Filtra por marca y categoría de activo.</div></div>
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <mat-form-field class="w-full">
+          <mat-label>Buscar modelo</mat-label>
+          <mat-icon matPrefix svgIcon="search" />
+          <input matInput placeholder="Nombre, clave, marca..." [value]="busqueda()" (input)="cambiarBusqueda($event)" />
+        </mat-form-field>
+        <mat-form-field class="w-full">
+          <mat-label>Marca</mat-label>
+          <mat-select [value]="marcaFiltro()" (selectionChange)="cambiarMarca($event.value)">
+            <mat-option value="">Todas las marcas</mat-option>
+            @for (marca of marcas(); track marca.id) {
+              <mat-option [value]="marca.id">{{ marca.nombre }}{{ marca.activo ? '' : ' (Inactiva)' }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field class="w-full">
+          <mat-label>Categoría</mat-label>
+          <mat-select [value]="categoriaFiltro()" (selectionChange)="cambiarCategoria($event.value)">
+            <mat-option value="">Todas las categorías</mat-option>
+            @for (categoria of categorias(); track categoria.id) {
+              <mat-option [value]="categoria.id">{{ categoria.nombre }}{{ categoria.activo ? '' : ' (Inactiva)' }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+      </div>
+    </div>
+
+    @if (errorMessage()) {
+      <div class="m-5 rounded-xl bg-red-50 p-4 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-400">{{ errorMessage() }}</div>
+    }
+
+    @if (loading() || empresaContexto.cargando()) {
+      <div class="flex flex-col items-center justify-center gap-3 p-12"><mat-spinner diameter="36" /><span>Cargando modelos...</span></div>
+    } @else if (!empresaContexto.empresaId) {
+      <div class="p-12 text-center text-on-surface-variant"><mat-icon svgIcon="building-2" /><div class="mt-3 font-semibold">Selecciona una empresa</div></div>
+    } @else {
+      <div class="overflow-x-auto">
+        <table class="w-full text-left">
+          <thead class="border-b bg-neutral-50/80 dark:bg-neutral-900/50">
+            <tr class="text-sm">
+              <th class="px-6 py-4 font-semibold">Modelo</th>
+              <th class="px-6 py-4 font-semibold">Marca</th>
+              <th class="px-6 py-4 font-semibold">Categoría</th>
+              <th class="px-6 py-4 font-semibold">Descripción</th>
+              <th class="px-6 py-4 font-semibold">Estatus</th>
+              @if (puedeGestionar()) { <th class="px-6 py-4 text-right font-semibold">Acciones</th> }
+            </tr>
+          </thead>
+          <tbody>
+            @for (modelo of modelosFiltrados(); track modelo.id) {
+              <tr class="border-b transition hover:bg-neutral-50/70 last:border-b-0 dark:hover:bg-neutral-900/40">
+                <td class="px-6 py-4">
+                  <div class="flex items-center gap-3">
+                    <span class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"><mat-icon svgIcon="package" /></span>
+                    <div><div class="font-semibold">{{ modelo.nombre }}</div><div class="text-sm text-on-surface-variant">{{ modelo.clave }}</div></div>
+                  </div>
+                </td>
+                <td class="px-6 py-4 text-sm">{{ modelo.marcaNombre }}</td>
+                <td class="px-6 py-4 text-sm">{{ modelo.categoriaActivoNombre }}</td>
+                <td class="px-6 py-4 text-sm">{{ modelo.descripcion || '—' }}</td>
+                <td class="px-6 py-4">
+                  <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold"
+                    [class]="modelo.activo ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'">
+                    {{ modelo.activo ? 'Activo' : 'Inactivo' }}
+                  </span>
+                </td>
+                @if (puedeGestionar()) {
+                  <td class="px-6 py-4 text-right">
+                    <button matIconButton matTooltip="Editar modelo" (click)="editar(modelo.id)"><mat-icon svgIcon="pencil" /></button>
+                    <button matIconButton [disabled]="actualizandoId() !== null"
+                      [matTooltip]="modelo.activo ? 'Desactivar modelo' : 'Activar modelo'" (click)="cambiarEstatus(modelo)">
+                      <mat-icon [svgIcon]="modelo.activo ? 'circle-x' : 'circle-check'" />
+                    </button>
+                  </td>
+                }
+              </tr>
+            } @empty {
+              <tr><td class="p-12 text-center text-on-surface-variant" [attr.colspan]="puedeGestionar() ? 6 : 5">
+                <mat-icon svgIcon="search-x" /><div class="mt-3 font-semibold">No se encontraron modelos</div>
+              </td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+</div>

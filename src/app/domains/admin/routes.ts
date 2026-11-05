@@ -31,6 +31,34 @@ const routes: Routes = [
         loadChildren: () =>
           import('./modules/categorias-activo/routes'),
       },
+      {
+        path: 'marcas',
+        canActivate: [roleGuard],
+        data: {
+          roles: [
+            AUTH_ROLES.ADMINISTRADOR,
+            AUTH_ROLES.ADMIN_EMPRESA,
+            AUTH_ROLES.OPERADOR,
+            AUTH_ROLES.CONSULTA,
+          ],
+        },
+        loadChildren: () =>
+          import('./modules/marcas/routes'),
+      },
+      {
+        path: 'modelos-activo',
+        canActivate: [roleGuard],
+        data: {
+          roles: [
+            AUTH_ROLES.ADMINISTRADOR,
+            AUTH_ROLES.ADMIN_EMPRESA,
+            AUTH_ROLES.OPERADOR,
+            AUTH_ROLES.CONSULTA,
+          ],
+        },
+        loadChildren: () =>
+          import('./modules/modelos-activo/routes'),
+      },
       { path: '**', redirectTo: 'inicio' },
     ],
   },
