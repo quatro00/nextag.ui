@@ -69,6 +69,18 @@ export const NAVIGATION: NavigationItem[] = [
           AUTH_ROLES.CONSULTA,
         ],
       },
+      {
+        id: 'catalogos/categorias-activo',
+        label: 'Categorías de activos',
+        icon: 'folder-tree',
+        route: '/admin/categorias-activo',
+        roles: [
+          AUTH_ROLES.ADMINISTRADOR,
+          AUTH_ROLES.ADMIN_EMPRESA,
+          AUTH_ROLES.OPERADOR,
+          AUTH_ROLES.CONSULTA,
+        ],
+      },
     ],
   },
   {

@@ -16,7 +16,21 @@ const routes: Routes = [
       { path: 'empresas', canActivate: [roleGuard], data: { roles: [AUTH_ROLES.ADMINISTRADOR] }, loadChildren: () => import('./modules/empresas/routes'), },
       { path: 'sucursales', canActivate: [roleGuard], data: { roles: [AUTH_ROLES.ADMINISTRADOR, AUTH_ROLES.ADMIN_EMPRESA, AUTH_ROLES.OPERADOR, AUTH_ROLES.CONSULTA,], }, loadChildren: () => import('./modules/sucursales/routes'), },
       { path: 'tipos-ubicacion', canActivate: [roleGuard], data: { roles: [AUTH_ROLES.ADMINISTRADOR, AUTH_ROLES.ADMIN_EMPRESA, AUTH_ROLES.OPERADOR, AUTH_ROLES.CONSULTA,], }, loadChildren: () => import('./modules/tipos-ubicacion/routes'), },
-      { path: 'ubicaciones', canActivate: [roleGuard], data: { roles: [AUTH_ROLES.ADMINISTRADOR, AUTH_ROLES.ADMIN_EMPRESA, AUTH_ROLES.OPERADOR, AUTH_ROLES.CONSULTA, ], }, loadChildren: () => import('./modules/ubicaciones/routes'), },
+      { path: 'ubicaciones', canActivate: [roleGuard], data: { roles: [AUTH_ROLES.ADMINISTRADOR, AUTH_ROLES.ADMIN_EMPRESA, AUTH_ROLES.OPERADOR, AUTH_ROLES.CONSULTA,], }, loadChildren: () => import('./modules/ubicaciones/routes'), },
+      {
+        path: 'categorias-activo',
+        canActivate: [roleGuard],
+        data: {
+          roles: [
+            AUTH_ROLES.ADMINISTRADOR,
+            AUTH_ROLES.ADMIN_EMPRESA,
+            AUTH_ROLES.OPERADOR,
+            AUTH_ROLES.CONSULTA,
+          ],
+        },
+        loadChildren: () =>
+          import('./modules/categorias-activo/routes'),
+      },
       { path: '**', redirectTo: 'inicio' },
     ],
   },

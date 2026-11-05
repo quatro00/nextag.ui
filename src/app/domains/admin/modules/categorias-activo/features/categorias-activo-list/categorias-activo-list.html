@@ -1,0 +1,506 @@
+<div class="mx-auto flex w-full max-w-7xl flex-auto flex-col p-6 sm:p-8">
+
+  <!-- ENCABEZADO -->
+  <div class="mb-8 flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+
+    <div class="flex items-center gap-4">
+
+      <div class="flex size-12 items-center justify-center rounded-xl bg-primary text-on-primary shadow-sm">
+        <mat-icon svgIcon="folder-tree" />
+      </div>
+
+      <div>
+
+        <div class="text-3xl font-bold tracking-tight">
+          Categorías de activos
+        </div>
+
+        <div class="mt-1 text-on-surface-variant">
+          Administra las categorías de
+          <strong>
+            {{ empresaContexto.seleccionada()?.nombre || 'la empresa seleccionada' }}
+          </strong>.
+        </div>
+
+      </div>
+
+    </div>
+
+    @if (puedeGestionar()) {
+
+      <button
+        mat-flat-button
+        [disabled]="!empresaContexto.empresaId || loading()"
+        (click)="nuevo()"
+      >
+        <mat-icon svgIcon="plus" />
+        <span class="ml-2">Nueva categoría</span>
+      </button>
+
+    }
+
+  </div>
+
+  <!-- INDICADORES -->
+  <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+
+    <!-- TOTAL -->
+    <div class="flex items-center gap-4 rounded-2xl border bg-surface p-5 shadow-sm">
+
+      <div class="flex size-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
+        <mat-icon svgIcon="layers" />
+      </div>
+
+      <div>
+        <div class="text-2xl font-bold">
+          {{ total() }}
+        </div>
+
+        <div class="text-sm text-on-surface-variant">
+          Categorías registradas
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ACTIVAS -->
+    <div class="flex items-center gap-4 rounded-2xl border bg-surface p-5 shadow-sm">
+
+      <div class="flex size-11 items-center justify-center rounded-xl bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+        <mat-icon svgIcon="circle-check" />
+      </div>
+
+      <div>
+        <div class="text-2xl font-bold">
+          {{ activas() }}
+        </div>
+
+        <div class="text-sm text-on-surface-variant">
+          Categorías activas
+        </div>
+      </div>
+
+    </div>
+
+    <!-- INACTIVAS -->
+    <div class="flex items-center gap-4 rounded-2xl border bg-surface p-5 shadow-sm">
+
+      <div class="flex size-11 items-center justify-center rounded-xl bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
+        <mat-icon svgIcon="circle-x" />
+      </div>
+
+      <div>
+        <div class="text-2xl font-bold">
+          {{ inactivas() }}
+        </div>
+
+        <div class="text-sm text-on-surface-variant">
+          Categorías inactivas
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- CONTENEDOR -->
+  <div class="overflow-hidden rounded-2xl border bg-surface shadow-sm">
+
+    <!-- FILTROS -->
+    <div class="border-b p-5">
+
+      <div class="mb-5">
+
+        <div class="text-lg font-semibold">
+          Categorías registradas
+        </div>
+
+        <div class="text-sm text-on-surface-variant">
+          Consulta y administra las categorías disponibles para el inventario.
+        </div>
+
+      </div>
+
+      <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+
+        <!-- BUSQUEDA -->
+        <mat-form-field class="w-full sm:w-96">
+
+          <mat-icon matPrefix svgIcon="search" />
+
+          <mat-label>Buscar categoría</mat-label>
+
+          <input
+            matInput
+            placeholder="Clave, nombre o categoría padre"
+            (input)="cambiarBusqueda($event)"
+          >
+
+        </mat-form-field>
+
+        <!-- VISTAS -->
+        <div class="flex items-center gap-2">
+
+          <button
+            mat-stroked-button
+            [class]="vista() === 'tabla' ? 'bg-primary/10 text-primary' : ''"
+            (click)="cambiarVista('tabla')"
+          >
+            <mat-icon svgIcon="list" />
+            <span class="ml-2">Listado</span>
+          </button>
+
+          <button
+            mat-stroked-button
+            [class]="vista() === 'arbol' ? 'bg-primary/10 text-primary' : ''"
+            (click)="cambiarVista('arbol')"
+          >
+            <mat-icon svgIcon="network" />
+            <span class="ml-2">Jerarquía</span>
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- ERROR -->
+    @if (errorMessage()) {
+
+      <div class="m-5 rounded-xl bg-red-50 p-4 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-400">
+        {{ errorMessage() }}
+      </div>
+
+    }
+
+    <!-- CARGANDO -->
+    @if (loading() || empresaContexto.cargando()) {
+
+      <div class="flex flex-col items-center justify-center gap-4 p-12">
+
+        <mat-spinner diameter="36" />
+
+        <span class="text-sm text-on-surface-variant">
+          Cargando categorías...
+        </span>
+
+      </div>
+
+    } @else if (!empresaContexto.empresaId) {
+
+      <div class="p-12 text-center text-on-surface-variant">
+
+        <mat-icon svgIcon="building-2" />
+
+        <div class="mt-3 font-semibold">
+          No hay una empresa seleccionada
+        </div>
+
+        <div class="mt-1 text-sm">
+          Selecciona una empresa desde el encabezado de NexTag.
+        </div>
+
+      </div>
+
+    } @else if (vista() === 'tabla') {
+
+      <!-- ===================================== -->
+      <!-- VISTA TABLA -->
+      <!-- ===================================== -->
+
+      <div class="overflow-x-auto">
+
+        <table class="w-full text-left">
+
+          <thead class="border-b bg-neutral-50/80 dark:bg-neutral-900/50">
+
+            <tr class="text-sm">
+
+              <th class="px-6 py-4 font-semibold">
+                Categoría
+              </th>
+
+              <th class="px-6 py-4 font-semibold">
+                Categoría padre
+              </th>
+
+              <th class="px-6 py-4 font-semibold">
+                Descripción
+              </th>
+
+              <th class="px-6 py-4 font-semibold">
+                Estatus
+              </th>
+
+              @if (puedeGestionar()) {
+                <th class="px-6 py-4 text-right font-semibold">
+                  Acciones
+                </th>
+              }
+
+            </tr>
+
+          </thead>
+
+          <tbody>
+
+            @for (categoria of categoriasFiltradas(); track categoria.id) {
+
+              <tr class="border-b transition hover:bg-neutral-50/70 last:border-b-0 dark:hover:bg-neutral-900/40">
+
+                <!-- CATEGORIA -->
+                <td class="px-6 py-4">
+
+                  <div class="flex items-center gap-3">
+
+                    <div class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                      <mat-icon svgIcon="folder" />
+                    </div>
+
+                    <div>
+
+                      <div class="font-semibold">
+                        {{ categoria.nombre }}
+                      </div>
+
+                      <div class="text-sm text-on-surface-variant">
+                        {{ categoria.clave }}
+                      </div>
+
+                    </div>
+
+                  </div>
+
+                </td>
+
+                <!-- PADRE -->
+                <td class="px-6 py-4 text-sm">
+                  {{ categoria.categoriaPadreNombre || '—' }}
+                </td>
+
+                <!-- DESCRIPCION -->
+                <td class="px-6 py-4 text-sm">
+                  {{ categoria.descripcion || '—' }}
+                </td>
+
+                <!-- ESTATUS -->
+                <td class="px-6 py-4">
+
+                  @if (categoria.activo) {
+
+                    <span class="inline-flex items-center gap-1 rounded-full bg-green-100 px-2.5 py-1 text-xs font-semibold text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                      <mat-icon class="size-3.5" svgIcon="circle-check" />
+                      Activa
+                    </span>
+
+                  } @else {
+
+                    <span class="inline-flex items-center gap-1 rounded-full bg-red-100 px-2.5 py-1 text-xs font-semibold text-red-700 dark:bg-red-900/30 dark:text-red-400">
+                      <mat-icon class="size-3.5" svgIcon="circle-x" />
+                      Inactiva
+                    </span>
+
+                  }
+
+                </td>
+
+                <!-- ACCIONES -->
+                @if (puedeGestionar()) {
+
+                  <td class="px-6 py-4">
+
+                    <div class="flex justify-end gap-1">
+
+                      <button
+                        matIconButton
+                        matTooltip="Editar categoría"
+                        (click)="editar(categoria.id)"
+                      >
+                        <mat-icon svgIcon="pencil" />
+                      </button>
+
+                      <button
+                        matIconButton
+                        [disabled]="actualizandoId() !== null"
+                        [matTooltip]="categoria.activo ? 'Desactivar' : 'Activar'"
+                        (click)="cambiarEstatus(categoria)"
+                      >
+                        <mat-icon
+                          [svgIcon]="categoria.activo ? 'circle-x' : 'circle-check'"
+                        />
+                      </button>
+
+                    </div>
+
+                  </td>
+
+                }
+
+              </tr>
+
+            } @empty {
+
+              <tr>
+
+                <td
+                  [attr.colspan]="puedeGestionar() ? 5 : 4"
+                  class="p-12 text-center"
+                >
+
+                  <mat-icon svgIcon="search-x" />
+
+                  <div class="mt-3 font-semibold">
+                    No se encontraron categorías
+                  </div>
+
+                  <div class="mt-1 text-sm text-on-surface-variant">
+                    No existen registros para los criterios seleccionados.
+                  </div>
+
+                </td>
+
+              </tr>
+
+            }
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+    } @else {
+
+      <!-- ===================================== -->
+      <!-- VISTA JERARQUICA -->
+      <!-- ===================================== -->
+
+      <div class="p-5">
+
+        <div class="mb-5 rounded-xl bg-primary/5 p-4 text-sm text-on-surface-variant">
+          Las categorías están organizadas por niveles.
+          Utiliza las flechas para expandir o contraer sus subcategorías.
+        </div>
+
+        <div class="space-y-2">
+
+          @for (categoria of filasArbol(); track categoria.id) {
+
+            <div
+              class="flex flex-wrap items-center gap-3 rounded-xl border px-4 py-3 transition hover:bg-neutral-50/70 dark:hover:bg-neutral-900/40"
+              [style.margin-left.px]="categoria.nivel * 24"
+            >
+
+              <!-- EXPANDIR -->
+              <div class="flex size-8 shrink-0 items-center justify-center">
+
+                @if (categoria.tieneHijos) {
+
+                  <button
+                    matIconButton
+                    [disabled]="!!busqueda().trim()"
+                    [attr.aria-label]="colapsadas().has(categoria.id) ? 'Expandir categoría' : 'Contraer categoría'"
+                    (click)="alternarNodo(categoria.id)"
+                  >
+                    <mat-icon
+                      [svgIcon]="colapsadas().has(categoria.id) && !busqueda().trim() ? 'chevron-right' : 'chevron-down'"
+                    />
+                  </button>
+
+                } @else {
+
+                  <mat-icon
+                    class="text-on-surface-variant"
+                    svgIcon="folder"
+                  />
+
+                }
+
+              </div>
+
+              <!-- INFORMACION -->
+              <div class="min-w-0 flex-auto">
+
+                <div class="font-semibold">
+                  {{ categoria.nombre }}
+                </div>
+
+                <div class="text-xs text-on-surface-variant">
+                  {{ categoria.clave }}
+                </div>
+
+              </div>
+
+              <!-- ESTATUS -->
+              @if (categoria.activo) {
+
+                <span class="rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                  Activa
+                </span>
+
+              } @else {
+
+                <span class="rounded-full bg-red-100 px-3 py-1 text-xs font-semibold text-red-700 dark:bg-red-900/30 dark:text-red-400">
+                  Inactiva
+                </span>
+
+              }
+
+              <!-- ACCIONES -->
+              @if (puedeGestionar()) {
+
+                <div class="flex items-center gap-1">
+
+                  <button
+                    matIconButton
+                    matTooltip="Editar categoría"
+                    (click)="editar(categoria.id)"
+                  >
+                    <mat-icon svgIcon="pencil" />
+                  </button>
+
+                  <button
+                    matIconButton
+                    [disabled]="actualizandoId() !== null"
+                    [matTooltip]="categoria.activo ? 'Desactivar' : 'Activar'"
+                    (click)="cambiarEstatus(categoria)"
+                  >
+                    <mat-icon
+                      [svgIcon]="categoria.activo ? 'circle-x' : 'circle-check'"
+                    />
+                  </button>
+
+                </div>
+
+              }
+
+            </div>
+
+          } @empty {
+
+            <div class="p-12 text-center text-on-surface-variant">
+
+              <mat-icon svgIcon="search-x" />
+
+              <div class="mt-3 font-semibold">
+                No se encontraron categorías
+              </div>
+
+              <div class="mt-1 text-sm">
+                No existen categorías para los criterios seleccionados.
+              </div>
+
+            </div>
+
+          }
+
+        </div>
+
+      </div>
+
+    }
+
+  </div>
+
+</div>
