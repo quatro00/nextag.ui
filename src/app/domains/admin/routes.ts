@@ -17,48 +17,10 @@ const routes: Routes = [
       { path: 'sucursales', canActivate: [roleGuard], data: { roles: [AUTH_ROLES.ADMINISTRADOR, AUTH_ROLES.ADMIN_EMPRESA, AUTH_ROLES.OPERADOR, AUTH_ROLES.CONSULTA,], }, loadChildren: () => import('./modules/sucursales/routes'), },
       { path: 'tipos-ubicacion', canActivate: [roleGuard], data: { roles: [AUTH_ROLES.ADMINISTRADOR, AUTH_ROLES.ADMIN_EMPRESA, AUTH_ROLES.OPERADOR, AUTH_ROLES.CONSULTA,], }, loadChildren: () => import('./modules/tipos-ubicacion/routes'), },
       { path: 'ubicaciones', canActivate: [roleGuard], data: { roles: [AUTH_ROLES.ADMINISTRADOR, AUTH_ROLES.ADMIN_EMPRESA, AUTH_ROLES.OPERADOR, AUTH_ROLES.CONSULTA,], }, loadChildren: () => import('./modules/ubicaciones/routes'), },
-      {
-        path: 'categorias-activo',
-        canActivate: [roleGuard],
-        data: {
-          roles: [
-            AUTH_ROLES.ADMINISTRADOR,
-            AUTH_ROLES.ADMIN_EMPRESA,
-            AUTH_ROLES.OPERADOR,
-            AUTH_ROLES.CONSULTA,
-          ],
-        },
-        loadChildren: () =>
-          import('./modules/categorias-activo/routes'),
-      },
-      {
-        path: 'marcas',
-        canActivate: [roleGuard],
-        data: {
-          roles: [
-            AUTH_ROLES.ADMINISTRADOR,
-            AUTH_ROLES.ADMIN_EMPRESA,
-            AUTH_ROLES.OPERADOR,
-            AUTH_ROLES.CONSULTA,
-          ],
-        },
-        loadChildren: () =>
-          import('./modules/marcas/routes'),
-      },
-      {
-        path: 'modelos-activo',
-        canActivate: [roleGuard],
-        data: {
-          roles: [
-            AUTH_ROLES.ADMINISTRADOR,
-            AUTH_ROLES.ADMIN_EMPRESA,
-            AUTH_ROLES.OPERADOR,
-            AUTH_ROLES.CONSULTA,
-          ],
-        },
-        loadChildren: () =>
-          import('./modules/modelos-activo/routes'),
-      },
+      { path: 'categorias-activo', canActivate: [roleGuard], data: { roles: [AUTH_ROLES.ADMINISTRADOR, AUTH_ROLES.ADMIN_EMPRESA, AUTH_ROLES.OPERADOR, AUTH_ROLES.CONSULTA,], }, loadChildren: () => import('./modules/categorias-activo/routes'), },
+      { path: 'marcas', canActivate: [roleGuard], data: { roles: [AUTH_ROLES.ADMINISTRADOR, AUTH_ROLES.ADMIN_EMPRESA, AUTH_ROLES.OPERADOR, AUTH_ROLES.CONSULTA,], }, loadChildren: () => import('./modules/marcas/routes'), },
+      { path: 'modelos-activo', canActivate: [roleGuard], data: { roles: [AUTH_ROLES.ADMINISTRADOR, AUTH_ROLES.ADMIN_EMPRESA, AUTH_ROLES.OPERADOR, AUTH_ROLES.CONSULTA,], }, loadChildren: () => import('./modules/modelos-activo/routes'), },
+      { path: 'proveedores', canActivate: [roleGuard], data: { roles: [AUTH_ROLES.ADMINISTRADOR, AUTH_ROLES.ADMIN_EMPRESA, AUTH_ROLES.OPERADOR, AUTH_ROLES.CONSULTA,], }, loadChildren: () => import('./modules/proveedores/routes'), },
       { path: '**', redirectTo: 'inicio' },
     ],
   },

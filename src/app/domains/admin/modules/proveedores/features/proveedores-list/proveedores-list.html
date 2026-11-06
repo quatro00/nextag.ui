@@ -1,0 +1,136 @@
+<div class="mx-auto flex w-full max-w-7xl flex-auto flex-col p-6 sm:p-8">
+  <div class="mb-8 flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+    <div class="flex items-center gap-4">
+      <div class="flex size-12 shrink-0 items-center justify-center rounded-xl bg-primary text-on-primary shadow-sm">
+        <mat-icon svgIcon="package" />
+      </div>
+      <div>
+        <h1 class="text-3xl font-bold tracking-tight">Proveedores</h1>
+        <p class="mt-1 text-on-surface-variant">
+          Administra los proveedores de <strong>{{ empresaContexto.seleccionada()?.nombre || 'la empresa seleccionada' }}</strong>.
+        </p>
+      </div>
+    </div>
+    @if (puedeGestionar()) {
+      <button mat-flat-button [disabled]="!empresaContexto.empresaId || loading()" (click)="nuevo()">
+        <mat-icon svgIcon="plus" /><span class="ml-2">Nuevo proveedor</span>
+      </button>
+    }
+  </div>
+
+  <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+    <div class="flex items-center gap-4 rounded-2xl border bg-surface p-5 shadow-sm">
+      <mat-icon class="text-primary" svgIcon="package" />
+      <div><div class="text-2xl font-bold">{{ total() }}</div><div class="text-sm text-on-surface-variant">Total de proveedores</div></div>
+    </div>
+    <div class="flex items-center gap-4 rounded-2xl border bg-surface p-5 shadow-sm">
+      <mat-icon class="text-green-700" svgIcon="circle-check" />
+      <div><div class="text-2xl font-bold">{{ activos() }}</div><div class="text-sm text-on-surface-variant">Activos</div></div>
+    </div>
+    <div class="flex items-center gap-4 rounded-2xl border bg-surface p-5 shadow-sm">
+      <mat-icon class="text-red-700" svgIcon="circle-x" />
+      <div><div class="text-2xl font-bold">{{ inactivos() }}</div><div class="text-sm text-on-surface-variant">Inactivos</div></div>
+    </div>
+  </div>
+
+  <div class="overflow-hidden rounded-2xl border bg-surface shadow-sm">
+    <div class="border-b p-5">
+      <div class="mb-4">
+        <div class="text-lg font-semibold">Catálogo de proveedores</div>
+        <p class="text-sm text-on-surface-variant">Consulta proveedores, sus servicios y sus datos de contacto.</p>
+      </div>
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <mat-form-field class="w-full">
+          <mat-label>Buscar</mat-label>
+          <mat-icon matPrefix svgIcon="search" />
+          <input matInput placeholder="Clave, nombre, RFC o correo" [value]="busqueda()" (input)="cambiarBusqueda($event)" />
+        </mat-form-field>
+        <mat-form-field class="w-full">
+          <mat-label>Tipo de servicio</mat-label>
+          <mat-select [value]="tipoFiltro()" (selectionChange)="cambiarTipo($event.value)">
+            <mat-option [value]="0">Todos los tipos</mat-option>
+            @for (tipo of tipos(); track tipo.id) {
+              <mat-option [value]="tipo.id">{{ tipo.nombre }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field class="w-full">
+          <mat-label>Estatus</mat-label>
+          <mat-select [value]="estatusFiltro()" (selectionChange)="cambiarEstatusFiltro($event.value)">
+            <mat-option value="todos">Todos</mat-option>
+            <mat-option value="activos">Activos</mat-option>
+            <mat-option value="inactivos">Inactivos</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+    </div>
+
+    @if (errorMessage()) {
+      <div class="m-5 rounded-xl bg-red-50 p-4 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-400">{{ errorMessage() }}</div>
+    }
+    @if (loading() || empresaContexto.cargando()) {
+      <div class="flex flex-col items-center gap-3 p-12"><mat-spinner diameter="36" /><span>Cargando proveedores...</span></div>
+    } @else if (!empresaContexto.empresaId) {
+      <div class="p-12 text-center text-on-surface-variant">
+        <mat-icon svgIcon="building-2" /><div class="mt-3 font-semibold">Selecciona una empresa</div>
+      </div>
+    } @else {
+      <div class="overflow-x-auto">
+        <table class="w-full text-left">
+          <thead class="border-b bg-neutral-50/80 dark:bg-neutral-900/50">
+            <tr class="text-sm">
+              <th class="px-6 py-4 font-semibold">Proveedor</th>
+              <th class="px-6 py-4 font-semibold">RFC</th>
+              <th class="px-6 py-4 font-semibold">Servicios</th>
+              <th class="px-6 py-4 font-semibold">Contacto</th>
+              <th class="px-6 py-4 font-semibold">Estatus</th>
+              <th class="px-6 py-4 text-right font-semibold">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (proveedor of filtrados(); track proveedor.id) {
+              <tr class="border-b transition hover:bg-neutral-50/70 last:border-b-0 dark:hover:bg-neutral-900/40">
+                <td class="px-6 py-4">
+                  <div class="font-semibold">{{ proveedor.nombre }}</div>
+                  <div class="text-sm text-on-surface-variant">{{ proveedor.clave }}</div>
+                  @if (proveedor.razonSocial) {<div class="text-xs text-on-surface-variant">{{ proveedor.razonSocial }}</div>}
+                </td>
+                <td class="px-6 py-4 text-sm">{{ proveedor.rfc || '—' }}</td>
+                <td class="px-6 py-4 text-sm">{{ proveedor.tiposProveedor.join(', ') || '—' }}</td>
+                <td class="px-6 py-4 text-sm">
+                  <div>{{ proveedor.correo || '—' }}</div>
+                  @if (proveedor.telefono) {<div class="text-on-surface-variant">{{ proveedor.telefono }}</div>}
+                </td>
+                <td class="px-6 py-4">
+                  <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold"
+                        [class]="proveedor.activo ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'">
+                    {{ proveedor.activo ? 'Activo' : 'Inactivo' }}
+                  </span>
+                </td>
+                <td class="px-6 py-4 text-right whitespace-nowrap">
+                  <button matIconButton [matTooltip]="puedeGestionar() ? 'Editar proveedor y contactos' : 'Consultar proveedor y contactos'"
+                    [attr.aria-label]="puedeGestionar() ? 'Editar proveedor' : 'Consultar proveedor'"
+                    (click)="verDetalle(proveedor.id)">
+                    <mat-icon [svgIcon]="puedeGestionar() ? 'pencil' : 'eye'" />
+                  </button>
+                  @if (puedeGestionar()) {
+                    <button matIconButton [disabled]="actualizandoId() !== null"
+                      [matTooltip]="proveedor.activo ? 'Desactivar proveedor' : 'Activar proveedor'"
+                      [attr.aria-label]="proveedor.activo ? 'Desactivar proveedor' : 'Activar proveedor'"
+                      (click)="cambiarEstatus(proveedor)">
+                      <mat-icon [svgIcon]="proveedor.activo ? 'circle-x' : 'circle-check'" />
+                    </button>
+                  }
+                </td>
+              </tr>
+            } @empty {
+              <tr><td class="p-12 text-center text-on-surface-variant" colspan="6">
+                <mat-icon svgIcon="search-x" /><div class="mt-3 font-semibold">No se encontraron proveedores</div>
+              </td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+</div>

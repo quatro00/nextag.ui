@@ -1,0 +1,184 @@
+<div class="mx-auto flex w-full max-w-6xl flex-auto flex-col p-6 sm:p-8">
+  <div class="mb-8 flex items-center gap-4">
+    <button matIconButton aria-label="Volver a proveedores" (click)="volver()"><mat-icon svgIcon="arrow-left" /></button>
+    <div class="flex size-12 shrink-0 items-center justify-center rounded-xl bg-primary text-on-primary shadow-sm">
+      <mat-icon svgIcon="package" />
+    </div>
+    <div>
+      <h1 class="text-3xl font-bold tracking-tight">{{ esEdicion ? 'Editar proveedor' : 'Nuevo proveedor' }}</h1>
+      <p class="mt-1 text-on-surface-variant">Empresa: <strong>{{ empresaContexto.seleccionada()?.nombre || 'Sin seleccionar' }}</strong></p>
+    </div>
+  </div>
+
+  @if (errorMessage()) {
+    <div class="mb-5 rounded-xl bg-red-50 p-4 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-400" role="alert">
+      {{ errorMessage() }}
+    </div>
+  }
+  @if (successMessage()) {
+    <div class="mb-5 rounded-xl bg-green-50 p-4 text-sm text-green-700 dark:bg-green-900/20 dark:text-green-400" role="status">
+      {{ successMessage() }}
+    </div>
+  }
+  @if (advertenciaTipos()) {
+    <div class="mb-5 rounded-xl bg-amber-50 p-4 text-sm text-amber-800 dark:bg-amber-900/20 dark:text-amber-300" role="alert">
+      {{ advertenciaTipos() }}
+    </div>
+  }
+
+  @if (loading() || empresaContexto.cargando()) {
+    <div class="flex justify-center p-12"><mat-spinner diameter="36" /></div>
+  } @else if (!empresaContexto.empresaId) {
+    <div class="rounded-2xl border bg-surface p-8 text-center text-on-surface-variant">Selecciona una empresa para administrar proveedores.</div>
+  } @else if (detalleCargado()) {
+    @if (!puedeGestionar()) {
+      <div class="mb-6 rounded-xl border bg-surface p-4 text-sm text-on-surface-variant">Modo de consulta: no cuentas con permisos para modificar el proveedor.</div>
+    }
+    <form class="flex flex-col gap-6" [formGroup]="form" (ngSubmit)="guardar()">
+      <!-- INFORMACIÓN GENERAL -->
+      <section class="overflow-hidden rounded-2xl border bg-surface shadow-sm">
+        <div class="flex items-center gap-3 border-b p-5">
+          <mat-icon class="text-primary" svgIcon="tag" />
+          <div><h2 class="font-semibold">Información general</h2><p class="text-sm text-on-surface-variant">Identificación, datos fiscales y contacto general.</p></div>
+        </div>
+        <div class="grid grid-cols-1 gap-5 p-6 md:grid-cols-2">
+          <mat-form-field class="w-full">
+            <mat-label>Clave</mat-label>
+            <input matInput formControlName="clave" maxlength="50" placeholder="PROV001" />
+            @if (form.controls.clave.hasError('required')) {<mat-error>La clave es obligatoria.</mat-error>}
+            @if (form.controls.clave.hasError('maxlength')) {<mat-error>Máximo 50 caracteres.</mat-error>}
+          </mat-form-field>
+          <mat-form-field class="w-full">
+            <mat-label>Nombre comercial</mat-label>
+            <input matInput formControlName="nombre" maxlength="200" placeholder="Computación Integral" />
+            @if (form.controls.nombre.hasError('required')) {<mat-error>El nombre es obligatorio.</mat-error>}
+            @if (form.controls.nombre.hasError('maxlength')) {<mat-error>Máximo 200 caracteres.</mat-error>}
+          </mat-form-field>
+          <mat-form-field class="w-full">
+            <mat-label>Razón social</mat-label>
+            <input matInput formControlName="razonSocial" maxlength="250" />
+          </mat-form-field>
+          <mat-form-field class="w-full">
+            <mat-label>RFC</mat-label>
+            <input matInput formControlName="rfc" maxlength="13" placeholder="Opcional" />
+          </mat-form-field>
+          <mat-form-field class="w-full">
+            <mat-label>Correo general</mat-label>
+            <input matInput type="email" formControlName="correo" maxlength="256" />
+            @if (form.controls.correo.hasError('email')) {<mat-error>Ingresa un correo válido.</mat-error>}
+          </mat-form-field>
+          <mat-form-field class="w-full">
+            <mat-label>Teléfono</mat-label>
+            <input matInput formControlName="telefono" maxlength="30" />
+          </mat-form-field>
+          <mat-form-field class="w-full md:col-span-2">
+            <mat-label>Sitio web</mat-label>
+            <input matInput formControlName="sitioWeb" maxlength="300" placeholder="https://" />
+          </mat-form-field>
+        </div>
+      </section>
+
+      <!-- DOMICILIO -->
+      <section class="overflow-hidden rounded-2xl border bg-surface shadow-sm">
+        <div class="flex items-center gap-3 border-b p-5">
+          <mat-icon class="text-primary" svgIcon="map-pin" />
+          <div><h2 class="font-semibold">Domicilio</h2><p class="text-sm text-on-surface-variant">Ubicación fiscal o comercial del proveedor.</p></div>
+        </div>
+        <div class="grid grid-cols-1 gap-5 p-6 md:grid-cols-2">
+          <mat-form-field class="w-full md:col-span-2">
+            <mat-label>Dirección</mat-label>
+            <input matInput formControlName="direccion" maxlength="300" />
+          </mat-form-field>
+          <mat-form-field class="w-full">
+            <mat-label>Colonia</mat-label>
+            <input matInput formControlName="colonia" maxlength="150" />
+          </mat-form-field>
+          <mat-form-field class="w-full">
+            <mat-label>Municipio</mat-label>
+            <input matInput formControlName="municipio" maxlength="150" />
+          </mat-form-field>
+          <mat-form-field class="w-full">
+            <mat-label>Estado</mat-label>
+            <input matInput formControlName="estado" maxlength="150" />
+          </mat-form-field>
+          <mat-form-field class="w-full">
+            <mat-label>País</mat-label>
+            <input matInput formControlName="pais" maxlength="100" />
+          </mat-form-field>
+          <mat-form-field class="w-full">
+            <mat-label>Código postal</mat-label>
+            <input matInput formControlName="codigoPostal" maxlength="15" />
+          </mat-form-field>
+        </div>
+      </section>
+
+      <!-- SERVICIOS -->
+      <section class="overflow-hidden rounded-2xl border bg-surface shadow-sm">
+        <div class="flex items-center gap-3 border-b p-5">
+          <mat-icon class="text-primary" svgIcon="tags" />
+          <div><h2 class="font-semibold">Tipos de proveedor</h2><p class="text-sm text-on-surface-variant">Selecciona uno o más servicios. Se utiliza el catálogo global.</p></div>
+        </div>
+        <div class="p-6">
+          <mat-form-field class="w-full">
+            <mat-label>Servicios ofrecidos</mat-label>
+            <mat-select formControlName="tipoProveedorIds" multiple>
+              @for (tipo of tipos(); track tipo.id) {
+                <mat-option [value]="tipo.id">{{ tipo.nombre }}</mat-option>
+              }
+            </mat-select>
+            @if (form.controls.tipoProveedorIds.hasError('required')) {
+              <mat-error>Selecciona al menos un tipo de proveedor.</mat-error>
+            }
+            <mat-hint>Los cambios reemplazarán la selección actual al guardar.</mat-hint>
+          </mat-form-field>
+        </div>
+      </section>
+
+      <!-- OBSERVACIONES -->
+      <section class="overflow-hidden rounded-2xl border bg-surface shadow-sm">
+        <div class="border-b p-5"><h2 class="font-semibold">Observaciones</h2></div>
+        <div class="p-6">
+          <mat-form-field class="w-full">
+            <mat-label>Información adicional</mat-label>
+            <textarea matInput formControlName="observaciones" maxlength="1000" rows="4"></textarea>
+            <mat-hint align="end">{{ form.controls.observaciones.value.length }}/1000</mat-hint>
+          </mat-form-field>
+        </div>
+      </section>
+
+      <div class="flex flex-wrap justify-end gap-3">
+        <button type="button" mat-button [disabled]="guardando()" (click)="volver()">
+          <mat-icon svgIcon="x" /><span class="ml-2">Volver al listado</span>
+        </button>
+        @if (puedeGestionar()) {
+        <button type="submit" mat-flat-button
+                [disabled]="guardando() || loading() || !detalleCargado() || form.invalid">
+          @if (guardando()) {<mat-spinner class="mr-2" diameter="18" />}
+          @else {<mat-icon svgIcon="save" />}
+          <span class="ml-2">{{ guardando() ? 'Guardando...' : 'Guardar proveedor' }}</span>
+        </button>
+        }
+      </div>
+    </form>
+
+    <!-- Contactos: separados del formulario del proveedor para no anidar forms. -->
+    <section class="mt-8">
+      @if (id; as proveedorId) {
+        <app-proveedor-contactos
+          [proveedorId]="proveedorId"
+          [proveedorActivo]="proveedorActivo()"
+          [puedeGestionar]="puedeGestionar()"
+        />
+      } @else {
+        <div class="rounded-2xl border bg-surface p-6">
+          <div class="flex items-center gap-3">
+            <mat-icon class="text-primary" svgIcon="users" />
+            <div><h2 class="font-semibold">Contactos del proveedor</h2>
+              <p class="mt-1 text-sm text-on-surface-variant">Guarda primero el proveedor para comenzar a registrar sus contactos.</p>
+            </div>
+          </div>
+        </div>
+      }
+    </section>
+  }
+</div>
