@@ -1,0 +1,64 @@
+<div class="mx-auto flex w-full max-w-6xl flex-auto flex-col p-6 sm:p-8">
+  <header class="mb-7 flex items-center gap-4">
+    <button matIconButton aria-label="Volver a inventario" (click)="volver()"><mat-icon svgIcon="arrow-left" /></button>
+    <div class="flex size-12 items-center justify-center rounded-xl bg-primary text-on-primary"><mat-icon svgIcon="boxes" /></div>
+    <div class="flex-1"><h1 class="text-3xl font-bold tracking-tight">{{ esEdicion ? 'Detalle del activo' : 'Nuevo activo' }}</h1><p class="mt-1 text-on-surface-variant">Empresa: <strong>{{ empresa.seleccionada()?.nombre || 'Sin seleccionar' }}</strong></p></div>
+    @if (detalle(); as d) { <span class="rounded-xl bg-primary/10 px-3 py-2 text-sm font-semibold text-primary">{{ d.estadoActivoNombre }}</span> }
+  </header>
+  @if (error()) { <div role="alert" class="mb-5 rounded-xl bg-red-50 p-4 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-300">{{ error() }}</div> }
+  @if (exito()) { <div role="status" class="mb-5 rounded-xl bg-green-50 p-4 text-sm text-green-700 dark:bg-green-900/20 dark:text-green-300">{{ exito() }}</div> }
+  @if (loading() || empresa.cargando()) { <div class="flex justify-center p-12"><mat-spinner diameter="36" /></div> }
+  @else if (!empresa.empresaId) { <div class="rounded-2xl border bg-surface p-10 text-center text-on-surface-variant">Selecciona una empresa.</div> }
+  @else if (cargado()) {
+    @if (soloConsulta()) { <div class="mb-5 rounded-xl border bg-surface px-5 py-4 text-sm text-on-surface-variant">{{ detalle()?.estadoActivoId === 7 ? 'Este activo está dado de baja: su información no puede editarse.' : 'Modo consulta: no tienes permisos para editar activos.' }}</div> }
+    <form class="flex flex-col gap-5" [formGroup]="form" (ngSubmit)="guardar()">
+      <section class="overflow-hidden rounded-2xl border bg-surface shadow-sm">
+        <div class="flex items-center gap-3 border-b p-5"><mat-icon svgIcon="barcode" class="text-primary" /><div><h2 class="font-semibold">Identificación</h2><p class="text-sm text-on-surface-variant">Datos únicos del bien físico.</p></div></div>
+        <div class="grid grid-cols-1 gap-5 p-6 md:grid-cols-2">
+          <mat-form-field class="w-full"><mat-label>Código interno</mat-label><input matInput formControlName="codigo" maxlength="50" placeholder="ACT-00001" />@if (form.controls.codigo.hasError('required')) {<mat-error>El código es obligatorio.</mat-error>}</mat-form-field>
+          <mat-form-field class="w-full"><mat-label>Nombre</mat-label><input matInput formControlName="nombre" maxlength="200" placeholder="Laptop Dell Latitude" />@if (form.controls.nombre.hasError('required')) {<mat-error>El nombre es obligatorio.</mat-error>}</mat-form-field>
+          <mat-form-field class="w-full"><mat-label>Número de inventario</mat-label><input matInput formControlName="numeroInventario" maxlength="100" /></mat-form-field>
+          <mat-form-field class="w-full"><mat-label>Número de serie</mat-label><input matInput formControlName="numeroSerie" maxlength="150" /></mat-form-field>
+          <mat-form-field class="w-full md:col-span-2"><mat-label>Descripción</mat-label><textarea matInput rows="2" maxlength="500" formControlName="descripcion"></textarea></mat-form-field>
+        </div>
+      </section>
+      <section class="overflow-hidden rounded-2xl border bg-surface shadow-sm">
+        <div class="flex items-center gap-3 border-b p-5"><mat-icon svgIcon="layers" class="text-primary" /><div><h2 class="font-semibold">Clasificación</h2><p class="text-sm text-on-surface-variant">La categoría y sus superiores deben estar activos. Marca y modelo son opcionales.</p></div></div>
+        <div class="grid grid-cols-1 gap-5 p-6 md:grid-cols-3">
+          <mat-form-field class="w-full"><mat-label>Categoría</mat-label><mat-select formControlName="categoriaActivoId" (selectionChange)="seleccionarCategoria($event.value)">@for (c of categorias(); track c.id) { <mat-option [value]="c.id" [disabled]="!c.activo">{{ c.nombre }}{{ c.activo ? '' : ' (Inactiva)' }}</mat-option> }</mat-select>@if (form.controls.categoriaActivoId.hasError('required')) {<mat-error>Selecciona una categoría.</mat-error>}</mat-form-field>
+          <mat-form-field class="w-full"><mat-label>Marca</mat-label><mat-select formControlName="marcaId" (selectionChange)="seleccionarMarca($event.value)"><mat-option value="">Sin marca</mat-option>@for (m of marcas(); track m.id) {<mat-option [value]="m.id" [disabled]="!m.activo">{{ m.nombre }}{{ m.activo ? '' : ' (Inactiva)' }}</mat-option>}</mat-select></mat-form-field>
+          <mat-form-field class="w-full"><mat-label>Modelo</mat-label><mat-select formControlName="modeloActivoId"><mat-option value="">Sin modelo</mat-option>@for (m of modelosFiltrados(); track m.id) {<mat-option [value]="m.id" [disabled]="!m.activo">{{ m.nombre }}{{ m.activo ? '' : ' (Inactivo)' }}</mat-option>}</mat-select><mat-hint>Filtrado por categoría y marca.</mat-hint></mat-form-field>
+        </div>
+      </section>
+      <section class="overflow-hidden rounded-2xl border bg-surface shadow-sm">
+        <div class="flex items-center gap-3 border-b p-5"><mat-icon svgIcon="map-pin" class="text-primary" /><div><h2 class="font-semibold">Ubicación</h2><p class="text-sm text-on-surface-variant">Selecciona una ubicación perteneciente a la sucursal.</p></div></div>
+        <div class="grid grid-cols-1 gap-5 p-6 md:grid-cols-2">
+          <mat-form-field class="w-full"><mat-label>Sucursal</mat-label><mat-select formControlName="sucursalId" (selectionChange)="seleccionarSucursal($event.value)">@for (s of sucursales(); track s.id) {<mat-option [value]="s.id" [disabled]="!s.activo">{{ s.nombre }}{{ s.activo ? '' : ' (Inactiva)' }}</mat-option>}</mat-select>@if (form.controls.sucursalId.hasError('required')) {<mat-error>La sucursal es obligatoria.</mat-error>}</mat-form-field>
+          <mat-form-field class="w-full"><mat-label>Ubicación específica</mat-label><mat-select formControlName="ubicacionId"><mat-option value="">Sin ubicación específica</mat-option>@for (u of ubicacionesFiltradas(); track u.id) {<mat-option [value]="u.id" [disabled]="!u.activo">{{ u.nombre }}{{ u.activo ? '' : ' (Inactiva)' }}</mat-option>}</mat-select></mat-form-field>
+        </div>
+        @if (detalle() && detalle()?.estadoActivoId !== 1) {<p class="px-6 pb-5 text-sm text-amber-700 dark:text-amber-400">Un activo cuyo estado no sea Disponible no podrá cambiar de ubicación desde este formulario; utiliza el módulo de movimientos cuando esté disponible.</p>}
+      </section>
+      <section class="overflow-hidden rounded-2xl border bg-surface shadow-sm">
+        <div class="flex items-center gap-3 border-b p-5"><mat-icon svgIcon="briefcase-business" class="text-primary" /><div><h2 class="font-semibold">Propiedad y adquisición</h2><p class="text-sm text-on-surface-variant">Proveedor, propietario y costo inicial.</p></div></div>
+        <div class="grid grid-cols-1 gap-5 p-6 md:grid-cols-2">
+          <mat-form-field class="w-full"><mat-label>Tipo de propiedad</mat-label><mat-select formControlName="tipoPropiedad"><mat-option value="PROPIO">Propio</mat-option><mat-option value="ARRENDADO">Arrendado</mat-option><mat-option value="COMODATO">Comodato</mat-option><mat-option value="TERCERO">Tercero</mat-option></mat-select></mat-form-field>
+          <mat-form-field class="w-full"><mat-label>Proveedor de adquisición</mat-label><mat-select formControlName="proveedorId"><mat-option value="">Sin proveedor</mat-option>@for (p of proveedores(); track p.id) {<mat-option [value]="p.id" [disabled]="!p.activo">{{ p.nombre }}</mat-option>}</mat-select></mat-form-field>
+          <mat-form-field class="w-full"><mat-label>Proveedor propietario</mat-label><mat-select formControlName="propietarioProveedorId"><mat-option value="">No seleccionado</mat-option>@for (p of proveedores(); track p.id) {<mat-option [value]="p.id" [disabled]="!p.activo">{{ p.nombre }}</mat-option>}</mat-select><mat-hint>No combinar con nombre de propietario externo.</mat-hint></mat-form-field>
+          <mat-form-field class="w-full"><mat-label>Propietario externo</mat-label><input matInput formControlName="propietarioNombre" maxlength="200" placeholder="Nombre del tercero" /></mat-form-field>
+          <mat-form-field class="w-full"><mat-label>Fecha de adquisición</mat-label><input type="date" matInput formControlName="fechaAdquisicion" /></mat-form-field>
+          <mat-form-field class="w-full"><mat-label>Costo de adquisición</mat-label><input matInput type="text" inputmode="decimal" formControlName="costoAdquisicion" placeholder="0.00" />@if (form.controls.costoAdquisicion.hasError('pattern')) {<mat-error>Máximo dos decimales y valor positivo.</mat-error>}</mat-form-field>
+          <mat-form-field class="w-full"><mat-label>Moneda</mat-label><input matInput formControlName="moneda" maxlength="3" placeholder="MXN" />@if (form.controls.moneda.invalid) {<mat-error>Ingresa un código de tres letras.</mat-error>}</mat-form-field>
+        </div>
+      </section>
+      <section class="overflow-hidden rounded-2xl border bg-surface shadow-sm"><div class="border-b p-5"><h2 class="font-semibold">Observaciones</h2></div><div class="p-6"><mat-form-field class="w-full"><mat-label>Notas adicionales</mat-label><textarea matInput formControlName="observaciones" maxlength="1000" rows="3"></textarea></mat-form-field></div></section>
+      <div class="flex flex-wrap justify-end gap-3"><button type="button" mat-button (click)="volver()" [disabled]="guardando()">Volver</button>@if (!soloConsulta()) {<button type="submit" mat-flat-button [disabled]="guardando() || form.invalid"><mat-icon svgIcon="save" /><span class="ml-2">{{ guardando() ? 'Guardando...' : 'Guardar activo' }}</span></button>}</div>
+    </form>
+    <section class="mt-8">
+      @if (id; as activoId) {
+        <app-activo-etiquetas [activoId]="activoId" [activoEstadoId]="detalle()?.estadoActivoId ?? 1" [puedeGestionar]="puedeGestionar()" />
+      } @else {
+        <div class="rounded-2xl border bg-surface p-6"><h2 class="font-semibold">Etiquetas NFC / QR</h2><p class="mt-2 text-sm text-on-surface-variant">Guarda primero el activo para vincularle una etiqueta.</p></div>
+      }
+    </section>
+  }
+</div>

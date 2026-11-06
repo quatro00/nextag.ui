@@ -1,0 +1,52 @@
+<section class="overflow-hidden rounded-2xl border bg-surface shadow-sm">
+  <div class="flex flex-col gap-3 border-b p-5 sm:flex-row sm:items-center sm:justify-between">
+    <div class="flex items-center gap-3"><mat-icon svgIcon="scan-line" class="text-primary" /><div><h2 class="text-lg font-semibold">Etiquetas NFC / QR</h2><p class="text-sm text-on-surface-variant">Etiqueta vigente y trazabilidad de reemplazos.</p></div></div>
+    <button mat-stroked-button type="button" (click)="administrar()"><mat-icon svgIcon="tags" /><span class="ml-2">Administrar etiquetas</span></button>
+  </div>
+  @if (error()) {<div role="alert" class="m-5 rounded-xl bg-red-50 p-4 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-300">{{ error() }}</div>}
+  @if (exito()) {<div role="status" class="m-5 rounded-xl bg-green-50 p-4 text-sm text-green-700 dark:bg-green-900/20 dark:text-green-300">{{ exito() }}</div>}
+  @if (cargando()) {<div class="flex justify-center p-8"><mat-spinner diameter="30" /></div>}
+  @else {
+    <div class="p-5">
+      @if (vigente(); as e) {
+        <div class="flex flex-col gap-3 rounded-xl border border-green-200 bg-green-50/70 p-5 dark:border-green-900 dark:bg-green-900/10 sm:flex-row sm:items-center sm:justify-between">
+          <div><div class="mb-1 text-xs font-bold uppercase tracking-wide text-green-800 dark:text-green-300">Etiqueta vigente</div><div class="font-mono text-lg font-semibold">{{ e.etiquetaCodigo }}</div><p class="mt-1 text-sm text-on-surface-variant">{{ e.tieneNfc ? 'NFC' : '' }}{{ e.tieneNfc && e.tieneQr ? ' + ' : '' }}{{ e.tieneQr ? 'QR' : '' }} · Vinculada: {{ e.fechaVinculacion | date:'dd/MM/yyyy HH:mm' }}</p></div>
+          <button mat-stroked-button type="button" (click)="verEtiqueta(e.etiquetaId)">Ver etiqueta</button>
+        </div>
+      } @else {
+        <div class="rounded-xl border border-dashed p-5 text-sm text-on-surface-variant">Este activo no tiene etiqueta vigente.</div>
+      }
+    </div>
+    @if (editable()) {
+      <div class="border-t p-5">
+        <div class="mb-4"><h3 class="font-semibold">{{ vigente() ? 'Reemplazar etiqueta' : 'Vincular etiqueta' }}</h3><p class="text-sm text-on-surface-variant">Selecciona una etiqueta disponible. Las usadas o anuladas no pueden reutilizarse.</p></div>
+        <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
+          <mat-form-field class="w-full sm:max-w-sm"><mat-label>Buscar etiqueta disponible</mat-label><input matInput [value]="buscador()" (input)="cambiarBuscador($event)" (keyup.enter)="buscarDisponibles()" placeholder="Código o UID NFC" /></mat-form-field>
+          <button mat-stroked-button type="button" (click)="buscarDisponibles()" [disabled]="operando() || cargandoDisponibles()">Buscar</button>
+        </div>
+        <mat-form-field class="w-full">
+          <mat-label>Etiqueta para vincular</mat-label>
+          <mat-select [value]="disponibleId()" (selectionChange)="seleccionar($event.value)" [disabled]="operando() || cargandoDisponibles()">
+            <mat-option value="">Selecciona una etiqueta</mat-option>
+            @for (e of disponibles(); track e.id) {<mat-option [value]="e.id">{{ e.codigo }} · {{ e.tieneNfc ? 'NFC' : '' }}{{ e.tieneNfc && e.tieneQr ? ' / ' : '' }}{{ e.tieneQr ? 'QR' : '' }}</mat-option>}
+          </mat-select>
+          <mat-hint>{{ totalDisponibles() }} etiquetas disponibles según búsqueda · Página {{ paginaDisponible() }} / {{ paginasDisponibles() }}</mat-hint>
+        </mat-form-field>
+        <div class="mt-3 flex items-center justify-end gap-3"><button mat-button type="button" (click)="cambiarPagina(paginaDisponible()-1)" [disabled]="paginaDisponible() <= 1 || cargandoDisponibles()">Anterior</button><button mat-button type="button" (click)="cambiarPagina(paginaDisponible()+1)" [disabled]="paginaDisponible() >= paginasDisponibles() || cargandoDisponibles()">Siguiente</button></div>
+        @if (vigente()) {<mat-form-field class="mt-3 w-full"><mat-label>Motivo del reemplazo o desvinculación</mat-label><input matInput maxlength="300" [value]="motivo()" (input)="cambiarMotivo($event)" placeholder="Etiqueta dañada, desprendida..." /></mat-form-field>}
+        <div class="mt-4 flex flex-wrap justify-end gap-3">
+          @if (vigente()) {<button mat-stroked-button type="button" (click)="desvincular()" [disabled]="operando() || !motivo().trim()"><mat-icon svgIcon="unlink" /><span class="ml-2">Desvincular y anular</span></button>}
+          <button mat-flat-button type="button" (click)="guardarVinculo()" [disabled]="operando() || cargandoDisponibles() || !disponibleId() || (!!vigente() && !motivo().trim())"><mat-icon svgIcon="link" /><span class="ml-2">{{ vigente() ? 'Reemplazar etiqueta' : 'Vincular etiqueta' }}</span></button>
+        </div>
+      </div>
+    } @else if (activoEstadoId() === 7) {
+      <div class="border-t px-5 py-3 text-sm text-on-surface-variant">No se pueden vincular etiquetas a un activo dado de baja.</div>
+    }
+    <div class="border-t p-5"><h3 class="mb-3 font-semibold">Historial de etiquetas</h3>
+      <div class="overflow-x-auto"><table class="w-full text-left text-sm"><thead class="border-b bg-neutral-50/80 dark:bg-neutral-900/50"><tr><th class="px-4 py-3">Código</th><th class="px-4 py-3">Vinculación</th><th class="px-4 py-3">Desvinculación</th><th class="px-4 py-3">Motivo</th><th class="px-4 py-3">Estatus</th></tr></thead><tbody>
+        @for (e of historial(); track e.id) {<tr class="border-b last:border-b-0"><td class="px-4 py-3"><button type="button" class="font-mono text-primary hover:underline" (click)="verEtiqueta(e.etiquetaId)">{{ e.etiquetaCodigo }}</button></td><td class="px-4 py-3">{{ e.fechaVinculacion | date:'dd/MM/yyyy HH:mm' }}</td><td class="px-4 py-3">{{ e.fechaDesvinculacion ? (e.fechaDesvinculacion | date:'dd/MM/yyyy HH:mm') : '—' }}</td><td class="px-4 py-3">{{ e.motivoDesvinculacion || '—' }}</td><td class="px-4 py-3"><span [class]="e.vigente ? 'text-green-700 dark:text-green-400' : 'text-on-surface-variant'">{{ e.vigente ? 'Vigente' : 'Histórica' }}</span></td></tr>}
+        @empty {<tr><td colspan="5" class="p-6 text-center text-on-surface-variant">Sin historial de etiquetas.</td></tr>}
+      </tbody></table></div>
+    </div>
+  }
+</section>

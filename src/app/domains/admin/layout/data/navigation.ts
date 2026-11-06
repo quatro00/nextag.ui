@@ -30,6 +30,36 @@ export const NAVIGATION: NavigationItem[] = [
     ],
   },
   {
+    id: 'inventario',
+    label: 'Inventario',
+    children: [
+      {
+        id: 'inventario/activos',
+        label: 'Activos',
+        icon: 'boxes',
+        route: '/admin/activos',
+        roles: [
+          AUTH_ROLES.ADMINISTRADOR,
+          AUTH_ROLES.ADMIN_EMPRESA,
+          AUTH_ROLES.OPERADOR,
+          AUTH_ROLES.CONSULTA
+        ]
+      },
+      {
+        id: 'inventario/etiquetas',
+        label: 'Etiquetas NFC / QR',
+        icon: 'scan-line',
+        route: '/admin/etiquetas',
+        roles: [
+          AUTH_ROLES.ADMINISTRADOR,
+          AUTH_ROLES.ADMIN_EMPRESA,
+          AUTH_ROLES.OPERADOR,
+          AUTH_ROLES.CONSULTA
+        ]
+      }
+    ]
+  },
+  {
     id: 'catalogos',
     label: 'Catálogos',
     children: [
