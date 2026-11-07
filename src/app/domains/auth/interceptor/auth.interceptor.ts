@@ -16,9 +16,14 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const empresaContexto = inject(EmpresaContextoService);
 
   const isApiRequest = req.url.startsWith(apiUrl);
+  const isPublicRequest = req.url.startsWith(`${apiUrl}/publico/`);
   const token = authService.accessToken;
 
   let request = req;
+
+  if (isPublicRequest) {
+    return next(req);
+  }
 
   if (isApiRequest && token && !authService.isTokenExpired()) {
     const headers: Record<string, string> = {
