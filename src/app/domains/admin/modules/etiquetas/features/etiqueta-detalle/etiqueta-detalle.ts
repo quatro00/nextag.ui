@@ -1,13 +1,14 @@
 import { DatePipe } from '@angular/common';
 import { Component, computed, effect, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { ActivatedRoute, Router } from '@angular/router';
+import * as QRCode from 'qrcode';
 import { firstValueFrom } from 'rxjs';
 import { EmpresaContextoService } from '@/app/core/empresa-contexto.service';
 import { AUTH_ROLES } from '@/app/domains/auth/constants/auth.roles';
@@ -37,6 +38,11 @@ export default class EtiquetaDetalleComponent {
   protected readonly error = signal<string | null>(null);
   protected readonly exito = signal<string | null>(null);
   protected readonly motivo = signal('');
+  protected readonly qrImagen = signal<string | null>(null);
+  protected readonly qrGenerando = signal(false);
+  protected readonly qrError = signal<string | null>(null);
+  protected readonly qrUrl = signal<string | null>(null);
+  private qrSolicitud = 0;
   protected readonly puedeGestionar = computed(() => this.auth.hasAnyRole([AUTH_ROLES.ADMINISTRADOR, AUTH_ROLES.ADMIN_EMPRESA]));
   protected readonly formNfc = this.fb.nonNullable.group({
     uidNfc: ['', Validators.maxLength(100)],
@@ -46,6 +52,13 @@ export default class EtiquetaDetalleComponent {
 
   constructor() {
     effect(onCleanup => {
+      
+      ++this.qrSolicitud;
+      this.qrImagen.set(null);
+      this.qrUrl.set(null);
+      this.qrError.set(null);
+      this.qrGenerando.set(false);
+
       const empresaId = this.empresa.seleccionada()?.id ?? null;
       if (empresaId && this.anteriorEmpresa && empresaId !== this.anteriorEmpresa) {
         void this.router.navigate(['/admin/etiquetas']);
@@ -84,6 +97,96 @@ export default class EtiquetaDetalleComponent {
     }
   }
 
+  protected descargarQr(): void {
+    const imagen = this.qrImagen();
+    const etiqueta = this.etiqueta();
+    if (!imagen || !etiqueta) {
+      return;
+    }
+
+    const enlace = document.createElement('a');
+    enlace.href = imagen;
+    const codigoSeguro = etiqueta.codigo.replace(
+      /[^a-zA-Z0-9_-]/g,
+      '_'
+    );
+
+    enlace.download = `Nextag-QR-${codigoSeguro}.png`;
+    document.body.appendChild(enlace);
+    enlace.click();
+    document.body.removeChild(enlace);
+  }
+
+  private async generarQr(etiqueta: Etiqueta): Promise<void> {
+
+    const solicitud = ++this.qrSolicitud;
+
+    this.qrImagen.set(null);
+    this.qrUrl.set(null);
+    this.qrError.set(null);
+
+    if (!etiqueta.tieneQr || !etiqueta.urlPublica) {
+      this.qrGenerando.set(false);
+      return;
+    }
+
+    this.qrGenerando.set(true);
+
+    try {
+
+      // Partimos de la URL generada por la API.
+      const url = new URL(etiqueta.urlPublica);
+      // Identificamos el origen para las estadísticas.
+      url.searchParams.set('origen', 'QR');
+      const urlFinal = url.toString();
+      // Generar PNG.
+      const imagen = await QRCode.toDataURL(urlFinal, {
+        errorCorrectionLevel: 'M',
+        margin: 4,
+        width: 600,
+        color: {
+          dark: '#000000',
+          light: '#FFFFFF',
+        },
+      });
+
+      // Evitar mostrar el QR de una consulta anterior.
+      if (solicitud !== this.qrSolicitud) {
+        return;
+      }
+
+      this.qrImagen.set(imagen);
+      this.qrUrl.set(urlFinal);
+
+    } catch {
+      if (solicitud === this.qrSolicitud) {
+        this.qrError.set(
+          'No fue posible generar el código QR.'
+        );
+      }
+    } finally {
+
+      if (solicitud === this.qrSolicitud) {
+        this.qrGenerando.set(false);
+      }
+
+    }
+  }
+
+  protected abrirFichaPublica(): void {
+
+    const url = this.qrUrl();
+
+    if (!url) {
+      return;
+    }
+
+    window.open(
+      url,
+      '_blank',
+      'noopener,noreferrer'
+    );
+  }
   protected async guardarNfc(): Promise<void> {
     const e = this.etiqueta();
     if (!e || !this.puedeGestionar() || e.anulada || !e.tieneNfc || this.guardando()) return;
@@ -131,9 +234,19 @@ export default class EtiquetaDetalleComponent {
   }
 
   private asignar(e: Etiqueta): void {
+
     this.etiqueta.set(e);
-    this.formNfc.reset({ uidNfc: e.uidNfc ?? '', nfcBloqueado: e.nfcBloqueado, confirmoVerificacionFisica: false });
-    if (e.nfcBloqueado || !this.puedeGestionar() || e.anulada) this.formNfc.disable({ emitEvent: false });
-    else this.formNfc.enable({ emitEvent: false });
+
+    this.formNfc.reset({ uidNfc: e.uidNfc ?? '', nfcBloqueado: e.nfcBloqueado, confirmoVerificacionFisica: false, });
+
+    if (e.nfcBloqueado || !this.puedeGestionar() || e.anulada) {
+      this.formNfc.disable({ emitEvent: false });
+    }
+    else {
+      this.formNfc.enable({ emitEvent: false });
+    }
+
+    // Generar QR automáticamente.
+    void this.generarQr(e);
   }
 }

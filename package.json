@@ -9,7 +9,7 @@
     "build": "ng build",
     "lint": "ng lint",
     "ng": "ng",
-    "start": "ng serve --no-hmr --port=3873",
+    "start": "ng serve --no-hmr --port=4200",
     "test": "ng test",
     "watch": "ng build --watch --configuration development"
   },
@@ -25,6 +25,7 @@
     "@angular/router": "22.1.1",
     "chroma-js": "3.2.0",
     "hsluv": "1.0.2",
+    "qrcode": "^1.5.4",
     "rxjs": "7.8.2",
     "tslib": "2.8.1"
   },
@@ -36,6 +37,7 @@
     "@tailwindcss/postcss": "4.3.3",
     "@types/chroma-js": "3.1.2",
     "@types/node": "24.13.3",
+    "@types/qrcode": "^1.5.6",
     "angular-eslint": "22.1.0",
     "eslint": "10.8.1",
     "eslint-import-resolver-typescript": "4.4.5",
