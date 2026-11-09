@@ -1,0 +1,365 @@
+<div class="mx-auto flex w-full max-w-5xl flex-col p-6 sm:p-8">
+
+  <header class="mb-7 flex items-center justify-between">
+
+    <div>
+      <h1 class="text-3xl font-bold">
+        Registrar movimiento
+      </h1>
+
+      <p class="mt-2 text-on-surface-variant">
+        Registra traslados, salidas y retornos de activos.
+      </p>
+    </div>
+
+    <button
+      mat-stroked-button
+      (click)="volver()">
+      Volver
+    </button>
+
+  </header>
+
+  @if (error()) {
+
+    <div
+      class="mb-5 rounded-xl bg-red-50 p-4 text-red-700"
+      role="alert">
+
+      {{ error() }}
+
+    </div>
+
+  }
+
+  @if (cargando() || empresa.cargando()) {
+
+    <div class="flex justify-center p-12">
+      <mat-spinner diameter="36" />
+    </div>
+
+  } @else if (!empresa.empresaId) {
+
+    <div class="rounded-xl border bg-surface p-8">
+      Selecciona una empresa.
+    </div>
+
+  } @else {
+
+    <form
+      class="flex flex-col gap-6"
+      [formGroup]="form"
+      (ngSubmit)="guardar()">
+
+      <!-- ACTIVO -->
+
+      <section class="rounded-2xl border bg-surface p-6">
+
+        <h2 class="mb-5 font-semibold">
+          Activo
+        </h2>
+
+        <div class="flex flex-wrap items-end gap-3">
+
+          <mat-form-field class="min-w-64 flex-1">
+            <mat-label>Buscar activo</mat-label>
+
+            <input
+              matInput
+              [value]="buscarActivo()"
+              (input)="cambiarBusqueda($event)"
+              (keyup.enter)="cargarActivos()"
+              placeholder="Código, nombre o número de serie" />
+          </mat-form-field>
+
+          <button
+            type="button"
+            mat-stroked-button
+            (click)="cargarActivos()">
+            Buscar
+          </button>
+
+        </div>
+
+        <mat-form-field class="w-full">
+          <mat-label>Seleccionar activo</mat-label>
+
+          <mat-select
+            formControlName="activoId"
+            (selectionChange)="seleccionarActivo($event.value)">
+
+            @for (activo of activos(); track activo.id) {
+
+              <mat-option [value]="activo.id">
+                {{ activo.codigo }} — {{ activo.nombre }}
+              </mat-option>
+
+            }
+
+          </mat-select>
+        </mat-form-field>
+
+        @if (situacion(); as actual) {
+
+          <div class="mt-4 rounded-xl bg-primary/5 p-5">
+
+            <h3 class="mb-3 font-semibold">
+              Situación actual
+            </h3>
+
+            <p>
+              <strong>Activo:</strong>
+              {{ actual.activoCodigo }} — {{ actual.activoNombre }}
+            </p>
+
+            <p class="mt-2">
+              <strong>Estado:</strong>
+              {{ actual.estadoActivoNombre }}
+            </p>
+
+            <p class="mt-2">
+              <strong>Sucursal:</strong>
+              {{ actual.sucursalNombre }}
+            </p>
+
+            <p class="mt-2">
+              <strong>Ubicación interna:</strong>
+              {{ actual.ubicacionNombre || 'Sin ubicación específica' }}
+            </p>
+
+            @if (actual.estaFuera) {
+
+              <div class="mt-4 rounded-lg bg-amber-100 p-4 text-amber-900">
+
+                <strong>Activo fuera de las instalaciones</strong>
+
+                <p class="mt-2">
+                  Destino:
+                  {{ actual.ubicacionExternaNombre }}
+                </p>
+
+              </div>
+
+            }
+
+          </div>
+
+        }
+
+      </section>
+
+      <!-- TIPO -->
+
+      <section class="rounded-2xl border bg-surface p-6">
+
+        <h2 class="mb-5 font-semibold">
+          Tipo de movimiento
+        </h2>
+
+        <mat-form-field class="w-full">
+          <mat-label>Movimiento</mat-label>
+
+          <mat-select
+            formControlName="tipoMovimientoActivoId"
+            (selectionChange)="cambiarTipo($event.value)">
+
+            @for (tipo of tipos(); track tipo.id) {
+
+              <mat-option [value]="tipo.id">
+                {{ tipo.nombre }}
+              </mat-option>
+
+            }
+
+          </mat-select>
+        </mat-form-field>
+
+      </section>
+
+      <!-- DESTINO INTERNO -->
+
+      @if (esInterno() || esRetorno()) {
+
+        <section class="rounded-2xl border bg-surface p-6">
+
+          <h2 class="mb-5 font-semibold">
+            Ubicación destino
+          </h2>
+
+          <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
+
+            <mat-form-field class="w-full">
+              <mat-label>Sucursal destino</mat-label>
+
+              <mat-select
+                formControlName="sucursalDestinoId"
+                (selectionChange)="cambiarSucursal($event.value)">
+
+                @for (sucursal of sucursales(); track sucursal.id) {
+
+                  <mat-option [value]="sucursal.id">
+                    {{ sucursal.nombre }}
+                  </mat-option>
+
+                }
+
+              </mat-select>
+            </mat-form-field>
+
+            <mat-form-field class="w-full">
+              <mat-label>Ubicación destino</mat-label>
+
+              <mat-select formControlName="ubicacionDestinoId">
+
+                <mat-option value="">
+                  Sin ubicación específica
+                </mat-option>
+
+                @for (ubicacion of ubicaciones(); track ubicacion.id) {
+
+                  <mat-option [value]="ubicacion.id">
+                    {{ ubicacion.nombre }}
+                  </mat-option>
+
+                }
+
+              </mat-select>
+            </mat-form-field>
+
+          </div>
+
+        </section>
+
+      }
+
+      <!-- DESTINO EXTERNO -->
+
+      @if (esSalida()) {
+
+        <section class="rounded-2xl border bg-surface p-6">
+
+          <h2 class="mb-5 font-semibold">
+            Destino externo
+          </h2>
+
+          <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
+
+            <mat-form-field class="w-full">
+              <mat-label>Nombre del destino</mat-label>
+
+              <input
+                matInput
+                formControlName="destinoExternoNombre"
+                maxlength="200" />
+            </mat-form-field>
+
+            <mat-form-field class="w-full">
+              <mat-label>Dirección</mat-label>
+
+              <input
+                matInput
+                formControlName="destinoExternoDireccion"
+                maxlength="500" />
+            </mat-form-field>
+
+          </div>
+
+        </section>
+
+      }
+
+      <!-- RETORNO -->
+
+      @if (esRetorno()) {
+
+        <section class="rounded-2xl border bg-surface p-6">
+
+          <h2 class="font-semibold">
+            Retorno de activo
+          </h2>
+
+          @if (situacion()?.estaFuera) {
+
+            <p class="mt-3 text-sm">
+              El retorno se asociará automáticamente con la salida
+              pendiente del activo.
+            </p>
+
+          } @else {
+
+            <div class="mt-3 rounded-lg bg-amber-100 p-4 text-amber-900">
+              Este activo no tiene una salida pendiente.
+            </div>
+
+          }
+
+        </section>
+
+      }
+
+      <!-- OBSERVACIONES -->
+
+      <section class="rounded-2xl border bg-surface p-6">
+
+        <h2 class="mb-5 font-semibold">
+          Información del movimiento
+        </h2>
+
+        <mat-form-field class="w-full">
+
+          <mat-label>Motivo</mat-label>
+
+          <input
+            matInput
+            formControlName="motivo"
+            maxlength="300" />
+
+        </mat-form-field>
+
+        <mat-form-field class="w-full">
+
+          <mat-label>Observaciones</mat-label>
+
+          <textarea
+            matInput
+            formControlName="observaciones"
+            maxlength="1000"
+            rows="4"></textarea>
+
+        </mat-form-field>
+
+      </section>
+
+      <!-- ACCIONES -->
+
+      <div class="flex justify-end gap-3">
+
+        <button
+          type="button"
+          mat-button
+          (click)="volver()">
+          Cancelar
+        </button>
+
+        <button
+          type="submit"
+          mat-flat-button
+          [disabled]="guardando() || form.invalid || !situacion()">
+
+          @if (guardando()) {
+            <mat-spinner diameter="18" />
+          } @else {
+            <mat-icon svgIcon="save" />
+          }
+
+          Registrar movimiento
+
+        </button>
+
+      </div>
+
+    </form>
+
+  }
+
+</div>
