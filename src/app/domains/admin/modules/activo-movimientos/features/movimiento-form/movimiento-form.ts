@@ -1,14 +1,14 @@
 import {
-  Component,
-  computed,
-  effect,
-  inject,
-  signal,
+    Component,
+    computed,
+    effect,
+    inject,
+    signal,
 } from '@angular/core';
 import {
-  FormBuilder,
-  ReactiveFormsModule,
-  Validators,
+    FormBuilder,
+    ReactiveFormsModule,
+    Validators,
 } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
@@ -19,545 +19,646 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { firstValueFrom, forkJoin } from 'rxjs';
 import { EmpresaContextoService } from
-  '@/app/core/empresa-contexto.service';
+    '@/app/core/empresa-contexto.service';
 import { ActivosService } from
-  '../../../activos/services/activos.service';
+    '../../../activos/services/activos.service';
 import { ActivoList } from
-  '../../../activos/types/activo.types';
+    '../../../activos/types/activo.types';
 import { SucursalesService } from
-  '../../../sucursales/services/sucursales.service';
+    '../../../sucursales/services/sucursales.service';
 import { SucursalList } from
-  '../../../sucursales/types/sucursal.types';
+    '../../../sucursales/types/sucursal.types';
 import { UbicacionesService } from
-  '../../../ubicaciones/services/ubicaciones.service';
+    '../../../ubicaciones/services/ubicaciones.service';
 import { UbicacionList } from
-  '../../../ubicaciones/types/ubicacion.types';
+    '../../../ubicaciones/types/ubicacion.types';
 import { mensajeApi } from '../../../shared/api-error';
 import { ActivoMovimientosService } from
-  '../../services/activo-movimientos.service';
+    '../../services/activo-movimientos.service';
+import { ActivoDetalle } from
+    '../../../activos/types/activo.types';
 import {
-  ActivoMovimientoCrear,
-  ActivoSituacion,
-  TipoMovimientoActivo,
+    ActivoMovimientoCrear,
+    ActivoSituacion,
+    TipoMovimientoActivo,
 } from '../../types/activo-movimiento.types';
 
 @Component({
-  selector: 'app-movimiento-form',
-  templateUrl: './movimiento-form.html',
-  imports: [
-    ReactiveFormsModule,
-    MatButtonModule,
-    MatFormFieldModule,
-    MatIconModule,
-    MatInputModule,
-    MatProgressSpinnerModule,
-    MatSelectModule,
-  ],
+    selector: 'app-movimiento-form',
+    templateUrl: './movimiento-form.html',
+    imports: [
+        ReactiveFormsModule,
+        MatButtonModule,
+        MatFormFieldModule,
+        MatIconModule,
+        MatInputModule,
+        MatProgressSpinnerModule,
+        MatSelectModule,
+    ],
 })
 export default class MovimientoForm {
 
-  protected readonly empresa =
-    inject(EmpresaContextoService);
+    protected readonly empresa =
+        inject(EmpresaContextoService);
 
-  private readonly fb = inject(FormBuilder);
-  private readonly router = inject(Router);
-  private readonly route = inject(ActivatedRoute);
+    private readonly fb = inject(FormBuilder);
+    private readonly router = inject(Router);
+    private readonly route = inject(ActivatedRoute);
 
-  private readonly movimientosService =
-    inject(ActivoMovimientosService);
+    private readonly movimientosService =
+        inject(ActivoMovimientosService);
 
-  private readonly activosService =
-    inject(ActivosService);
+    private readonly activosService =
+        inject(ActivosService);
 
-  private readonly sucursalesService =
-    inject(SucursalesService);
+    private readonly sucursalesService =
+        inject(SucursalesService);
 
-  private readonly ubicacionesService =
-    inject(UbicacionesService);
+    private readonly ubicacionesService =
+        inject(UbicacionesService);
 
-  protected readonly activos =
-    signal<ActivoList[]>([]);
+    protected readonly activos =
+        signal<ActivoList[]>([]);
 
-  protected readonly tipos =
-    signal<TipoMovimientoActivo[]>([]);
+    protected readonly activoPrecargado =
+        signal<ActivoDetalle | null>(null);
 
-  protected readonly sucursales =
-    signal<SucursalList[]>([]);
+    protected readonly tipos =
+        signal<TipoMovimientoActivo[]>([]);
 
-  protected readonly ubicaciones =
-    signal<UbicacionList[]>([]);
+    protected readonly sucursales =
+        signal<SucursalList[]>([]);
 
-  protected readonly situacion =
-    signal<ActivoSituacion | null>(null);
+    protected readonly ubicaciones =
+        signal<UbicacionList[]>([]);
 
-  protected readonly buscarActivo = signal('');
+    protected readonly situacion =
+        signal<ActivoSituacion | null>(null);
 
-  protected readonly cargando = signal(false);
-  protected readonly guardando = signal(false);
+    protected readonly buscarActivo = signal('');
 
-  protected readonly error =
-    signal<string | null>(null);
+    protected readonly cargando = signal(false);
+    protected readonly guardando = signal(false);
 
-  private solicitud = 0;
-  private solicitudSituacion = 0;
-  private solicitudUbicaciones = 0;
+    protected readonly error =
+        signal<string | null>(null);
 
-  protected readonly form = this.fb.nonNullable.group({
+    private solicitud = 0;
+    private solicitudActivos = 0;
+    private solicitudSituacion = 0;
+    private solicitudUbicaciones = 0;
 
-    activoId: ['', Validators.required],
+    protected readonly form = this.fb.nonNullable.group({
 
-    tipoMovimientoActivoId: [0, Validators.min(1)],
+        activoId: ['', Validators.required],
 
-    sucursalDestinoId: [''],
+        tipoMovimientoActivoId: [0, Validators.min(1)],
 
-    ubicacionDestinoId: [''],
+        sucursalDestinoId: [''],
 
-    destinoExternoNombre: ['', Validators.maxLength(200)],
+        ubicacionDestinoId: [''],
 
-    destinoExternoDireccion: ['', Validators.maxLength(500)],
+        destinoExternoNombre: ['', Validators.maxLength(200)],
 
-    motivo: ['', Validators.maxLength(300)],
+        destinoExternoDireccion: ['', Validators.maxLength(500)],
 
-    observaciones: ['', Validators.maxLength(1000)],
-  });
+        motivo: ['', Validators.maxLength(300)],
 
-  protected readonly tipoSeleccionado = computed(() =>
-    this.tipos().find(
-      x => x.id === this.formTipo()
-    ) ?? null
-  );
-
-  private readonly formTipo = signal(0);
-
-  protected readonly esSalida = computed(() =>
-    [
-      'SALIDA_TEMPORAL',
-      'ENVIO_MANTENIMIENTO',
-    ].includes(this.tipoSeleccionado()?.clave ?? '')
-  );
-
-  protected readonly esRetorno = computed(() =>
-    [
-      'RETORNO',
-      'REGRESO_MANTENIMIENTO',
-    ].includes(this.tipoSeleccionado()?.clave ?? '')
-  );
-
-  protected readonly esInterno = computed(() =>
-    [
-      'TRASLADO',
-      'AJUSTE_UBICACION',
-    ].includes(this.tipoSeleccionado()?.clave ?? '')
-  );
-
-  constructor() {
-
-    effect((onCleanup) => {
-
-      const empresaId =
-        this.empresa.seleccionada()?.id ?? null;
-
-      const req = ++this.solicitud;
-      ++this.solicitudSituacion;
-      ++this.solicitudUbicaciones;
-
-      this.form.reset();
-
-      this.formTipo.set(0);
-
-      this.activos.set([]);
-      this.tipos.set([]);
-      this.sucursales.set([]);
-      this.ubicaciones.set([]);
-
-      this.situacion.set(null);
-
-      this.buscarActivo.set('');
-
-      this.error.set(null);
-      this.cargando.set(!!empresaId);
-
-      if (!empresaId) {
-        return;
-      }
-
-      const sub = forkJoin({
-
-        tipos: this.movimientosService.getTipos(),
-
-        sucursales: this.sucursalesService.getAll(true),
-
-      }).subscribe({
-
-        next: datos => {
-
-          if (
-            req !== this.solicitud ||
-            this.empresa.empresaId !== empresaId
-          ) {
-            return;
-          }
-
-          this.tipos.set(datos.tipos);
-          this.sucursales.set(datos.sucursales);
-
-          this.cargando.set(false);
-
-          void this.cargarActivos();
-
-          const activoId =
-            this.route.snapshot.queryParamMap.get('activoId');
-
-          if (activoId) {
-            this.form.controls.activoId.setValue(activoId);
-            void this.cargarSituacion(activoId);
-          }
-        },
-
-        error: err => {
-
-          if (
-            req !== this.solicitud ||
-            this.empresa.empresaId !== empresaId
-          ) {
-            return;
-          }
-
-          this.error.set(
-            mensajeApi(
-              err,
-              'No fue posible cargar el formulario.'
-            )
-          );
-
-          this.cargando.set(false);
-        },
-      });
-
-      onCleanup(() => sub.unsubscribe());
-
+        observaciones: ['', Validators.maxLength(1000)],
     });
-  }
 
-  protected cambiarBusqueda(event: Event): void {
-    this.buscarActivo.set(
-      (event.target as HTMLInputElement).value
+    protected readonly tipoSeleccionado = computed(() =>
+        this.tipos().find(
+            x => x.id === this.formTipo()
+        ) ?? null
     );
-  }
 
-  protected async cargarActivos(): Promise<void> {
+    private readonly formTipo = signal(0);
 
-    const empresaId = this.empresa.empresaId;
+    protected readonly esSalida = computed(() =>
+        [
+            'SALIDA_TEMPORAL',
+            'ENVIO_MANTENIMIENTO',
+        ].includes(this.tipoSeleccionado()?.clave ?? '')
+    );
 
-    if (!empresaId) return;
+    protected readonly esRetorno = computed(() =>
+        [
+            'RETORNO',
+            'REGRESO_MANTENIMIENTO',
+        ].includes(this.tipoSeleccionado()?.clave ?? '')
+    );
 
-    const req = ++this.solicitud;
+    protected readonly esInterno = computed(() =>
+        [
+            'TRASLADO',
+            'AJUSTE_UBICACION',
+        ].includes(this.tipoSeleccionado()?.clave ?? '')
+    );
 
-    try {
+    constructor() {
 
-      const resultado = await firstValueFrom(
-        this.activosService.getAll({
-          buscar: this.buscarActivo() || undefined,
-          pagina: 1,
-          tamanoPagina: 100,
-        })
-      );
+        effect((onCleanup) => {
 
-      if (
-        this.empresa.empresaId !== empresaId ||
-        req !== this.solicitud
-      ) return;
+            const empresaId =
+                this.empresa.seleccionada()?.id ?? null;
 
-      this.activos.set(resultado.items);
+            const req = ++this.solicitud;
+            ++this.solicitudActivos;
+            ++this.solicitudSituacion;
+            ++this.solicitudUbicaciones;
 
-    } catch (err) {
+            this.form.reset();
 
-      if (
-        this.empresa.empresaId === empresaId &&
-        req === this.solicitud
-      ) {
-        this.error.set(
-          mensajeApi(err, 'No fue posible cargar los activos.')
+            this.formTipo.set(0);
+
+            this.activoPrecargado.set(null);
+
+            this.activos.set([]);
+            this.tipos.set([]);
+            this.sucursales.set([]);
+            this.ubicaciones.set([]);
+
+            this.situacion.set(null);
+
+            this.buscarActivo.set('');
+
+            this.error.set(null);
+            this.cargando.set(!!empresaId);
+
+            if (!empresaId) {
+                return;
+            }
+
+            const sub = forkJoin({
+
+                tipos: this.movimientosService.getTipos(),
+
+                sucursales: this.sucursalesService.getAll(true),
+
+            }).subscribe({
+
+                next: datos => {
+
+                    if (
+                        req !== this.solicitud ||
+                        this.empresa.empresaId !== empresaId
+                    ) {
+                        return;
+                    }
+
+                    this.tipos.set(datos.tipos);
+                    this.sucursales.set(datos.sucursales);
+
+                    this.cargando.set(false);
+
+                    void this.cargarActivos();
+
+                    const activoId =
+                        this.route.snapshot.queryParamMap.get('activoId');
+
+                    if (activoId) {
+                        this.form.controls.activoId.setValue(activoId);
+                        void this.precargarActivo(activoId, empresaId);
+                        void this.cargarSituacion(activoId);
+                    }
+                },
+
+                error: err => {
+
+                    if (
+                        req !== this.solicitud ||
+                        this.empresa.empresaId !== empresaId
+                    ) {
+                        return;
+                    }
+
+                    this.error.set(
+                        mensajeApi(
+                            err,
+                            'No fue posible cargar el formulario.'
+                        )
+                    );
+
+                    this.cargando.set(false);
+                },
+            });
+
+            onCleanup(() => sub.unsubscribe());
+
+        });
+    }
+
+    private async precargarActivo(
+        activoId: string,
+        empresaId: string
+    ): Promise<void> {
+
+        try {
+
+            const activo = await firstValueFrom(
+                this.activosService.getById(activoId)
+            );
+
+            if (
+                this.empresa.empresaId !== empresaId ||
+                this.form.controls.activoId.value !== activoId
+            ) return;
+
+            this.activoPrecargado.set(activo);
+
+        } catch (err) {
+
+            if (this.empresa.empresaId === empresaId) {
+                this.error.set(
+                    mensajeApi(
+                        err,
+                        'No fue posible recuperar el activo seleccionado.'
+                    )
+                );
+            }
+        }
+    }
+
+    protected cambiarBusqueda(event: Event): void {
+        this.buscarActivo.set(
+            (event.target as HTMLInputElement).value
         );
-      }
-    }
-  }
-
-  protected async seleccionarActivo(
-    activoId: string
-  ): Promise<void> {
-
-    this.form.controls.activoId.setValue(activoId);
-
-    this.situacion.set(null);
-
-    if (!activoId) return;
-
-    await this.cargarSituacion(activoId);
-  }
-
-  private async cargarSituacion(
-    activoId: string
-  ): Promise<void> {
-
-    const empresaId = this.empresa.empresaId;
-
-    if (!empresaId) return;
-
-    const req = ++this.solicitudSituacion;
-
-    try {
-
-      const resultado = await firstValueFrom(
-        this.movimientosService.getSituacionActivo(activoId)
-      );
-
-      if (
-        req !== this.solicitudSituacion ||
-        this.empresa.empresaId !== empresaId ||
-        this.form.controls.activoId.value !== activoId
-      ) return;
-
-      this.situacion.set(resultado);
-
-    } catch (err) {
-
-      if (
-        req === this.solicitudSituacion &&
-        this.empresa.empresaId === empresaId
-      ) {
-        this.error.set(
-          mensajeApi(
-            err,
-            'No fue posible consultar la ubicación del activo.'
-          )
-        );
-      }
-    }
-  }
-
-  protected cambiarTipo(id: number): void {
-
-    this.form.controls.tipoMovimientoActivoId.setValue(id);
-
-    this.formTipo.set(id);
-
-    this.error.set(null);
-
-    this.form.patchValue({
-      sucursalDestinoId: '',
-      ubicacionDestinoId: '',
-      destinoExternoNombre: '',
-      destinoExternoDireccion: '',
-    });
-
-    this.ubicaciones.set([]);
-  }
-
-  protected cambiarSucursal(id: string): void {
-
-    this.form.controls.sucursalDestinoId.setValue(id);
-
-    this.form.controls.ubicacionDestinoId.setValue('');
-
-    this.ubicaciones.set([]);
-
-    if (id) {
-      void this.cargarUbicaciones(id);
-    }
-  }
-
-  private async cargarUbicaciones(
-    sucursalId: string
-  ): Promise<void> {
-
-    const empresaId = this.empresa.empresaId;
-
-    if (!empresaId) return;
-
-    const req = ++this.solicitudUbicaciones;
-
-    try {
-
-      const items = await firstValueFrom(
-        this.ubicacionesService.getAll(
-          sucursalId,
-          true
-        )
-      );
-
-      if (
-        req !== this.solicitudUbicaciones ||
-        this.empresa.empresaId !== empresaId ||
-        this.form.controls.sucursalDestinoId.value !== sucursalId
-      ) return;
-
-      this.ubicaciones.set(items);
-
-    } catch (err) {
-
-      if (
-        req === this.solicitudUbicaciones &&
-        this.empresa.empresaId === empresaId
-      ) {
-        this.error.set(
-          mensajeApi(
-            err,
-            'No fue posible cargar las ubicaciones.'
-          )
-        );
-      }
-    }
-  }
-
-  protected async guardar(): Promise<void> {
-
-    if (
-      this.guardando() ||
-      this.form.invalid ||
-      !this.empresa.empresaId
-    ) {
-      this.form.markAllAsTouched();
-      return;
     }
 
-    const situacion = this.situacion();
+    protected async cargarActivos(): Promise<void> {
 
-    if (!situacion) {
-      this.error.set('Selecciona un activo válido.');
-      return;
+        const empresaId = this.empresa.empresaId;
+
+        if (!empresaId) return;
+
+        const req = ++this.solicitudActivos;
+
+        try {
+
+            const resultado = await firstValueFrom(
+                this.activosService.getAll({
+                    buscar: this.buscarActivo() || undefined,
+                    pagina: 1,
+                    tamanoPagina: 100,
+                })
+            );
+
+            if (
+                this.empresa.empresaId !== empresaId ||
+                req !== this.solicitudActivos
+            ) return;
+
+            this.activos.set(resultado.items);
+
+        } catch (err) {
+
+            if (
+                this.empresa.empresaId === empresaId &&
+                req === this.solicitudActivos
+            ) {
+                this.error.set(
+                    mensajeApi(
+                        err,
+                        'No fue posible cargar los activos.'
+                    )
+                );
+            }
+        }
     }
 
-    const tipo = this.tipoSeleccionado();
+    protected async seleccionarActivo(
+        activoId: string
+    ): Promise<void> {
 
-    if (!tipo) {
-      this.error.set('Selecciona el tipo de movimiento.');
-      return;
+        this.form.controls.activoId.setValue(activoId);
+
+        this.activoPrecargado.set(null);
+        this.situacion.set(null);
+
+        ++this.solicitudSituacion;
+
+        if (!activoId) return;
+
+        await this.cargarSituacion(activoId);
     }
 
-    if (situacion.estaFuera && !this.esRetorno()) {
-      this.error.set(
-        'El activo está fuera. Debes registrar primero su retorno.'
-      );
-      return;
+    private async cargarSituacion(
+        activoId: string
+    ): Promise<void> {
+
+        const empresaId = this.empresa.empresaId;
+
+        if (!empresaId) return;
+
+        const req = ++this.solicitudSituacion;
+
+        try {
+
+            const resultado = await firstValueFrom(
+                this.movimientosService.getSituacionActivo(activoId)
+            );
+
+            if (
+                req !== this.solicitudSituacion ||
+                this.empresa.empresaId !== empresaId ||
+                this.form.controls.activoId.value !== activoId
+            ) return;
+
+            this.situacion.set(resultado);
+
+        } catch (err) {
+
+            if (
+                req === this.solicitudSituacion &&
+                this.empresa.empresaId === empresaId
+            ) {
+                this.error.set(
+                    mensajeApi(
+                        err,
+                        'No fue posible consultar la ubicación del activo.'
+                    )
+                );
+            }
+        }
     }
 
-    if (!situacion.estaFuera && this.esRetorno()) {
-      this.error.set(
-        'El activo no tiene una salida pendiente.'
-      );
-      return;
+    protected cambiarTipo(id: number): void {
+
+        this.form.controls.tipoMovimientoActivoId.setValue(id);
+
+        this.formTipo.set(id);
+
+        this.error.set(null);
+
+        this.form.patchValue({
+            sucursalDestinoId: '',
+            ubicacionDestinoId: '',
+            destinoExternoNombre: '',
+            destinoExternoDireccion: '',
+        });
+
+        this.ubicaciones.set([]);
     }
 
-    const f = this.form.getRawValue();
+    protected cambiarSucursal(id: string): void {
 
-    if (
-      (this.esInterno() || this.esRetorno()) &&
-      !f.sucursalDestinoId
-    ) {
-      this.error.set('Selecciona una sucursal destino.');
-      return;
+        this.form.controls.sucursalDestinoId.setValue(id);
+
+        this.form.controls.ubicacionDestinoId.setValue('');
+
+        this.ubicaciones.set([]);
+
+        if (id) {
+            void this.cargarUbicaciones(id);
+        }
     }
 
-    if (
-      this.esSalida() &&
-      !f.destinoExternoNombre.trim()
-    ) {
-      this.error.set('Indica el destino externo.');
-      return;
+    private async cargarUbicaciones(
+        sucursalId: string
+    ): Promise<void> {
+
+        const empresaId = this.empresa.empresaId;
+
+        if (!empresaId) return;
+
+        const req = ++this.solicitudUbicaciones;
+
+        try {
+
+            const items = await firstValueFrom(
+                this.ubicacionesService.getAll(
+                    sucursalId,
+                    true
+                )
+            );
+
+            if (
+                req !== this.solicitudUbicaciones ||
+                this.empresa.empresaId !== empresaId ||
+                this.form.controls.sucursalDestinoId.value !== sucursalId
+            ) return;
+
+            this.ubicaciones.set(items);
+
+        } catch (err) {
+
+            if (
+                req === this.solicitudUbicaciones &&
+                this.empresa.empresaId === empresaId
+            ) {
+                this.error.set(
+                    mensajeApi(
+                        err,
+                        'No fue posible cargar las ubicaciones.'
+                    )
+                );
+            }
+        }
     }
 
-    const dto: ActivoMovimientoCrear = {
+    protected async guardar(): Promise<void> {
 
-      activoId: f.activoId,
+        if (
+            this.guardando() ||
+            this.form.invalid ||
+            !this.empresa.empresaId
+        ) {
+            this.form.markAllAsTouched();
+            return;
+        }
 
-      tipoMovimientoActivoId:
-        f.tipoMovimientoActivoId,
+        const situacion = this.situacion();
 
-      sucursalDestinoId:
-        this.esSalida()
-          ? null
-          : f.sucursalDestinoId || null,
+        if (!situacion) {
+            this.error.set('Selecciona un activo válido.');
+            return;
+        }
 
-      ubicacionDestinoId:
-        this.esSalida()
-          ? null
-          : f.ubicacionDestinoId || null,
+        const tipo = this.tipoSeleccionado();
 
-      destinoExternoNombre:
-        this.esSalida()
-          ? f.destinoExternoNombre.trim() || null
-          : null,
+        if (!tipo) {
+            this.error.set('Selecciona el tipo de movimiento.');
+            return;
+        }
 
-      destinoExternoDireccion:
-        this.esSalida()
-          ? f.destinoExternoDireccion.trim() || null
-          : null,
+        if (situacion.estaFuera && !this.esRetorno()) {
+            this.error.set(
+                'El activo está fuera. Debes registrar primero su retorno.'
+            );
+            return;
+        }
 
-      proveedorDestinoId: null,
+        if (!situacion.estaFuera && this.esRetorno()) {
+            this.error.set(
+                'El activo no tiene una salida pendiente.'
+            );
+            return;
+        }
 
-      movimientoOrigenId:
-        this.esRetorno()
-          ? situacion.movimientoSalidaId
-          : null,
+        if (this.esRetorno()) {
 
-      estadoActivoDestinoId: null,
+            const movimientoSalidaId =
+                situacion.movimientoSalidaId;
 
-      motivo: f.motivo.trim() || null,
+            if (!movimientoSalidaId) {
 
-      observaciones:
-        f.observaciones.trim() || null,
+                this.error.set(
+                    'No se encontró el movimiento de salida pendiente.'
+                );
 
-      tipoReferencia: null,
+                return;
+            }
 
-      referenciaId: null,
-    };
+            try {
 
-    if (
-      !confirm('¿Confirmas el registro del movimiento?')
-    ) {
-      return;
+                const salida = await firstValueFrom(
+                    this.movimientosService.getById(
+                        movimientoSalidaId
+                    )
+                );
+
+                const tipoEsperado =
+                    salida.tipoMovimientoClave === 'SALIDA_TEMPORAL'
+                        ? 'RETORNO'
+                        : salida.tipoMovimientoClave === 'ENVIO_MANTENIMIENTO'
+                            ? 'REGRESO_MANTENIMIENTO'
+                            : null;
+
+                if (
+                    !tipoEsperado ||
+                    tipo.clave !== tipoEsperado
+                ) {
+
+                    this.error.set(
+                        'El tipo de retorno no corresponde con la salida registrada.'
+                    );
+
+                    return;
+                }
+
+            } catch (err) {
+
+                this.error.set(
+                    mensajeApi(
+                        err,
+                        'No fue posible validar la salida pendiente.'
+                    )
+                );
+
+                return;
+            }
+        }
+
+        const f = this.form.getRawValue();
+
+        if (
+            (this.esInterno() || this.esRetorno()) &&
+            !f.sucursalDestinoId
+        ) {
+            this.error.set('Selecciona una sucursal destino.');
+            return;
+        }
+
+        if (
+            this.esSalida() &&
+            !f.destinoExternoNombre.trim()
+        ) {
+            this.error.set('Indica el destino externo.');
+            return;
+        }
+
+        const dto: ActivoMovimientoCrear = {
+
+            activoId: f.activoId,
+
+            tipoMovimientoActivoId:
+                f.tipoMovimientoActivoId,
+
+            sucursalDestinoId:
+                this.esSalida()
+                    ? null
+                    : f.sucursalDestinoId || null,
+
+            ubicacionDestinoId:
+                this.esSalida()
+                    ? null
+                    : f.ubicacionDestinoId || null,
+
+            destinoExternoNombre:
+                this.esSalida()
+                    ? f.destinoExternoNombre.trim() || null
+                    : null,
+
+            destinoExternoDireccion:
+                this.esSalida()
+                    ? f.destinoExternoDireccion.trim() || null
+                    : null,
+
+            proveedorDestinoId: null,
+
+            movimientoOrigenId:
+                this.esRetorno()
+                    ? situacion.movimientoSalidaId
+                    : null,
+
+            estadoActivoDestinoId: null,
+
+            motivo: f.motivo.trim() || null,
+
+            observaciones:
+                f.observaciones.trim() || null,
+
+            tipoReferencia: null,
+
+            referenciaId: null,
+        };
+
+        if (
+            !confirm('¿Confirmas el registro del movimiento?')
+        ) {
+            return;
+        }
+
+        const empresaId = this.empresa.empresaId;
+
+        this.guardando.set(true);
+        this.error.set(null);
+
+        try {
+
+            const creado = await firstValueFrom(
+                this.movimientosService.create(dto)
+            );
+
+            if (this.empresa.empresaId !== empresaId) return;
+
+            await this.router.navigate([
+                '/admin/movimientos',
+                creado.id,
+            ]);
+
+        } catch (err) {
+
+            if (this.empresa.empresaId === empresaId) {
+                this.error.set(
+                    mensajeApi(
+                        err,
+                        'No fue posible registrar el movimiento.'
+                    )
+                );
+            }
+
+        } finally {
+
+            this.guardando.set(false);
+        }
     }
 
-    const empresaId = this.empresa.empresaId;
+    protected volver(): void {
 
-    this.guardando.set(true);
-    this.error.set(null);
-
-    try {
-
-      const creado = await firstValueFrom(
-        this.movimientosService.create(dto)
-      );
-
-      if (this.empresa.empresaId !== empresaId) return;
-
-      await this.router.navigate([
-        '/admin/movimientos',
-        creado.id,
-      ]);
-
-    } catch (err) {
-
-      if (this.empresa.empresaId === empresaId) {
-        this.error.set(
-          mensajeApi(
-            err,
-            'No fue posible registrar el movimiento.'
-          )
-        );
-      }
-
-    } finally {
-
-      this.guardando.set(false);
+        void this.router.navigate([
+            '/admin/movimientos',
+        ]);
     }
-  }
-
-  protected volver(): void {
-
-    void this.router.navigate([
-      '/admin/movimientos',
-    ]);
-  }
 }
