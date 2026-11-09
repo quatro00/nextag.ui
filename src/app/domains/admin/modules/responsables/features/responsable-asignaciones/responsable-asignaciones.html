@@ -1,0 +1,476 @@
+<section class="overflow-hidden rounded-2xl border bg-surface shadow-sm">
+
+  <!-- ===================================== -->
+  <!-- ENCABEZADO                            -->
+  <!-- ===================================== -->
+
+  <div class="flex flex-wrap items-center justify-between gap-4 border-b p-5">
+
+    <div class="flex items-center gap-3">
+
+      <mat-icon
+        svgIcon="boxes"
+        class="text-primary" />
+
+      <div>
+
+        <h2 class="font-semibold">
+          Activos asignados
+        </h2>
+
+        <p class="text-sm text-on-surface-variant">
+          Equipos bajo responsabilidad e historial de asignaciones.
+        </p>
+
+      </div>
+
+    </div>
+
+    <button
+      type="button"
+      mat-stroked-button
+      [disabled]="cargando()"
+      (click)="recargar()">
+
+      <mat-icon svgIcon="refresh-cw" />
+
+      Actualizar
+
+    </button>
+
+  </div>
+
+  <!-- ===================================== -->
+  <!-- ERRORES                               -->
+  <!-- ===================================== -->
+
+  @if (error()) {
+
+    <div
+      role="alert"
+      class="m-5 rounded-xl bg-red-50 p-4 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-300">
+
+      {{ error() }}
+
+    </div>
+
+  }
+
+  <!-- ===================================== -->
+  <!-- CARGANDO                              -->
+  <!-- ===================================== -->
+
+  @if (cargando() || empresa.cargando()) {
+
+    <div class="flex justify-center p-12">
+
+      <mat-spinner diameter="32" />
+
+    </div>
+
+  } @else if (!empresa.empresaId) {
+
+    <div class="p-10 text-center text-on-surface-variant">
+
+      Selecciona una empresa.
+
+    </div>
+
+  } @else {
+
+    <!-- =================================== -->
+    <!-- RESUMEN                            -->
+    <!-- =================================== -->
+
+    <div class="grid grid-cols-1 gap-4 border-b p-6 sm:grid-cols-3">
+
+      <!-- VIGENTES -->
+
+      <div class="rounded-xl bg-green-50 p-5 dark:bg-green-900/20">
+
+        <div class="text-sm text-green-700 dark:text-green-400">
+          Activos vigentes
+        </div>
+
+        <div class="mt-2 text-3xl font-bold text-green-800 dark:text-green-300">
+          {{ totalVigentes() }}
+        </div>
+
+      </div>
+
+      <!-- FINALIZADAS -->
+
+      <div class="rounded-xl bg-neutral-100 p-5 dark:bg-neutral-900/40">
+
+        <div class="text-sm text-on-surface-variant">
+          Asignaciones finalizadas
+        </div>
+
+        <div class="mt-2 text-3xl font-bold">
+          {{ totalFinalizadas() }}
+        </div>
+
+      </div>
+
+      <!-- TOTAL -->
+
+      <div class="rounded-xl bg-primary/10 p-5">
+
+        <div class="text-sm text-primary">
+          Total histórico
+        </div>
+
+        <div class="mt-2 text-3xl font-bold text-primary">
+          {{ totalAsignaciones() }}
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- =================================== -->
+    <!-- ACTIVOS ACTUALMENTE ASIGNADOS       -->
+    <!-- =================================== -->
+
+    <div class="border-b p-6">
+
+      <div class="mb-5">
+
+        <h3 class="text-lg font-semibold">
+          Activos actualmente asignados
+        </h3>
+
+        <p class="mt-1 text-sm text-on-surface-variant">
+          Equipos que todavía no registran devolución.
+        </p>
+
+      </div>
+
+      <div class="overflow-x-auto rounded-xl border">
+
+        <table class="w-full text-left">
+
+          <thead
+            class="border-b bg-neutral-50/80 text-sm dark:bg-neutral-900/50">
+
+            <tr>
+
+              <th class="px-5 py-4 font-semibold">
+                Activo
+              </th>
+
+              <th class="px-5 py-4 font-semibold">
+                Número de serie
+              </th>
+
+              <th class="px-5 py-4 font-semibold">
+                Ubicación actual
+              </th>
+
+              <th class="px-5 py-4 font-semibold">
+                Fecha de asignación
+              </th>
+
+              <th class="px-5 py-4 text-right font-semibold">
+                Acciones
+              </th>
+
+            </tr>
+
+          </thead>
+
+          <tbody>
+
+            @for (item of vigentes(); track item.id) {
+
+              <tr class="border-b last:border-b-0">
+
+                <!-- ACTIVO -->
+
+                <td class="px-5 py-4">
+
+                  <div class="font-semibold">
+                    {{ item.activoNombre }}
+                  </div>
+
+                  <div class="text-xs text-on-surface-variant">
+                    {{ item.activoCodigo }}
+                  </div>
+
+                  @if (item.activoNumeroInventario) {
+
+                    <div class="text-xs text-on-surface-variant">
+                      Inventario: {{ item.activoNumeroInventario }}
+                    </div>
+
+                  }
+
+                </td>
+
+                <!-- SERIE -->
+
+                <td class="px-5 py-4 text-sm">
+
+                  {{ item.activoNumeroSerie || '—' }}
+
+                </td>
+
+                <!-- UBICACION -->
+
+                <td class="px-5 py-4 text-sm">
+
+                  <div>
+                    {{ item.sucursalNombre }}
+                  </div>
+
+                  @if (item.ubicacionNombre) {
+
+                    <div class="text-xs text-on-surface-variant">
+                      {{ item.ubicacionNombre }}
+                    </div>
+
+                  }
+
+                </td>
+
+                <!-- FECHA -->
+
+                <td class="px-5 py-4 text-sm">
+
+                  {{ item.fechaAsignacion | date:'dd/MM/yyyy HH:mm' }}
+
+                </td>
+
+                <!-- ACCIONES -->
+
+                <td class="px-5 py-4">
+
+                  <div class="flex justify-end gap-1">
+
+                    <button
+                      type="button"
+                      matIconButton
+                      matTooltip="Ver ficha del activo"
+                      (click)="verActivo(item.activoId)">
+
+                      <mat-icon svgIcon="eye" />
+
+                    </button>
+
+                    @if (puedeGestionar()) {
+
+                      <button
+                        type="button"
+                        matIconButton
+                        matTooltip="Registrar devolución"
+                        (click)="devolver(item.id)">
+
+                        <mat-icon svgIcon="rotate-ccw" />
+
+                      </button>
+
+                      <button
+                        type="button"
+                        matIconButton
+                        matTooltip="Reasignar"
+                        (click)="reasignar(item.id)">
+
+                        <mat-icon svgIcon="arrow-left-right" />
+
+                      </button>
+
+                    }
+
+                  </div>
+
+                </td>
+
+              </tr>
+
+            } @empty {
+
+              <tr>
+
+                <td
+                  colspan="5"
+                  class="p-10 text-center text-sm text-on-surface-variant">
+
+                  Este responsable no tiene activos asignados actualmente.
+
+                </td>
+
+              </tr>
+
+            }
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+    </div>
+
+    <!-- =================================== -->
+    <!-- HISTORIAL DE ASIGNACIONES           -->
+    <!-- =================================== -->
+
+    <div class="p-6">
+
+      <div class="mb-5">
+
+        <h3 class="text-lg font-semibold">
+          Historial de asignaciones
+        </h3>
+
+        <p class="mt-1 text-sm text-on-surface-variant">
+          Equipos que estuvieron bajo la responsabilidad
+          de esta persona o área.
+        </p>
+
+      </div>
+
+      <div class="overflow-x-auto rounded-xl border">
+
+        <table class="w-full text-left">
+
+          <thead
+            class="border-b bg-neutral-50/80 text-sm dark:bg-neutral-900/50">
+
+            <tr>
+
+              <th class="px-5 py-4 font-semibold">
+                Activo
+              </th>
+
+              <th class="px-5 py-4 font-semibold">
+                Fecha asignación
+              </th>
+
+              <th class="px-5 py-4 font-semibold">
+                Fecha devolución
+              </th>
+
+              <th class="px-5 py-4 font-semibold">
+                Motivo de devolución
+              </th>
+
+              <th class="px-5 py-4 text-right font-semibold">
+                Acciones
+              </th>
+
+            </tr>
+
+          </thead>
+
+          <tbody>
+
+            @for (item of finalizadas(); track item.id) {
+
+              <tr class="border-b last:border-b-0">
+
+                <!-- ACTIVO -->
+
+                <td class="px-5 py-4">
+
+                  <div class="font-semibold">
+                    {{ item.activoNombre }}
+                  </div>
+
+                  <div class="text-xs text-on-surface-variant">
+                    {{ item.activoCodigo }}
+                  </div>
+
+                </td>
+
+                <!-- ASIGNACION -->
+
+                <td class="px-5 py-4 text-sm">
+
+                  {{ item.fechaAsignacion | date:'dd/MM/yyyy' }}
+
+                </td>
+
+                <!-- DEVOLUCION -->
+
+                <td class="px-5 py-4 text-sm">
+
+                  @if (item.fechaDevolucion) {
+
+                    {{ item.fechaDevolucion | date:'dd/MM/yyyy' }}
+
+                  } @else {
+
+                    —
+
+                  }
+
+                </td>
+
+                <!-- MOTIVO -->
+
+                <td class="px-5 py-4 text-sm">
+
+                  {{ item.motivoDevolucion || '—' }}
+
+                </td>
+
+                <!-- ACCIONES -->
+
+                <td class="px-5 py-4">
+
+                  <div class="flex justify-end gap-1">
+
+                    <button
+                      type="button"
+                      matIconButton
+                      matTooltip="Ver asignación"
+                      (click)="verAsignacion(item.id)">
+
+                      <mat-icon svgIcon="eye" />
+
+                    </button>
+
+                    <button
+                      type="button"
+                      matIconButton
+                      matTooltip="Ver activo"
+                      (click)="verActivo(item.activoId)">
+
+                      <mat-icon svgIcon="external-link" />
+
+                    </button>
+
+                  </div>
+
+                </td>
+
+              </tr>
+
+            } @empty {
+
+              <tr>
+
+                <td
+                  colspan="5"
+                  class="p-10 text-center text-sm text-on-surface-variant">
+
+                  Este responsable todavía no tiene asignaciones finalizadas.
+
+                </td>
+
+              </tr>
+
+            }
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+    </div>
+
+  }
+
+</section>

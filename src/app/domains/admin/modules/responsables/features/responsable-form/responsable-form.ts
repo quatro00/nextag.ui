@@ -30,6 +30,7 @@ import {
   ResponsableGuardar,
   TipoResponsable,
 } from '../../types/responsable.types';
+import { ResponsableAsignaciones } from '../responsable-asignaciones/responsable-asignaciones';
 
 @Component({
   selector: 'app-responsable-form',
@@ -42,6 +43,7 @@ import {
     MatInputModule,
     MatProgressSpinnerModule,
     MatSelectModule,
+    ResponsableAsignaciones,
   ],
 })
 export default class ResponsableForm {
