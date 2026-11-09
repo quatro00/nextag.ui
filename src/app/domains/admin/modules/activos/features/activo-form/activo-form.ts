@@ -25,13 +25,14 @@ import { UbicacionesService } from '../../../ubicaciones/services/ubicaciones.se
 import { UbicacionList } from '../../../ubicaciones/types/ubicacion.types';
 import { mensajeApi } from '../../../shared/api-error';
 import { ActivoEtiquetas } from '../activo-etiquetas/activo-etiquetas';
+import { ActivoAsignaciones } from '../activo-asignaciones/activo-asignaciones';
 import { ActivosService } from '../../services/activos.service';
 import { ActivoDetalle, ActivoGuardar } from '../../types/activo.types';
 
 @Component({
   selector: 'app-activo-form',
   templateUrl: './activo-form.html',
-  imports: [ReactiveFormsModule, MatButtonModule, MatFormFieldModule, MatIconModule, MatInputModule, MatProgressSpinnerModule, MatSelectModule, ActivoEtiquetas],
+  imports: [ReactiveFormsModule, MatButtonModule, MatFormFieldModule, MatIconModule, MatInputModule, MatProgressSpinnerModule, MatSelectModule, ActivoEtiquetas, ActivoAsignaciones,],
 })
 export default class ActivoForm {
   protected readonly empresa = inject(EmpresaContextoService);

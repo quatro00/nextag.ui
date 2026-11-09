@@ -51,6 +51,7 @@ import {
 })
 export default class AsignacionDetalle {
 
+    private accionInicialAplicada = false;
     protected readonly empresa = inject(EmpresaContextoService);
 
     private readonly route = inject(ActivatedRoute);
@@ -160,7 +161,7 @@ export default class AsignacionDetalle {
                     switchMap(params => {
 
                         const asignacionId = params.get('id');
-
+                        this.accionInicialAplicada = false;
                         this.id.set(asignacionId);
 
                         this.detalle.set(null);
@@ -217,6 +218,25 @@ export default class AsignacionDetalle {
                         );
 
                         this.loading.set(false);
+
+                        // Abrir la acción solicitada desde la ficha del activo.
+                        if (
+                            !this.accionInicialAplicada &&
+                            datos.detalle.vigente &&
+                            this.puedeGestionar()
+                        ) {
+                            const accion = this.route.snapshot.queryParamMap.get('accion');
+
+                            this.accionInicialAplicada = true;
+
+                            if (accion === 'devolver') {
+                                this.mostrarDevolucion();
+                            }
+
+                            if (accion === 'reasignar') {
+                                this.mostrarReasignacion();
+                            }
+                        }
                     },
 
                     error: err => {

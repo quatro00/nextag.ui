@@ -1,0 +1,423 @@
+<section class="overflow-hidden rounded-2xl border bg-surface shadow-sm">
+
+  <!-- ENCABEZADO -->
+
+  <div class="flex flex-wrap items-center justify-between gap-4 border-b p-5">
+
+    <div class="flex items-center gap-3">
+
+      <mat-icon
+        svgIcon="user-check"
+        class="text-primary" />
+
+      <div>
+
+        <h2 class="font-semibold">
+          Asignación y responsable
+        </h2>
+
+        <p class="text-sm text-on-surface-variant">
+          Responsable actual e historial de entregas.
+        </p>
+
+      </div>
+
+    </div>
+
+    <button
+      mat-stroked-button
+      type="button"
+      [disabled]="cargando()"
+      (click)="recargar()">
+
+      <mat-icon svgIcon="refresh-cw" />
+
+      Actualizar
+
+    </button>
+
+  </div>
+
+  <!-- ERROR -->
+
+  @if (error()) {
+
+    <div
+      role="alert"
+      class="m-5 rounded-xl bg-red-50 p-4 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-300">
+
+      {{ error() }}
+
+    </div>
+
+  }
+
+  <!-- CARGANDO -->
+
+  @if (cargando() || empresa.cargando()) {
+
+    <div class="flex justify-center p-12">
+
+      <mat-spinner diameter="32" />
+
+    </div>
+
+  } @else if (!empresa.empresaId) {
+
+    <div class="p-10 text-center text-on-surface-variant">
+
+      Selecciona una empresa.
+
+    </div>
+
+  } @else {
+
+    <!-- RESPONSABLE ACTUAL -->
+
+    <div class="border-b p-6">
+
+      <div class="mb-5 flex flex-wrap items-center justify-between gap-4">
+
+        <h3 class="text-base font-semibold">
+          Responsable actual
+        </h3>
+
+        @if (vigente()) {
+
+          <span
+            class="rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700 dark:bg-green-900/30 dark:text-green-400">
+
+            Asignación vigente
+
+          </span>
+
+        } @else {
+
+          <span
+            class="rounded-full bg-neutral-200 px-3 py-1 text-xs font-semibold text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300">
+
+            Sin asignación
+
+          </span>
+
+        }
+
+      </div>
+
+      @if (vigente(); as asignacion) {
+
+        <div class="grid grid-cols-1 gap-5 md:grid-cols-3">
+
+          <!-- RESPONSABLE -->
+
+          <div>
+
+            <div class="text-sm text-on-surface-variant">
+              Responsable
+            </div>
+
+            <div class="mt-1 font-semibold">
+              {{ asignacion.responsableNombre }}
+            </div>
+
+            <div class="text-xs text-on-surface-variant">
+              {{ asignacion.responsableTipo === 'PERSONA' ? 'Persona' : 'Área' }}
+            </div>
+
+          </div>
+
+          <!-- AREA -->
+
+          <div>
+
+            <div class="text-sm text-on-surface-variant">
+              Área relacionada
+            </div>
+
+            <div class="mt-1">
+              {{ asignacion.areaResponsableNombre || '—' }}
+            </div>
+
+          </div>
+
+          <!-- FECHA -->
+
+          <div>
+
+            <div class="text-sm text-on-surface-variant">
+              Fecha de asignación
+            </div>
+
+            <div class="mt-1">
+              {{ asignacion.fechaAsignacion | date:'dd/MM/yyyy HH:mm' }}
+            </div>
+
+          </div>
+
+          <!-- MOTIVO -->
+
+          @if (asignacion.motivoAsignacion) {
+
+            <div class="md:col-span-3">
+
+              <div class="text-sm text-on-surface-variant">
+                Motivo de asignación
+              </div>
+
+              <div class="mt-1">
+                {{ asignacion.motivoAsignacion }}
+              </div>
+
+            </div>
+
+          }
+
+        </div>
+
+        <!-- ACCIONES -->
+
+        <div class="mt-6 flex flex-wrap gap-3">
+
+          <button
+            type="button"
+            mat-stroked-button
+            (click)="verAsignacion(asignacion.id)">
+
+            <mat-icon svgIcon="eye" />
+
+            Ver asignación
+
+          </button>
+
+          @if (puedeOperarVigente()) {
+
+            <button
+              type="button"
+              mat-stroked-button
+              (click)="devolver()">
+
+              <mat-icon svgIcon="rotate-ccw" />
+
+              Registrar devolución
+
+            </button>
+
+            <button
+              type="button"
+              mat-flat-button
+              (click)="reasignar()">
+
+              <mat-icon svgIcon="arrow-left-right" />
+
+              Reasignar
+
+            </button>
+
+          }
+
+        </div>
+
+      } @else {
+
+        <div class="rounded-xl bg-neutral-50 p-6 dark:bg-neutral-900/30">
+
+          <p class="text-sm text-on-surface-variant">
+            Este activo no tiene un responsable asignado actualmente.
+          </p>
+
+          @if (puedeAsignar()) {
+
+            <button
+              type="button"
+              mat-flat-button
+              class="mt-4"
+              (click)="nuevaAsignacion()">
+
+              <mat-icon svgIcon="user-plus" />
+
+              Asignar responsable
+
+            </button>
+
+          }
+
+        </div>
+
+      }
+
+    </div>
+
+    <!-- HISTORIAL -->
+
+    <div class="p-6">
+
+      <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
+
+        <div>
+
+          <h3 class="text-base font-semibold">
+            Historial de asignaciones
+          </h3>
+
+          <p class="mt-1 text-sm text-on-surface-variant">
+            Total de registros: {{ totalAsignaciones() }}
+          </p>
+
+        </div>
+
+      </div>
+
+      <div class="overflow-x-auto rounded-xl border">
+
+        <table class="w-full text-left">
+
+          <thead
+            class="border-b bg-neutral-50/80 text-sm dark:bg-neutral-900/50">
+
+            <tr>
+
+              <th class="px-5 py-4 font-semibold">
+                Responsable
+              </th>
+
+              <th class="px-5 py-4 font-semibold">
+                Tipo
+              </th>
+
+              <th class="px-5 py-4 font-semibold">
+                Asignación
+              </th>
+
+              <th class="px-5 py-4 font-semibold">
+                Devolución
+              </th>
+
+              <th class="px-5 py-4 font-semibold">
+                Estado
+              </th>
+
+              <th class="px-5 py-4 text-right font-semibold">
+                Acciones
+              </th>
+
+            </tr>
+
+          </thead>
+
+          <tbody>
+
+            @for (item of historial(); track item.id) {
+
+              <tr class="border-b last:border-b-0">
+
+                <!-- RESPONSABLE -->
+
+                <td class="px-5 py-4">
+
+                  <div class="font-semibold">
+                    {{ item.responsableNombre }}
+                  </div>
+
+                  @if (item.responsableCodigo) {
+
+                    <div class="text-xs text-on-surface-variant">
+                      {{ item.responsableCodigo }}
+                    </div>
+
+                  }
+
+                </td>
+
+                <!-- TIPO -->
+
+                <td class="px-5 py-4 text-sm">
+
+                  {{ item.responsableTipo === 'PERSONA' ? 'Persona' : 'Área' }}
+
+                </td>
+
+                <!-- FECHA ASIGNACION -->
+
+                <td class="px-5 py-4 text-sm">
+
+                  {{ item.fechaAsignacion | date:'dd/MM/yyyy' }}
+
+                </td>
+
+                <!-- FECHA DEVOLUCION -->
+
+                <td class="px-5 py-4 text-sm">
+
+                  @if (item.fechaDevolucion) {
+
+                    {{ item.fechaDevolucion | date:'dd/MM/yyyy' }}
+
+                  } @else {
+
+                    —
+
+                  }
+
+                </td>
+
+                <!-- ESTADO -->
+
+                <td class="px-5 py-4">
+
+                  <span
+                    class="rounded-full px-3 py-1 text-xs font-semibold"
+                    [class]="item.vigente
+                      ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                      : 'bg-neutral-200 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300'">
+
+                    {{ item.vigente ? 'Vigente' : 'Finalizada' }}
+
+                  </span>
+
+                </td>
+
+                <!-- ACCIONES -->
+
+                <td class="px-5 py-4 text-right">
+
+                  <button
+                    type="button"
+                    matIconButton
+                    matTooltip="Ver detalle"
+                    (click)="verAsignacion(item.id)">
+
+                    <mat-icon svgIcon="eye" />
+
+                  </button>
+
+                </td>
+
+              </tr>
+
+            } @empty {
+
+              <tr>
+
+                <td
+                  colspan="6"
+                  class="p-8 text-center text-sm text-on-surface-variant">
+
+                  Este activo todavía no tiene historial de asignaciones.
+
+                </td>
+
+              </tr>
+
+            }
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+    </div>
+
+  }
+
+</section>
