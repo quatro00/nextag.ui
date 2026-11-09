@@ -1,0 +1,569 @@
+<div class="mx-auto flex w-full max-w-5xl flex-auto flex-col p-6 sm:p-8">
+
+  <header class="mb-8 flex items-center gap-4">
+
+    <button matIconButton (click)="volver()">
+      <mat-icon svgIcon="arrow-left" />
+    </button>
+
+    <div>
+      <h1 class="text-3xl font-bold">
+        Detalle de asignación
+      </h1>
+
+      <p class="text-on-surface-variant">
+        Información de entrega y devolución del activo.
+      </p>
+    </div>
+
+  </header>
+
+  @if (error()) {
+    <div
+      class="mb-5 rounded-xl bg-red-50 p-4 text-sm text-red-700"
+      role="alert">
+      {{ error() }}
+    </div>
+  }
+
+  @if (exito()) {
+    <div
+      class="mb-5 rounded-xl bg-green-50 p-4 text-sm text-green-700"
+      role="status">
+      {{ exito() }}
+    </div>
+  }
+
+  @if (loading() || empresa.cargando()) {
+
+    <div class="flex justify-center p-12">
+      <mat-spinner diameter="36" />
+    </div>
+
+  } @else if (!empresa.empresaId) {
+
+    <div class="rounded-xl border bg-surface p-8 text-center">
+      Selecciona una empresa.
+    </div>
+
+  } @else if (detalle(); as asignacion) {
+
+    <!-- ESTADO -->
+
+    <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
+
+      <span
+        class="rounded-full px-4 py-2 text-sm font-semibold"
+        [class]="asignacion.vigente
+          ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+          : 'bg-neutral-200 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300'">
+
+        {{ asignacion.vigente ? 'Asignación vigente' : 'Asignación finalizada' }}
+
+      </span>
+
+      @if (asignacion.vigente && puedeGestionar()) {
+
+        <div class="flex flex-wrap gap-3">
+
+          <button
+            mat-stroked-button
+            (click)="mostrarDevolucion()">
+
+            Registrar devolución
+
+          </button>
+
+          <button
+            mat-flat-button
+            (click)="mostrarReasignacion()">
+
+            <mat-icon svgIcon="arrow-left-right" />
+
+            Reasignar
+
+          </button>
+
+        </div>
+
+      }
+
+    </div>
+
+    <!-- ACTIVO -->
+
+    <section class="mb-6 rounded-2xl border bg-surface shadow-sm">
+
+      <div class="border-b p-5">
+        <h2 class="font-semibold">Activo</h2>
+      </div>
+
+      <div class="grid grid-cols-1 gap-5 p-6 md:grid-cols-2">
+
+        <div>
+
+          <div class="text-sm text-on-surface-variant">
+            Código
+          </div>
+
+          <div class="font-semibold">
+            {{ asignacion.activoCodigo }}
+          </div>
+
+        </div>
+
+        <div>
+
+          <div class="text-sm text-on-surface-variant">
+            Nombre
+          </div>
+
+          <div class="font-semibold">
+            {{ asignacion.activoNombre }}
+          </div>
+
+        </div>
+
+        <div>
+
+          <div class="text-sm text-on-surface-variant">
+            Número de serie
+          </div>
+
+          <div>
+            {{ asignacion.activoNumeroSerie || '—' }}
+          </div>
+
+        </div>
+
+        <div>
+
+          <div class="text-sm text-on-surface-variant">
+            Sucursal / ubicación actual
+          </div>
+
+          <div>
+            {{ asignacion.sucursalNombre }}
+            /
+            {{ asignacion.ubicacionNombre || 'Sin ubicación' }}
+          </div>
+
+        </div>
+
+        <div class="md:col-span-2">
+
+          <button
+            mat-stroked-button
+            (click)="abrirActivo()">
+
+            <mat-icon svgIcon="external-link" />
+
+            Ver ficha del activo
+
+          </button>
+
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- RESPONSABLE -->
+
+    <section class="mb-6 rounded-2xl border bg-surface shadow-sm">
+
+      <div class="border-b p-5">
+        <h2 class="font-semibold">Responsable</h2>
+      </div>
+
+      <div class="grid grid-cols-1 gap-5 p-6 md:grid-cols-2">
+
+        <div>
+
+          <div class="text-sm text-on-surface-variant">
+            Nombre
+          </div>
+
+          <div class="font-semibold">
+            {{ asignacion.responsableNombre }}
+          </div>
+
+        </div>
+
+        <div>
+
+          <div class="text-sm text-on-surface-variant">
+            Tipo
+          </div>
+
+          <div>
+            {{ asignacion.responsableTipo === 'PERSONA' ? 'Persona' : 'Área' }}
+          </div>
+
+        </div>
+
+        <div>
+
+          <div class="text-sm text-on-surface-variant">
+            Código
+          </div>
+
+          <div>
+            {{ asignacion.responsableCodigo || '—' }}
+          </div>
+
+        </div>
+
+        <div>
+
+          <div class="text-sm text-on-surface-variant">
+            Área relacionada
+          </div>
+
+          <div>
+            {{ asignacion.areaResponsableNombre || '—' }}
+          </div>
+
+        </div>
+
+        <div class="md:col-span-2">
+
+          <button
+            mat-stroked-button
+            (click)="abrirResponsable()">
+
+            <mat-icon svgIcon="external-link" />
+
+            Ver responsable
+
+          </button>
+
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ENTREGA -->
+
+    <section class="mb-6 rounded-2xl border bg-surface shadow-sm">
+
+      <div class="border-b p-5">
+        <h2 class="font-semibold">Información de entrega</h2>
+      </div>
+
+      <div class="grid grid-cols-1 gap-5 p-6 md:grid-cols-2">
+
+        <div>
+
+          <div class="text-sm text-on-surface-variant">
+            Fecha de asignación (UTC)
+          </div>
+
+          <div>
+            {{ asignacion.fechaAsignacion }}
+          </div>
+
+        </div>
+
+        <div>
+
+          <div class="text-sm text-on-surface-variant">
+            Motivo
+          </div>
+
+          <div>
+            {{ asignacion.motivoAsignacion || '—' }}
+          </div>
+
+        </div>
+
+        <div class="md:col-span-2">
+
+          <div class="text-sm text-on-surface-variant">
+            Observaciones
+          </div>
+
+          <div>
+            {{ asignacion.observacionesAsignacion || '—' }}
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- DEVOLUCION REGISTRADA -->
+
+    @if (!asignacion.vigente) {
+
+      <section class="mb-6 rounded-2xl border bg-surface shadow-sm">
+
+        <div class="border-b p-5">
+          <h2 class="font-semibold">Información de devolución</h2>
+        </div>
+
+        <div class="grid grid-cols-1 gap-5 p-6 md:grid-cols-2">
+
+          <div>
+
+            <div class="text-sm text-on-surface-variant">
+              Fecha de devolución (UTC)
+            </div>
+
+            <div>
+              {{ asignacion.fechaDevolucion || '—' }}
+            </div>
+
+          </div>
+
+          <div>
+
+            <div class="text-sm text-on-surface-variant">
+              Condición de devolución
+            </div>
+
+            <div>
+              {{ asignacion.condicionDevolucion || '—' }}
+            </div>
+
+          </div>
+
+          <div>
+
+            <div class="text-sm text-on-surface-variant">
+              Motivo
+            </div>
+
+            <div>
+              {{ asignacion.motivoDevolucion || '—' }}
+            </div>
+
+          </div>
+
+          <div>
+
+            <div class="text-sm text-on-surface-variant">
+              Observaciones
+            </div>
+
+            <div>
+              {{ asignacion.observacionesDevolucion || '—' }}
+            </div>
+
+          </div>
+
+        </div>
+
+      </section>
+
+    }
+
+    <!-- FORMULARIO DEVOLUCION -->
+
+    @if (accion() === 'devolver') {
+
+      <section class="mb-6 rounded-2xl border bg-surface shadow-sm">
+
+        <div class="border-b p-5">
+          <h2 class="font-semibold">Registrar devolución</h2>
+        </div>
+
+        <form
+          [formGroup]="formDevolucion"
+          (ngSubmit)="devolver()"
+          class="flex flex-col gap-5 p-6">
+
+          <mat-form-field class="w-full">
+
+            <mat-label>Motivo de devolución</mat-label>
+
+            <input
+              matInput
+              formControlName="motivoDevolucion"
+              maxlength="300" />
+
+          </mat-form-field>
+
+          <mat-form-field class="w-full">
+
+            <mat-label>Condición del activo</mat-label>
+
+            <mat-select formControlName="condicionDevolucion">
+
+              <mat-option value="">Sin especificar</mat-option>
+              <mat-option value="BUEN_ESTADO">Buen estado</mat-option>
+              <mat-option value="CON_DETALLES">Con detalles</mat-option>
+              <mat-option value="DAÑADO">Dañado</mat-option>
+
+            </mat-select>
+
+          </mat-form-field>
+
+          <mat-form-field class="w-full">
+
+            <mat-label>Observaciones</mat-label>
+
+            <textarea
+              matInput
+              rows="4"
+              maxlength="1000"
+              formControlName="observacionesDevolucion">
+            </textarea>
+
+          </mat-form-field>
+
+          <div class="flex justify-end gap-3">
+
+            <button
+              type="button"
+              mat-button
+              [disabled]="guardando()"
+              (click)="cancelarAccion()">
+
+              Cancelar
+
+            </button>
+
+            <button
+              type="submit"
+              mat-flat-button
+              [disabled]="guardando() || formDevolucion.invalid">
+
+              Confirmar devolución
+
+            </button>
+
+          </div>
+
+        </form>
+
+      </section>
+
+    }
+
+    <!-- FORMULARIO REASIGNACION -->
+
+    @if (accion() === 'reasignar') {
+
+      <section class="mb-6 rounded-2xl border bg-surface shadow-sm">
+
+        <div class="border-b p-5">
+          <h2 class="font-semibold">Reasignar activo</h2>
+        </div>
+
+        <form
+          [formGroup]="formReasignacion"
+          (ngSubmit)="reasignar()"
+          class="flex flex-col gap-5 p-6">
+
+          <mat-form-field class="w-full">
+
+            <mat-label>Nuevo responsable</mat-label>
+
+            <mat-select formControlName="nuevoResponsableId">
+
+              @for (responsable of responsables(); track responsable.id) {
+
+                <mat-option [value]="responsable.id">
+
+                  {{ responsable.nombre }}
+                  ({{ responsable.tipo === 'PERSONA' ? 'Persona' : 'Área' }})
+
+                </mat-option>
+
+              }
+
+            </mat-select>
+
+            @if (formReasignacion.controls.nuevoResponsableId.hasError('required')) {
+              <mat-error>Selecciona un responsable.</mat-error>
+            }
+
+          </mat-form-field>
+
+          <mat-form-field class="w-full">
+
+            <mat-label>Motivo de reasignación</mat-label>
+
+            <input
+              matInput
+              maxlength="300"
+              formControlName="motivo" />
+
+          </mat-form-field>
+
+          <mat-form-field class="w-full">
+
+            <mat-label>Condición del activo</mat-label>
+
+            <mat-select formControlName="condicionDevolucion">
+
+              <mat-option value="">Sin especificar</mat-option>
+              <mat-option value="BUEN_ESTADO">Buen estado</mat-option>
+              <mat-option value="CON_DETALLES">Con detalles</mat-option>
+              <mat-option value="DAÑADO">Dañado</mat-option>
+
+            </mat-select>
+
+          </mat-form-field>
+
+          <mat-form-field class="w-full">
+
+            <mat-label>Observaciones de devolución</mat-label>
+
+            <textarea
+              matInput
+              maxlength="1000"
+              rows="3"
+              formControlName="observacionesDevolucion">
+            </textarea>
+
+          </mat-form-field>
+
+          <mat-form-field class="w-full">
+
+            <mat-label>Observaciones de nueva entrega</mat-label>
+
+            <textarea
+              matInput
+              maxlength="1000"
+              rows="3"
+              formControlName="observacionesAsignacion">
+            </textarea>
+
+          </mat-form-field>
+
+          <div class="flex justify-end gap-3">
+
+            <button
+              type="button"
+              mat-button
+              [disabled]="guardando()"
+              (click)="cancelarAccion()">
+
+              Cancelar
+
+            </button>
+
+            <button
+              type="submit"
+              mat-flat-button
+              [disabled]="guardando() || formReasignacion.invalid">
+
+              Confirmar reasignación
+
+            </button>
+
+          </div>
+
+        </form>
+
+      </section>
+
+    }
+
+  }
+
+</div>

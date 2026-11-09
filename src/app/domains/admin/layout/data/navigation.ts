@@ -46,6 +46,18 @@ export const NAVIGATION: NavigationItem[] = [
         ]
       },
       {
+        id: 'inventario/asignaciones',
+        label: 'Asignaciones',
+        icon: 'clipboard-list',
+        route: '/admin/asignaciones',
+        roles: [
+          AUTH_ROLES.ADMINISTRADOR,
+          AUTH_ROLES.ADMIN_EMPRESA,
+          AUTH_ROLES.OPERADOR,
+          AUTH_ROLES.CONSULTA,
+        ],
+      },
+      {
         id: 'inventario/etiquetas',
         label: 'Etiquetas NFC / QR',
         icon: 'scan-line',
