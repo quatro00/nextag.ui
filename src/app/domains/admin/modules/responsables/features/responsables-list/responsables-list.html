@@ -1,0 +1,426 @@
+<div class="mx-auto flex w-full max-w-7xl flex-auto flex-col p-6 sm:p-8">
+
+  <!-- Encabezado -->
+
+  <div class="mb-8 flex flex-wrap items-center justify-between gap-4">
+
+    <div class="flex items-center gap-4">
+
+      <div
+        class="flex size-12 items-center justify-center rounded-xl bg-primary text-on-primary">
+
+        <mat-icon svgIcon="users" />
+
+      </div>
+
+      <div>
+
+        <h1 class="text-3xl font-bold tracking-tight">
+          Responsables
+        </h1>
+
+        <p class="mt-1 text-on-surface-variant">
+          Empresa:
+          <strong>
+            {{ empresaContexto.seleccionada()?.nombre || 'Sin seleccionar' }}
+          </strong>
+        </p>
+
+      </div>
+
+    </div>
+
+    @if (puedeGestionar()) {
+
+      <button
+        mat-flat-button
+        [disabled]="!empresaContexto.empresaId"
+        (click)="nuevo()">
+
+        <mat-icon svgIcon="plus" />
+
+        <span class="ml-2">
+          Nuevo responsable
+        </span>
+
+      </button>
+
+    }
+
+  </div>
+
+  <!-- Listado -->
+
+  <section class="overflow-hidden rounded-2xl border bg-surface shadow-sm">
+
+    <div class="border-b p-5">
+
+      <h2 class="text-lg font-semibold">
+        Catálogo de responsables
+      </h2>
+
+      <p class="mt-1 text-sm text-on-surface-variant">
+        Administra las personas y áreas responsables de los activos.
+      </p>
+
+      <!-- Filtros -->
+
+      <div class="mt-5 grid grid-cols-1 gap-4 md:grid-cols-4">
+
+        <mat-form-field class="w-full">
+
+          <mat-label>Buscar</mat-label>
+
+          <mat-icon matPrefix svgIcon="search" />
+
+          <input
+            matInput
+            placeholder="Nombre o código"
+            [value]="busqueda()"
+            (input)="cambiarBusqueda($event)"
+            (keyup.enter)="buscar()" />
+
+        </mat-form-field>
+
+        <mat-form-field class="w-full">
+
+          <mat-label>Tipo</mat-label>
+
+          <mat-select
+            [value]="tipoFiltro()"
+            (selectionChange)="cambiarTipo($event.value)">
+
+            <mat-option value="">
+              Todos
+            </mat-option>
+
+            <mat-option value="PERSONA">
+              Personas
+            </mat-option>
+
+            <mat-option value="AREA">
+              Áreas
+            </mat-option>
+
+          </mat-select>
+
+        </mat-form-field>
+
+        <mat-form-field class="w-full">
+
+          <mat-label>Estado</mat-label>
+
+          <mat-select
+            [value]="estatusFiltro()"
+            (selectionChange)="cambiarEstatus($event.value)">
+
+            <mat-option value="todos">
+              Todos
+            </mat-option>
+
+            <mat-option value="activos">
+              Activos
+            </mat-option>
+
+            <mat-option value="inactivos">
+              Inactivos
+            </mat-option>
+
+          </mat-select>
+
+        </mat-form-field>
+
+        <div class="flex items-start">
+
+          <button
+            mat-stroked-button
+            class="mt-2"
+            (click)="buscar()">
+
+            <mat-icon svgIcon="search" />
+
+            <span class="ml-2">
+              Buscar
+            </span>
+
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- Errores -->
+
+    @if (errorMessage()) {
+
+      <div
+        class="m-5 rounded-xl bg-red-50 p-4 text-sm text-red-700"
+        role="alert">
+
+        {{ errorMessage() }}
+
+      </div>
+
+    }
+
+    <!-- Carga -->
+
+    @if (loading() || empresaContexto.cargando()) {
+
+      <div class="flex justify-center p-12">
+
+        <mat-spinner diameter="36" />
+
+      </div>
+
+    }
+
+    @else if (!empresaContexto.empresaId) {
+
+      <div class="p-12 text-center text-on-surface-variant">
+
+        Selecciona una empresa para consultar responsables.
+
+      </div>
+
+    }
+
+    @else {
+
+      <!-- Tabla -->
+
+      <div class="overflow-x-auto">
+
+        <table class="w-full text-left">
+
+          <thead class="border-b bg-neutral-50/80 dark:bg-neutral-900/50">
+
+            <tr class="text-sm">
+
+              <th class="px-6 py-4 font-semibold">
+                Código
+              </th>
+
+              <th class="px-6 py-4 font-semibold">
+                Responsable
+              </th>
+
+              <th class="px-6 py-4 font-semibold">
+                Tipo
+              </th>
+
+              <th class="px-6 py-4 font-semibold">
+                Sucursal
+              </th>
+
+              <th class="px-6 py-4 font-semibold">
+                Área / Personas
+              </th>
+
+              <th class="px-6 py-4 font-semibold">
+                Estado
+              </th>
+
+              <th class="px-6 py-4 text-right font-semibold">
+                Acciones
+              </th>
+
+            </tr>
+
+          </thead>
+
+          <tbody>
+
+            @for (responsable of responsables(); track responsable.id) {
+
+              <tr
+                class="border-b transition hover:bg-neutral-50/70 last:border-b-0 dark:hover:bg-neutral-900/40">
+
+                <td class="px-6 py-4 font-mono text-sm">
+
+                  {{ responsable.codigo || '—' }}
+
+                </td>
+
+                <td class="px-6 py-4">
+
+                  <div class="font-semibold">
+
+                    {{ responsable.nombre }}
+
+                  </div>
+
+                  @if (responsable.tipo === 'PERSONA' && responsable.puesto) {
+
+                    <div class="text-xs text-on-surface-variant">
+
+                      {{ responsable.puesto }}
+
+                    </div>
+
+                  }
+
+                  @if (responsable.correo) {
+
+                    <div class="text-xs text-on-surface-variant">
+
+                      {{ responsable.correo }}
+
+                    </div>
+
+                  }
+
+                </td>
+
+                <td class="px-6 py-4">
+
+                  <span
+                    class="rounded-full px-3 py-1 text-xs font-semibold"
+                    [class]="responsable.tipo === 'PERSONA'
+                      ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
+                      : 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300'">
+
+                    {{ responsable.tipo === 'PERSONA' ? 'Persona' : 'Área' }}
+
+                  </span>
+
+                </td>
+
+                <td class="px-6 py-4 text-sm">
+
+                  {{ responsable.sucursalNombre || '—' }}
+
+                </td>
+
+                <td class="px-6 py-4 text-sm">
+
+                  @if (responsable.tipo === 'PERSONA') {
+
+                    {{ responsable.areaResponsableNombre || 'Sin área' }}
+
+                  } @else {
+
+                    {{ responsable.totalPersonas }}
+                    persona(s)
+
+                  }
+
+                </td>
+
+                <td class="px-6 py-4">
+
+                  <span
+                    class="rounded-full px-3 py-1 text-xs font-semibold"
+                    [class]="responsable.activo
+                      ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
+                      : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'">
+
+                    {{ responsable.activo ? 'Activo' : 'Inactivo' }}
+
+                  </span>
+
+                </td>
+
+                <td class="px-6 py-4 text-right whitespace-nowrap">
+
+                  <button
+                    matIconButton
+                    [matTooltip]="puedeGestionar() ? 'Editar' : 'Consultar'"
+                    (click)="verDetalle(responsable.id)">
+
+                    <mat-icon
+                      [svgIcon]="puedeGestionar() ? 'pencil' : 'eye'" />
+
+                  </button>
+
+                  @if (puedeGestionar()) {
+
+                    <button
+                      matIconButton
+                      [disabled]="actualizandoId() !== null"
+                      [matTooltip]="responsable.activo ? 'Desactivar' : 'Activar'"
+                      (click)="actualizarEstatus(responsable)">
+
+                      <mat-icon
+                        [svgIcon]="responsable.activo ? 'circle-x' : 'circle-check'" />
+
+                    </button>
+
+                  }
+
+                </td>
+
+              </tr>
+
+            } @empty {
+
+              <tr>
+
+                <td
+                  colspan="7"
+                  class="p-12 text-center text-on-surface-variant">
+
+                  No se encontraron responsables.
+
+                </td>
+
+              </tr>
+
+            }
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+      <!-- Paginación -->
+
+      <div
+        class="flex flex-wrap items-center justify-between gap-4 border-t p-5">
+
+        <div class="text-sm text-on-surface-variant">
+
+          Total de registros:
+          <strong>{{ total() }}</strong>
+
+        </div>
+
+        <div class="flex items-center gap-3">
+
+          <button
+            mat-stroked-button
+            [disabled]="pagina() <= 1"
+            (click)="cambiarPagina(pagina() - 1)">
+
+            Anterior
+
+          </button>
+
+          <span class="text-sm">
+
+            Página {{ pagina() }}
+            de {{ totalPaginas() || 1 }}
+
+          </span>
+
+          <button
+            mat-stroked-button
+            [disabled]="pagina() >= totalPaginas()"
+            (click)="cambiarPagina(pagina() + 1)">
+
+            Siguiente
+
+          </button>
+
+        </div>
+
+      </div>
+
+    }
+
+  </section>
+
+</div>

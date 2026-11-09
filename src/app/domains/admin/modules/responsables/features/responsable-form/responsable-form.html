@@ -1,0 +1,414 @@
+<div class="mx-auto flex w-full max-w-5xl flex-auto flex-col p-6 sm:p-8">
+
+  <!-- Encabezado -->
+
+  <header class="mb-7 flex items-center gap-4">
+
+    <button
+      matIconButton
+      aria-label="Volver a responsables"
+      (click)="volver()">
+
+      <mat-icon svgIcon="arrow-left" />
+
+    </button>
+
+    <div
+      class="flex size-12 items-center justify-center rounded-xl bg-primary text-on-primary">
+
+      <mat-icon svgIcon="users" />
+
+    </div>
+
+    <div>
+
+      <h1 class="text-3xl font-bold tracking-tight">
+
+        {{ esEdicion ? 'Detalle de responsable' : 'Nuevo responsable' }}
+
+      </h1>
+
+      <p class="mt-1 text-on-surface-variant">
+
+        Empresa:
+        <strong>
+          {{ empresaContexto.seleccionada()?.nombre || 'Sin seleccionar' }}
+        </strong>
+
+      </p>
+
+    </div>
+
+  </header>
+
+  <!-- Mensajes -->
+
+  @if (errorMessage()) {
+
+    <div
+      class="mb-5 rounded-xl bg-red-50 p-4 text-sm text-red-700"
+      role="alert">
+
+      {{ errorMessage() }}
+
+    </div>
+
+  }
+
+  @if (successMessage()) {
+
+    <div
+      class="mb-5 rounded-xl bg-green-50 p-4 text-sm text-green-700"
+      role="status">
+
+      {{ successMessage() }}
+
+    </div>
+
+  }
+
+  @if (loading() || empresaContexto.cargando()) {
+
+    <div class="flex justify-center p-12">
+
+      <mat-spinner diameter="36" />
+
+    </div>
+
+  }
+
+  @else if (!empresaContexto.empresaId) {
+
+    <div class="rounded-2xl border bg-surface p-8 text-center">
+
+      Selecciona una empresa.
+
+    </div>
+
+  }
+
+  @else if (detalleCargado()) {
+
+    @if (!puedeGestionar()) {
+
+      <div class="mb-5 rounded-xl border bg-surface p-4 text-sm">
+
+        Modo consulta: no tienes permisos para modificar responsables.
+
+      </div>
+
+    }
+
+    <form
+      class="flex flex-col gap-6"
+      [formGroup]="form"
+      (ngSubmit)="guardar()">
+
+      <!-- Información general -->
+
+      <section class="overflow-hidden rounded-2xl border bg-surface shadow-sm">
+
+        <div class="border-b p-5">
+
+          <h2 class="font-semibold">
+            Información general
+          </h2>
+
+          <p class="mt-1 text-sm text-on-surface-variant">
+            Identificación de la persona o área responsable.
+          </p>
+
+        </div>
+
+        <div class="grid grid-cols-1 gap-5 p-6 md:grid-cols-2">
+
+          <!-- Tipo -->
+
+          <mat-form-field class="w-full">
+
+            <mat-label>Tipo de responsable</mat-label>
+
+            <mat-select
+              formControlName="tipo"
+              (selectionChange)="cambiarTipo($event.value)">
+
+              <mat-option value="PERSONA">
+                Persona
+              </mat-option>
+
+              <mat-option value="AREA">
+                Área / Departamento
+              </mat-option>
+
+            </mat-select>
+
+          </mat-form-field>
+
+          <!-- Código -->
+
+          <mat-form-field class="w-full">
+
+            <mat-label>
+              {{ tipo() === 'PERSONA' ? 'Número de empleado / Código' : 'Código de área' }}
+            </mat-label>
+
+            <input
+              matInput
+              formControlName="codigo"
+              maxlength="50" />
+
+          </mat-form-field>
+
+          <!-- Nombre -->
+
+          <mat-form-field class="w-full md:col-span-2">
+
+            <mat-label>
+              {{ tipo() === 'PERSONA' ? 'Nombre completo' : 'Nombre del área' }}
+            </mat-label>
+
+            <input
+              matInput
+              formControlName="nombre"
+              maxlength="200" />
+
+            @if (form.controls.nombre.hasError('required')) {
+
+              <mat-error>
+                El nombre es obligatorio.
+              </mat-error>
+
+            }
+
+          </mat-form-field>
+
+          <!-- Sucursal -->
+
+          <mat-form-field class="w-full">
+
+            <mat-label>Sucursal</mat-label>
+
+            <mat-select formControlName="sucursalId">
+
+              <mat-option value="">
+                Sin sucursal
+              </mat-option>
+
+              @for (sucursal of sucursales(); track sucursal.id) {
+
+                <mat-option [value]="sucursal.id">
+
+                  {{ sucursal.nombre }}
+
+                </mat-option>
+
+              }
+
+            </mat-select>
+
+          </mat-form-field>
+
+          <!-- Campos persona -->
+
+          @if (tipo() === 'PERSONA') {
+
+            <mat-form-field class="w-full">
+
+              <mat-label>Área responsable</mat-label>
+
+              <mat-select formControlName="areaResponsableId">
+
+                <mat-option value="">
+                  Sin área
+                </mat-option>
+
+                @for (area of areas(); track area.id) {
+
+                  <mat-option [value]="area.id">
+
+                    {{ area.nombre }}
+
+                  </mat-option>
+
+                }
+
+              </mat-select>
+
+            </mat-form-field>
+
+            <mat-form-field class="w-full">
+
+              <mat-label>Puesto</mat-label>
+
+              <input
+                matInput
+                formControlName="puesto"
+                maxlength="100" />
+
+            </mat-form-field>
+
+            <mat-form-field class="w-full">
+
+              <mat-label>Departamento</mat-label>
+
+              <input
+                matInput
+                formControlName="departamento"
+                maxlength="150" />
+
+            </mat-form-field>
+
+          }
+
+          <!-- Campos área -->
+
+          @if (tipo() === 'AREA') {
+
+            <mat-form-field class="w-full">
+
+              <mat-label>Persona de contacto</mat-label>
+
+              <input
+                matInput
+                formControlName="contacto"
+                maxlength="150" />
+
+            </mat-form-field>
+
+          }
+
+        </div>
+
+      </section>
+
+      <!-- Contacto -->
+
+      <section class="overflow-hidden rounded-2xl border bg-surface shadow-sm">
+
+        <div class="border-b p-5">
+
+          <h2 class="font-semibold">
+            Información de contacto
+          </h2>
+
+        </div>
+
+        <div class="grid grid-cols-1 gap-5 p-6 md:grid-cols-2">
+
+          <mat-form-field class="w-full">
+
+            <mat-label>Correo electrónico</mat-label>
+
+            <input
+              matInput
+              type="email"
+              formControlName="correo"
+              maxlength="256" />
+
+            @if (form.controls.correo.hasError('email')) {
+
+              <mat-error>
+                Ingresa un correo válido.
+              </mat-error>
+
+            }
+
+          </mat-form-field>
+
+          <mat-form-field class="w-full">
+
+            <mat-label>Teléfono</mat-label>
+
+            <input
+              matInput
+              formControlName="telefono"
+              maxlength="30" />
+
+          </mat-form-field>
+
+        </div>
+
+      </section>
+
+      <!-- Observaciones -->
+
+      <section class="overflow-hidden rounded-2xl border bg-surface shadow-sm">
+
+        <div class="border-b p-5">
+
+          <h2 class="font-semibold">
+            Observaciones
+          </h2>
+
+        </div>
+
+        <div class="p-6">
+
+          <mat-form-field class="w-full">
+
+            <mat-label>Información adicional</mat-label>
+
+            <textarea
+              matInput
+              formControlName="observaciones"
+              maxlength="500"
+              rows="4">
+            </textarea>
+
+          </mat-form-field>
+
+        </div>
+
+      </section>
+
+      <!-- Acciones -->
+
+      <div class="flex flex-wrap justify-end gap-3">
+
+        <button
+          type="button"
+          mat-button
+          (click)="volver()">
+
+          <mat-icon svgIcon="arrow-left" />
+
+          <span class="ml-2">
+            Volver
+          </span>
+
+        </button>
+
+        @if (puedeGestionar()) {
+
+          <button
+            type="submit"
+            mat-flat-button
+            [disabled]="guardando() || form.invalid">
+
+            @if (guardando()) {
+
+              <mat-spinner diameter="18" />
+
+            } @else {
+
+              <mat-icon svgIcon="save" />
+
+            }
+
+            <span class="ml-2">
+
+              {{ guardando() ? 'Guardando...' : 'Guardar responsable' }}
+
+            </span>
+
+          </button>
+
+        }
+
+      </div>
+
+    </form>
+
+  }
+
+</div>

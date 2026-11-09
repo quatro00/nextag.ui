@@ -147,6 +147,18 @@ export const NAVIGATION: NavigationItem[] = [
           AUTH_ROLES.CONSULTA,
         ],
       },
+      {
+        id: 'catalogos/responsables',
+        label: 'Responsables',
+        icon: 'users',
+        route: '/admin/responsables',
+        roles: [
+          AUTH_ROLES.ADMINISTRADOR,
+          AUTH_ROLES.ADMIN_EMPRESA,
+          AUTH_ROLES.OPERADOR,
+          AUTH_ROLES.CONSULTA,
+        ],
+      },
     ],
   },
   {

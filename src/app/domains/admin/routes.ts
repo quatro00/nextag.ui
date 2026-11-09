@@ -21,34 +21,9 @@ const routes: Routes = [
       { path: 'marcas', canActivate: [roleGuard], data: { roles: [AUTH_ROLES.ADMINISTRADOR, AUTH_ROLES.ADMIN_EMPRESA, AUTH_ROLES.OPERADOR, AUTH_ROLES.CONSULTA,], }, loadChildren: () => import('./modules/marcas/routes'), },
       { path: 'modelos-activo', canActivate: [roleGuard], data: { roles: [AUTH_ROLES.ADMINISTRADOR, AUTH_ROLES.ADMIN_EMPRESA, AUTH_ROLES.OPERADOR, AUTH_ROLES.CONSULTA,], }, loadChildren: () => import('./modules/modelos-activo/routes'), },
       { path: 'proveedores', canActivate: [roleGuard], data: { roles: [AUTH_ROLES.ADMINISTRADOR, AUTH_ROLES.ADMIN_EMPRESA, AUTH_ROLES.OPERADOR, AUTH_ROLES.CONSULTA,], }, loadChildren: () => import('./modules/proveedores/routes'), },
-      {
-        path: 'activos',
-        canActivate: [roleGuard],
-        data: {
-          roles: [
-            AUTH_ROLES.ADMINISTRADOR,
-            AUTH_ROLES.ADMIN_EMPRESA,
-            AUTH_ROLES.OPERADOR,
-            AUTH_ROLES.CONSULTA
-          ]
-        },
-        loadChildren: () =>
-          import('./modules/activos/routes')
-      },
-      {
-        path: 'etiquetas',
-        canActivate: [roleGuard],
-        data: {
-          roles: [
-            AUTH_ROLES.ADMINISTRADOR,
-            AUTH_ROLES.ADMIN_EMPRESA,
-            AUTH_ROLES.OPERADOR,
-            AUTH_ROLES.CONSULTA
-          ]
-        },
-        loadChildren: () =>
-          import('./modules/etiquetas/routes')
-      },
+      { path: 'activos', canActivate: [roleGuard], data: { roles: [AUTH_ROLES.ADMINISTRADOR, AUTH_ROLES.ADMIN_EMPRESA, AUTH_ROLES.OPERADOR, AUTH_ROLES.CONSULTA ] }, loadChildren: () => import('./modules/activos/routes') },
+      { path: 'etiquetas', canActivate: [roleGuard], data: { roles: [AUTH_ROLES.ADMINISTRADOR, AUTH_ROLES.ADMIN_EMPRESA, AUTH_ROLES.OPERADOR, AUTH_ROLES.CONSULTA] }, loadChildren: () => import('./modules/etiquetas/routes') },
+      { path: 'responsables', canActivate: [roleGuard], data: { roles: [AUTH_ROLES.ADMINISTRADOR, AUTH_ROLES.ADMIN_EMPRESA, AUTH_ROLES.OPERADOR, AUTH_ROLES.CONSULTA, ], }, loadChildren: () => import('./modules/responsables/routes'), },
       { path: '**', redirectTo: 'inicio' },
     ],
   },
