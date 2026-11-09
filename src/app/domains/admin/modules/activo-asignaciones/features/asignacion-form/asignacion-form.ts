@@ -1,14 +1,14 @@
 import {
-  Component,
-  computed,
-  effect,
-  inject,
-  signal,
+    Component,
+    computed,
+    effect,
+    inject,
+    signal,
 } from '@angular/core';
 import {
-  FormBuilder,
-  ReactiveFormsModule,
-  Validators,
+    FormBuilder,
+    ReactiveFormsModule,
+    Validators,
 } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -21,355 +21,477 @@ import { firstValueFrom } from 'rxjs';
 import { EmpresaContextoService } from '@/app/core/empresa-contexto.service';
 import { AUTH_ROLES } from '@/app/domains/auth/constants/auth.roles';
 import { AuthService } from '@/app/domains/auth/services/auth.services';
+import { ActivosService } from '../../../activos/services/activos.service';
+import { ActivoDetalle } from '../../../activos/types/activo.types';
 import { ResponsablesService } from '../../../responsables/services/responsables.service';
 import { Responsable } from '../../../responsables/types/responsable.types';
 import { mensajeApi } from '../../../shared/api-error';
 import { ActivoAsignacionesService } from '../../services/activo-asignaciones.service';
 import {
-  ActivoAsignacionCrear,
-  ActivoSinAsignar,
+    ActivoAsignacionCrear,
+    ActivoSinAsignar,
 } from '../../types/activo-asignacion.types';
 
+
 @Component({
-  selector: 'app-asignacion-form',
-  templateUrl: './asignacion-form.html',
-  imports: [
-    ReactiveFormsModule,
-    MatButtonModule,
-    MatFormFieldModule,
-    MatIconModule,
-    MatInputModule,
-    MatProgressSpinnerModule,
-    MatSelectModule,
-  ],
+    selector: 'app-asignacion-form',
+    templateUrl: './asignacion-form.html',
+    imports: [
+        ReactiveFormsModule,
+        MatButtonModule,
+        MatFormFieldModule,
+        MatIconModule,
+        MatInputModule,
+        MatProgressSpinnerModule,
+        MatSelectModule,
+    ],
 })
 export default class AsignacionForm {
 
-  protected readonly empresa = inject(EmpresaContextoService);
+    protected readonly empresa = inject(EmpresaContextoService);
 
-  private readonly fb = inject(FormBuilder);
-  private readonly router = inject(Router);
-  private readonly route = inject(ActivatedRoute);
-  private readonly auth = inject(AuthService);
+    private readonly fb = inject(FormBuilder);
+    private readonly router = inject(Router);
+    private readonly route = inject(ActivatedRoute);
+    private readonly auth = inject(AuthService);
 
-  private readonly service = inject(ActivoAsignacionesService);
-  private readonly responsablesService = inject(ResponsablesService);
+    private readonly service = inject(ActivoAsignacionesService);
+    private readonly responsablesService = inject(ResponsablesService);
+    private readonly activosService = inject(ActivosService);
 
-  private solicitudActivos = 0;
-  private solicitudResponsables = 0;
+    private solicitudActivos = 0;
+    private solicitudResponsables = 0;
 
-  protected readonly activos = signal<ActivoSinAsignar[]>([]);
-  protected readonly responsables = signal<Responsable[]>([]);
+    protected readonly activos = signal<ActivoSinAsignar[]>([]);
+    protected readonly responsables = signal<Responsable[]>([]);
 
-  protected readonly cargandoActivos = signal(false);
-  protected readonly cargandoResponsables = signal(false);
-  protected readonly guardando = signal(false);
+    protected readonly activoSeleccionado = signal<ActivoSinAsignar | null>(null);
+    protected readonly responsableSeleccionado = signal<Responsable | null>(null);
 
-  protected readonly error = signal<string | null>(null);
+    protected readonly cargandoActivos = signal(false);
+    protected readonly cargandoResponsables = signal(false);
+    protected readonly guardando = signal(false);
 
-  protected readonly buscarActivo = signal('');
-  protected readonly buscarResponsable = signal('');
+    protected readonly error = signal<string | null>(null);
 
-  protected readonly paginaActivos = signal(1);
-  protected readonly paginasActivos = signal(1);
+    protected readonly buscarActivo = signal('');
+    protected readonly buscarResponsable = signal('');
 
-  protected readonly paginaResponsables = signal(1);
-  protected readonly paginasResponsables = signal(1);
+    protected readonly paginaActivos = signal(1);
+    protected readonly paginasActivos = signal(1);
 
-  protected readonly puedeGestionar = computed(() =>
-    this.auth.hasAnyRole([
-      AUTH_ROLES.ADMINISTRADOR,
-      AUTH_ROLES.ADMIN_EMPRESA,
-    ])
-  );
+    protected readonly paginaResponsables = signal(1);
+    protected readonly paginasResponsables = signal(1);
 
-  protected readonly form = this.fb.nonNullable.group({
-    activoId: ['', Validators.required],
-    responsableId: ['', Validators.required],
+    protected readonly puedeGestionar = computed(() =>
+        this.auth.hasAnyRole([
+            AUTH_ROLES.ADMINISTRADOR,
+            AUTH_ROLES.ADMIN_EMPRESA,
+        ])
+    );
 
-    motivoAsignacion: ['', Validators.maxLength(300)],
+    protected readonly form = this.fb.nonNullable.group({
+        activoId: ['', Validators.required],
+        responsableId: ['', Validators.required],
 
-    observacionesAsignacion: [
-      '',
-      Validators.maxLength(1000),
-    ],
-  });
+        motivoAsignacion: ['', Validators.maxLength(300)],
 
-  constructor() {
-
-    effect(() => {
-
-      const empresaId =
-        this.empresa.seleccionada()?.id ?? null;
-
-      ++this.solicitudActivos;
-      ++this.solicitudResponsables;
-
-      this.activos.set([]);
-      this.responsables.set([]);
-
-      this.paginaActivos.set(1);
-      this.paginaResponsables.set(1);
-
-      this.paginasActivos.set(1);
-      this.paginasResponsables.set(1);
-
-      this.buscarActivo.set('');
-      this.buscarResponsable.set('');
-
-      this.error.set(null);
-      this.form.reset();
-
-      if (!empresaId) return;
-
-      const activoId =
-        this.route.snapshot.queryParamMap.get('activoId');
-
-      if (activoId) {
-        this.form.controls.activoId.setValue(activoId);
-      }
-
-      void this.cargarActivos();
-      void this.cargarResponsables();
-
+        observacionesAsignacion: [
+            '',
+            Validators.maxLength(1000),
+        ],
     });
-  }
 
-  protected cambiarBusquedaActivo(event: Event): void {
-    this.buscarActivo.set(
-      (event.target as HTMLInputElement).value
-    );
-  }
+    constructor() {
 
-  protected cambiarBusquedaResponsable(event: Event): void {
-    this.buscarResponsable.set(
-      (event.target as HTMLInputElement).value
-    );
-  }
+        effect(() => {
 
-  protected buscarActivos(): void {
-    this.paginaActivos.set(1);
-    void this.cargarActivos();
-  }
+            const empresaId =
+                this.empresa.seleccionada()?.id ?? null;
 
-  protected buscarResponsables(): void {
-    this.paginaResponsables.set(1);
-    void this.cargarResponsables();
-  }
+            ++this.solicitudActivos;
+            ++this.solicitudResponsables;
 
-  protected cambiarPaginaActivos(valor: number): void {
+            this.activos.set([]);
+            this.responsables.set([]);
 
-    if (
-      valor < 1 ||
-      valor > this.paginasActivos()
-    ) return;
+            this.activoSeleccionado.set(null);
+            this.responsableSeleccionado.set(null);
 
-    this.paginaActivos.set(valor);
+            this.paginaActivos.set(1);
+            this.paginaResponsables.set(1);
 
-    void this.cargarActivos();
-  }
+            this.paginasActivos.set(1);
+            this.paginasResponsables.set(1);
 
-  protected cambiarPaginaResponsables(valor: number): void {
+            this.buscarActivo.set('');
+            this.buscarResponsable.set('');
 
-    if (
-      valor < 1 ||
-      valor > this.paginasResponsables()
-    ) return;
+            this.error.set(null);
+            this.form.reset();
 
-    this.paginaResponsables.set(valor);
+            if (!empresaId) return;
 
-    void this.cargarResponsables();
-  }
+            const activoId =
+                this.route.snapshot.queryParamMap.get('activoId');
 
-  private async cargarActivos(): Promise<void> {
+            if (activoId) {
+                void this.precargarActivo(activoId, empresaId);
+            }
 
-    const empresaId = this.empresa.empresaId;
+            void this.cargarActivos();
+            void this.cargarResponsables();
 
-    if (!empresaId) return;
+        });
+    }
 
-    const solicitudActual = ++this.solicitudActivos;
+    private async precargarActivo(
+        activoId: string,
+        empresaId: string
+    ): Promise<void> {
 
-    this.cargandoActivos.set(true);
+        try {
+            const activo: ActivoDetalle = await firstValueFrom(
+                this.activosService.getById(activoId)
+            );
 
-    try {
+            if (this.empresa.empresaId !== empresaId) {
+                return;
+            }
 
-      const resultado = await firstValueFrom(
-        this.service.getActivosSinAsignar(
-          this.buscarActivo(),
-          undefined,
-          this.paginaActivos(),
-          20
-        )
-      );
+            if (
+                activo.estadoActivoId === 7 ||
+                activo.fechaBaja !== null
+            ) {
+                this.error.set(
+                    'No se puede asignar un activo dado de baja.'
+                );
 
-      if (
-        solicitudActual !== this.solicitudActivos ||
-        this.empresa.empresaId !== empresaId
-      ) return;
+                return;
+            }
 
-      this.activos.set(resultado.items);
+            const seleccionado: ActivoSinAsignar = {
+                id: activo.id,
+                codigo: activo.codigo,
+                nombre: activo.nombre,
 
-      this.paginasActivos.set(
-        Math.max(1, resultado.totalPaginas)
-      );
+                numeroSerie: activo.numeroSerie,
+                numeroInventario: activo.numeroInventario,
 
-      // Conservar visible el activo seleccionado
-      // cuando se cambia de página.
-      const seleccionado = this.form.controls.activoId.value;
+                sucursalId: activo.sucursalId,
+                sucursalNombre: activo.sucursalNombre,
 
-      if (
-        seleccionado &&
-        !resultado.items.some(x => x.id === seleccionado)
-      ) {
-        this.form.controls.activoId.setValue('');
-      }
+                ubicacionId: activo.ubicacionId,
+                ubicacionNombre: activo.ubicacionNombre,
 
-    } catch (err) {
+                estadoActivoId: activo.estadoActivoId,
+                estadoActivoNombre: activo.estadoActivoNombre,
+            };
 
-      if (
-        solicitudActual === this.solicitudActivos &&
-        this.empresa.empresaId === empresaId
-      ) {
-        this.error.set(
-          mensajeApi(err, 'No fue posible cargar los activos.')
+            this.activoSeleccionado.set(seleccionado);
+
+            this.form.controls.activoId.setValue(activo.id);
+
+        } catch (err) {
+
+            if (this.empresa.empresaId === empresaId) {
+
+                this.error.set(
+                    mensajeApi(
+                        err,
+                        'No fue posible recuperar el activo seleccionado.'
+                    )
+                );
+            }
+        }
+    }
+
+    protected cambiarBusquedaActivo(event: Event): void {
+        this.buscarActivo.set(
+            (event.target as HTMLInputElement).value
         );
-      }
-
-    } finally {
-
-      if (solicitudActual === this.solicitudActivos) {
-        this.cargandoActivos.set(false);
-      }
     }
-  }
 
-  private async cargarResponsables(): Promise<void> {
-
-    const empresaId = this.empresa.empresaId;
-
-    if (!empresaId) return;
-
-    const solicitudActual = ++this.solicitudResponsables;
-
-    this.cargandoResponsables.set(true);
-
-    try {
-
-      const resultado = await firstValueFrom(
-        this.responsablesService.getAll({
-          buscar: this.buscarResponsable(),
-          activo: true,
-          pagina: this.paginaResponsables(),
-          tamanoPagina: 20,
-        })
-      );
-
-      if (
-        solicitudActual !== this.solicitudResponsables ||
-        this.empresa.empresaId !== empresaId
-      ) return;
-
-      this.responsables.set(resultado.items);
-
-      this.paginasResponsables.set(
-        Math.max(1, resultado.totalPaginas)
-      );
-
-      const seleccionado =
-        this.form.controls.responsableId.value;
-
-      if (
-        seleccionado &&
-        !resultado.items.some(x => x.id === seleccionado)
-      ) {
-        this.form.controls.responsableId.setValue('');
-      }
-
-    } catch (err) {
-
-      if (
-        solicitudActual === this.solicitudResponsables &&
-        this.empresa.empresaId === empresaId
-      ) {
-        this.error.set(
-          mensajeApi(err, 'No fue posible cargar responsables.')
+    protected cambiarBusquedaResponsable(event: Event): void {
+        this.buscarResponsable.set(
+            (event.target as HTMLInputElement).value
         );
-      }
-
-    } finally {
-
-      if (solicitudActual === this.solicitudResponsables) {
-        this.cargandoResponsables.set(false);
-      }
-    }
-  }
-
-  protected async guardar(): Promise<void> {
-
-    if (
-      this.guardando() ||
-      !this.puedeGestionar()
-    ) return;
-
-    if (this.form.invalid) {
-      this.form.markAllAsTouched();
-      return;
     }
 
-    const empresaId = this.empresa.empresaId;
-
-    if (!empresaId) {
-      this.error.set('Selecciona una empresa.');
-      return;
+    protected buscarActivos(): void {
+        this.paginaActivos.set(1);
+        void this.cargarActivos();
     }
 
-    const f = this.form.getRawValue();
+    protected buscarResponsables(): void {
+        this.paginaResponsables.set(1);
+        void this.cargarResponsables();
+    }
 
-    const dto: ActivoAsignacionCrear = {
-      activoId: f.activoId,
-      responsableId: f.responsableId,
+    protected readonly mostrarActivoSeleccionado = computed(() => {
 
-      fechaAsignacion: null,
+        const seleccionado = this.activoSeleccionado();
 
-      motivoAsignacion:
-        f.motivoAsignacion.trim() || null,
+        if (!seleccionado) {
+            return false;
+        }
 
-      observacionesAsignacion:
-        f.observacionesAsignacion.trim() || null,
-    };
-
-    this.guardando.set(true);
-    this.error.set(null);
-
-    try {
-
-      const creado = await firstValueFrom(
-        this.service.create(dto)
-      );
-
-      if (this.empresa.empresaId === empresaId) {
-
-        await this.router.navigate([
-          '/admin/asignaciones',
-          creado.id,
-        ]);
-      }
-
-    } catch (err) {
-
-      if (this.empresa.empresaId === empresaId) {
-        this.error.set(
-          mensajeApi(err, 'No fue posible registrar la asignación.')
+        return !this.activos().some(
+            x => x.id === seleccionado.id
         );
-      }
+    });
 
-    } finally {
+    protected readonly mostrarResponsableSeleccionado =
+        computed(() => {
 
-      this.guardando.set(false);
+            const seleccionado = this.responsableSeleccionado();
+
+            if (!seleccionado) {
+                return false;
+            }
+
+            return !this.responsables().some(
+                x => x.id === seleccionado.id
+            );
+        });
+
+    protected cambiarPaginaActivos(valor: number): void {
+
+        if (
+            valor < 1 ||
+            valor > this.paginasActivos()
+        ) return;
+
+        this.paginaActivos.set(valor);
+
+        void this.cargarActivos();
     }
-  }
 
-  protected volver(): void {
-    void this.router.navigate(['/admin/asignaciones']);
-  }
+    protected seleccionarActivo(id: string): void {
+        const activo = this.activos().find(x => x.id === id);
+
+        if (activo) {
+            this.activoSeleccionado.set(activo);
+        }
+    }
+
+    protected seleccionarResponsable(id: string): void {
+        const responsable = this.responsables().find(
+            x => x.id === id
+        );
+
+        if (responsable) {
+            this.responsableSeleccionado.set(responsable);
+        }
+    }
+
+    protected cambiarPaginaResponsables(valor: number): void {
+
+        if (
+            valor < 1 ||
+            valor > this.paginasResponsables()
+        ) return;
+
+        this.paginaResponsables.set(valor);
+
+        void this.cargarResponsables();
+    }
+
+    private async cargarActivos(): Promise<void> {
+
+        const empresaId = this.empresa.empresaId;
+
+        if (!empresaId) return;
+
+        const solicitudActual = ++this.solicitudActivos;
+
+        this.cargandoActivos.set(true);
+
+        try {
+
+            const resultado = await firstValueFrom(
+                this.service.getActivosSinAsignar(
+                    this.buscarActivo(),
+                    undefined,
+                    this.paginaActivos(),
+                    20
+                )
+            );
+
+            if (
+                solicitudActual !== this.solicitudActivos ||
+                this.empresa.empresaId !== empresaId
+            ) return;
+
+            this.activos.set(resultado.items);
+
+            const seleccionadoId =
+                this.form.controls.activoId.value;
+
+            if (seleccionadoId) {
+
+                const encontrado = resultado.items.find(
+                    x => x.id === seleccionadoId
+                );
+
+                if (encontrado) {
+                    this.activoSeleccionado.set(encontrado);
+                }
+            }
+
+            this.paginasActivos.set(
+                Math.max(1, resultado.totalPaginas)
+            );
+        } catch (err) {
+
+            if (
+                solicitudActual === this.solicitudActivos &&
+                this.empresa.empresaId === empresaId
+            ) {
+                this.error.set(
+                    mensajeApi(err, 'No fue posible cargar los activos.')
+                );
+            }
+
+        } finally {
+
+            if (solicitudActual === this.solicitudActivos) {
+                this.cargandoActivos.set(false);
+            }
+        }
+    }
+
+    private async cargarResponsables(): Promise<void> {
+
+        const empresaId = this.empresa.empresaId;
+
+        if (!empresaId) return;
+
+        const solicitudActual = ++this.solicitudResponsables;
+
+        this.cargandoResponsables.set(true);
+
+        try {
+
+            const resultado = await firstValueFrom(
+                this.responsablesService.getAll({
+                    buscar: this.buscarResponsable(),
+                    activo: true,
+                    pagina: this.paginaResponsables(),
+                    tamanoPagina: 20,
+                })
+            );
+
+            if (
+                solicitudActual !== this.solicitudResponsables ||
+                this.empresa.empresaId !== empresaId
+            ) return;
+
+            this.responsables.set(resultado.items);
+
+            this.paginasResponsables.set(
+                Math.max(1, resultado.totalPaginas)
+            );
+
+            const seleccionadoId =
+                this.form.controls.responsableId.value;
+
+            if (seleccionadoId) {
+
+                const encontrado = resultado.items.find(
+                    x => x.id === seleccionadoId
+                );
+
+                if (encontrado) {
+                    this.responsableSeleccionado.set(encontrado);
+                }
+            }
+
+        } catch (err) {
+
+            if (
+                solicitudActual === this.solicitudResponsables &&
+                this.empresa.empresaId === empresaId
+            ) {
+                this.error.set(
+                    mensajeApi(err, 'No fue posible cargar responsables.')
+                );
+            }
+
+        } finally {
+
+            if (solicitudActual === this.solicitudResponsables) {
+                this.cargandoResponsables.set(false);
+            }
+        }
+    }
+
+    protected async guardar(): Promise<void> {
+
+        if (
+            this.guardando() ||
+            !this.puedeGestionar()
+        ) return;
+
+        if (this.form.invalid) {
+            this.form.markAllAsTouched();
+            return;
+        }
+
+        const empresaId = this.empresa.empresaId;
+
+        if (!empresaId) {
+            this.error.set('Selecciona una empresa.');
+            return;
+        }
+
+        const f = this.form.getRawValue();
+
+        const dto: ActivoAsignacionCrear = {
+            activoId: f.activoId,
+            responsableId: f.responsableId,
+
+            fechaAsignacion: null,
+
+            motivoAsignacion:
+                f.motivoAsignacion.trim() || null,
+
+            observacionesAsignacion:
+                f.observacionesAsignacion.trim() || null,
+        };
+
+        this.guardando.set(true);
+        this.error.set(null);
+
+        try {
+
+            const creado = await firstValueFrom(
+                this.service.create(dto)
+            );
+
+            if (this.empresa.empresaId === empresaId) {
+
+                await this.router.navigate([
+                    '/admin/asignaciones',
+                    creado.id,
+                ]);
+            }
+
+        } catch (err) {
+
+            if (this.empresa.empresaId === empresaId) {
+                this.error.set(
+                    mensajeApi(err, 'No fue posible registrar la asignación.')
+                );
+            }
+
+        } finally {
+
+            this.guardando.set(false);
+        }
+    }
+
+    protected volver(): void {
+        void this.router.navigate(['/admin/asignaciones']);
+    }
 }
