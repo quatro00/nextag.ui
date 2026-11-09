@@ -161,4 +161,33 @@
     }
   </section>
   }
+
+  <!-- ======================================= -->
+  <!-- ETIQUETAS NFC / QR                     -->
+  <!-- ======================================= -->
+
+  <section class="mt-8">
+
+    @if (id; as activoId) {
+
+    <app-activo-etiquetas [activoId]="activoId" [activoEstadoId]="detalle()?.estadoActivoId ?? 1"
+      [puedeGestionar]="puedeGestionar()" />
+
+    } @else {
+
+    <div class="rounded-2xl border bg-surface p-6">
+
+      <h2 class="font-semibold">
+        Etiquetas NFC / QR
+      </h2>
+
+      <p class="mt-2 text-sm text-on-surface-variant">
+        Guarda primero el activo para vincularle una etiqueta.
+      </p>
+
+    </div>
+
+    }
+
+  </section>
 </div>
