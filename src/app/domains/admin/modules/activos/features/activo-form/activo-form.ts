@@ -141,6 +141,15 @@ export default class ActivoForm {
               costoAdquisicion: d.costoAdquisicion === null ? '' : String(d.costoAdquisicion),
               moneda: d.moneda, observaciones: d.observaciones ?? '',
             });
+            if (this.esEdicion) {
+              this.form.controls.sucursalId.disable({
+                emitEvent: false,
+              });
+
+              this.form.controls.ubicacionId.disable({
+                emitEvent: false,
+              });
+            }
           }
           if (!this.auth.hasAnyRole([AUTH_ROLES.ADMINISTRADOR, AUTH_ROLES.ADMIN_EMPRESA]) || datos.detalle?.estadoActivoId === 7) this.form.disable({ emitEvent: false });
           this.cargado.set(true); this.loading.set(false);
