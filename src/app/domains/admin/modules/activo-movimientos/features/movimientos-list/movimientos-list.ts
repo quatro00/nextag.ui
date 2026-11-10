@@ -6,7 +6,7 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
@@ -52,6 +52,7 @@ export default class MovimientosList {
 
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
 
   private solicitud = 0;
 
@@ -71,6 +72,9 @@ export default class MovimientosList {
 
   protected readonly tipoId =
     signal<number | null>(null);
+
+  protected readonly activoId =
+    signal<string | null>(null);
 
   protected readonly pagina = signal(1);
   protected readonly tamanoPagina = 20;
@@ -98,6 +102,9 @@ export default class MovimientosList {
       const empresaId =
         this.empresa.seleccionada()?.id ?? null;
 
+      const activoId =
+        this.route.snapshot.queryParamMap.get('activoId');
+
       const req = ++this.solicitud;
 
       this.items.set([]);
@@ -110,6 +117,7 @@ export default class MovimientosList {
       this.buscarTexto.set('');
 
       this.tipoId.set(null);
+      this.activoId.set(activoId);
 
       this.error.set(null);
       this.loading.set(!!empresaId);
@@ -119,11 +127,15 @@ export default class MovimientosList {
       }
 
       const sub = forkJoin({
+
         movimientos: this.service.getAll({
+          activoId: activoId || undefined,
           pagina: 1,
           tamanoPagina: this.tamanoPagina,
         }),
+
         tipos: this.service.getTipos(),
+
       }).subscribe({
 
         next: datos => {
@@ -240,6 +252,26 @@ export default class MovimientosList {
     ]);
   }
 
+  protected quitarFiltroActivo(): void {
+
+    this.activoId.set(null);
+
+    this.pagina.set(1);
+
+    void this.recargar();
+
+    void this.router.navigate(
+      ['/admin/movimientos'],
+      {
+        queryParams: {
+          activoId: null,
+        },
+        queryParamsHandling: 'merge',
+        replaceUrl: true,
+      }
+    );
+  }
+
   private async recargar(): Promise<void> {
 
     const empresaId = this.empresa.empresaId;
@@ -257,16 +289,16 @@ export default class MovimientosList {
 
       const resultado = await firstValueFrom(
         this.service.getAll({
-
+          activoId:
+            this.activoId() || undefined,
           buscar:
             this.buscarTexto() || undefined,
-
           tipoMovimientoActivoId:
             this.tipoId() ?? undefined,
-
-          pagina: this.pagina(),
-
-          tamanoPagina: this.tamanoPagina,
+          pagina:
+            this.pagina(),
+          tamanoPagina:
+            this.tamanoPagina,
         })
       );
 

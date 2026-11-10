@@ -1,0 +1,442 @@
+<section class="overflow-hidden rounded-2xl border bg-surface shadow-sm">
+
+    <!-- ===================================== -->
+    <!-- ENCABEZADO                            -->
+    <!-- ===================================== -->
+
+    <div class="flex flex-wrap items-center justify-between gap-4 border-b p-5">
+
+        <div class="flex items-center gap-3">
+
+            <mat-icon svgIcon="arrow-left-right" class="text-primary" />
+
+            <div>
+
+                <h2 class="font-semibold">
+                    Movimientos y ubicación física
+                </h2>
+
+                <p class="text-sm text-on-surface-variant">
+                    Ubicación actual e historial de movimientos.
+                </p>
+
+            </div>
+
+        </div>
+
+        <div class="flex flex-wrap gap-3">
+
+            <button type="button" mat-stroked-button [disabled]="cargando()" (click)="recargar()">
+
+                <mat-icon svgIcon="refresh-cw" />
+
+                Actualizar
+
+            </button>
+
+            @if (puedeMover()) {
+
+            <button type="button" mat-flat-button (click)="nuevoMovimiento()">
+
+                <mat-icon svgIcon="plus" />
+
+                Nuevo movimiento
+
+            </button>
+
+            }
+
+        </div>
+
+    </div>
+
+    <!-- ===================================== -->
+    <!-- ERROR                                 -->
+    <!-- ===================================== -->
+
+    @if (error()) {
+
+    <div role="alert" class="m-5 rounded-xl bg-red-50 p-4 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-300">
+
+        {{ error() }}
+
+    </div>
+
+    }
+
+    <!-- ===================================== -->
+    <!-- CARGANDO                              -->
+    <!-- ===================================== -->
+
+    @if (cargando() || empresa.cargando()) {
+
+    <div class="flex justify-center p-12">
+
+        <mat-spinner diameter="32" />
+
+    </div>
+
+    } @else if (!empresa.empresaId) {
+
+    <div class="p-10 text-center text-on-surface-variant">
+
+        Selecciona una empresa.
+
+    </div>
+
+    } @else {
+
+    <!-- ================================= -->
+    <!-- SITUACION FISICA                  -->
+    <!-- ================================= -->
+
+    <div class="border-b p-6">
+
+        <div class="mb-5 flex flex-wrap items-center justify-between gap-4">
+
+            <h3 class="text-base font-semibold">
+                Situación física actual
+            </h3>
+
+            @if (situacion(); as actual) {
+
+            @if (actual.estaFuera) {
+
+            <span
+                class="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">
+
+                Fuera de instalaciones
+
+            </span>
+
+            } @else {
+
+            <span
+                class="rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700 dark:bg-green-900/30 dark:text-green-400">
+
+                En instalaciones
+
+            </span>
+
+            }
+
+            }
+
+        </div>
+
+        @if (situacion(); as actual) {
+
+        <div class="grid grid-cols-1 gap-5 md:grid-cols-3">
+
+            <!-- ESTADO -->
+
+            <div>
+
+                <div class="text-sm text-on-surface-variant">
+                    Estado operativo
+                </div>
+
+                <div class="mt-1 font-semibold">
+                    {{ actual.estadoActivoNombre }}
+                </div>
+
+            </div>
+
+            <!-- SUCURSAL -->
+
+            <div>
+
+                <div class="text-sm text-on-surface-variant">
+                    Sucursal administrativa
+                </div>
+
+                <div class="mt-1 font-semibold">
+                    {{ actual.sucursalNombre }}
+                </div>
+
+            </div>
+
+            <!-- UBICACION -->
+
+            <div>
+
+                <div class="text-sm text-on-surface-variant">
+                    Última ubicación interna
+                </div>
+
+                <div class="mt-1">
+                    {{ actual.ubicacionNombre || 'Sin ubicación específica' }}
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- UBICACION EXTERNA -->
+
+        @if (actual.estaFuera) {
+
+        <div class="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-5 dark:border-amber-900 dark:bg-amber-900/10">
+
+            <div class="flex items-center gap-2">
+
+                <mat-icon svgIcon="map-pin" class="text-amber-700" />
+
+                <h4 class="font-semibold text-amber-900 dark:text-amber-400">
+                    Ubicación física externa
+                </h4>
+
+            </div>
+
+            <div class="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+
+                <div>
+
+                    <div class="text-sm text-on-surface-variant">
+                        Destino
+                    </div>
+
+                    <div class="mt-1 font-medium">
+                        {{ actual.ubicacionExternaNombre || '—' }}
+                    </div>
+
+                </div>
+
+                <div>
+
+                    <div class="text-sm text-on-surface-variant">
+                        Fecha de salida
+                    </div>
+
+                    <div class="mt-1">
+                        {{ actual.fechaSalida | date:'dd/MM/yyyy HH:mm' }}
+                    </div>
+
+                </div>
+
+                @if (actual.ubicacionExternaDireccion) {
+
+                <div class="md:col-span-2">
+
+                    <div class="text-sm text-on-surface-variant">
+                        Dirección
+                    </div>
+
+                    <div class="mt-1">
+                        {{ actual.ubicacionExternaDireccion }}
+                    </div>
+
+                </div>
+
+                }
+
+            </div>
+
+            @if (actual.movimientoSalidaId) {
+
+            <button type="button" mat-stroked-button class="mt-5" (click)="verMovimiento(actual.movimientoSalidaId)">
+
+                <mat-icon svgIcon="eye" />
+
+                Consultar salida
+
+            </button>
+
+            }
+
+        </div>
+
+        }
+
+        } @else {
+
+        <div class="rounded-xl bg-neutral-50 p-6 dark:bg-neutral-900/30">
+
+            No se encontró información sobre la situación física del activo.
+
+        </div>
+
+        }
+
+    </div>
+
+    <!-- ================================= -->
+    <!-- HISTORIAL                         -->
+    <!-- ================================= -->
+
+    <div class="p-6">
+
+        <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
+
+            <div>
+
+                <h3 class="text-base font-semibold">
+                    Historial de movimientos
+                </h3>
+
+                <p class="mt-1 text-sm text-on-surface-variant">
+                    Total de registros: {{ totalMovimientos() }}
+                </p>
+
+            </div>
+
+            <button type="button" mat-stroked-button (click)="verTodos()">
+
+                <mat-icon svgIcon="list" />
+
+                Ver todos
+
+            </button>
+
+        </div>
+
+        <div class="overflow-x-auto rounded-xl border">
+
+            <table class="w-full text-left">
+
+                <thead class="border-b bg-neutral-50/80 text-sm dark:bg-neutral-900/50">
+
+                    <tr>
+
+                        <th class="px-5 py-4 font-semibold">
+                            Fecha
+                        </th>
+
+                        <th class="px-5 py-4 font-semibold">
+                            Movimiento
+                        </th>
+
+                        <th class="px-5 py-4 font-semibold">
+                            Origen
+                        </th>
+
+                        <th class="px-5 py-4 font-semibold">
+                            Destino
+                        </th>
+
+                        <th class="px-5 py-4 font-semibold">
+                            Estado
+                        </th>
+
+                        <th class="px-5 py-4 text-right font-semibold">
+                            Acciones
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    @for (item of historial(); track item.id) {
+
+                    <tr class="border-b last:border-b-0">
+
+                        <!-- FECHA -->
+
+                        <td class="px-5 py-4 whitespace-nowrap text-sm">
+
+                            {{ item.fechaMovimiento | date:'dd/MM/yyyy HH:mm' }}
+
+                        </td>
+
+                        <!-- MOVIMIENTO -->
+
+                        <td class="px-5 py-4">
+
+                            <div class="font-semibold">
+                                {{ item.tipoMovimientoNombre }}
+                            </div>
+
+                            @if (item.motivo) {
+
+                            <div class="mt-1 text-xs text-on-surface-variant">
+                                {{ item.motivo }}
+                            </div>
+
+                            }
+
+                        </td>
+
+                        <!-- ORIGEN -->
+
+                        <td class="px-5 py-4 text-sm">
+
+                            {{ ubicacionOrigen(item) }}
+
+                        </td>
+
+                        <!-- DESTINO -->
+
+                        <td class="px-5 py-4 text-sm">
+
+                            {{ ubicacionDestino(item) }}
+
+                        </td>
+
+                        <!-- ESTADO -->
+
+                        <td class="px-5 py-4">
+
+                            @if (item.anulado) {
+
+                            <span
+                                class="rounded-full bg-red-100 px-3 py-1 text-xs font-semibold text-red-700 dark:bg-red-900/30 dark:text-red-400">
+
+                                Anulado
+
+                            </span>
+
+                            } @else {
+
+                            <span
+                                class="rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700 dark:bg-green-900/30 dark:text-green-400">
+
+                                Registrado
+
+                            </span>
+
+                            }
+
+                        </td>
+
+                        <!-- ACCIONES -->
+
+                        <td class="px-5 py-4 text-right">
+
+                            <button type="button" matIconButton matTooltip="Ver detalle"
+                                (click)="verMovimiento(item.id)">
+
+                                <mat-icon svgIcon="eye" />
+
+                            </button>
+
+                        </td>
+
+                    </tr>
+
+                    } @empty {
+
+                    <tr>
+
+                        <td colspan="6" class="p-8 text-center text-sm text-on-surface-variant">
+
+                            Este activo todavía no tiene movimientos registrados.
+
+                        </td>
+
+                    </tr>
+
+                    }
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+    }
+
+</section>

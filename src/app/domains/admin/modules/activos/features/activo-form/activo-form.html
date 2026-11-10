@@ -80,7 +80,7 @@
         </div>
       </div>
       <div class="grid grid-cols-1 gap-5 p-6 md:grid-cols-2">
-        <mat-form-field class="w-full"><mat-label>Sucursal</mat-label><mat-select formControlName="sucursalId"
+        <mat-form-field class="w-full"><mat-label>Sucursal</mat-label><mat-select [disabled]="esEdicion" formControlName="sucursalId"
             (selectionChange)="seleccionarSucursal($event.value)">@for (s of sucursales(); track s.id) {<mat-option
               [value]="s.id" [disabled]="!s.activo">{{ s.nombre }}{{ s.activo ? '' : ' (Inactiva)'
               }}</mat-option>}</mat-select>@if (form.controls.sucursalId.hasError('required')) {<mat-error>La sucursal
@@ -159,6 +159,35 @@
       </p>
     </div>
     }
+  </section>
+
+  <!-- ======================================= -->
+  <!-- MOVIMIENTOS DEL ACTIVO                  -->
+  <!-- ======================================= -->
+
+  <section class="mt-8">
+
+    @if (id; as activoId) {
+
+    <app-activo-movimientos [activoId]="activoId" [activoEstadoId]="detalle()?.estadoActivoId ?? 1"
+      [puedeGestionar]="puedeGestionar()" />
+
+    } @else {
+
+    <div class="rounded-2xl border bg-surface p-6">
+
+      <h2 class="font-semibold">
+        Movimientos y ubicación física
+      </h2>
+
+      <p class="mt-2 text-sm text-on-surface-variant">
+        Guarda primero el activo para registrar y consultar sus movimientos.
+      </p>
+
+    </div>
+
+    }
+
   </section>
 
   <!-- ======================================= -->
