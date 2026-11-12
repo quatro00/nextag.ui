@@ -190,6 +190,18 @@ export const NAVIGATION: NavigationItem[] = [
     label: 'Soporte técnico',
     children: [
       {
+        id: 'soporte/tickets',
+        label: 'Tickets',
+        icon: 'clipboard-list',
+        route: '/admin/tickets',
+        roles: [
+          AUTH_ROLES.ADMINISTRADOR,
+          AUTH_ROLES.ADMIN_EMPRESA,
+          AUTH_ROLES.OPERADOR,
+          AUTH_ROLES.CONSULTA,
+        ],
+      },
+      {
         id: 'soporte/categorias-ticket',
         label: 'Categorías de tickets',
         icon: 'tags',

@@ -1,0 +1,209 @@
+<div class="mx-auto flex w-full max-w-4xl flex-col p-6 sm:p-8">
+
+  <header class="mb-7">
+
+    <h1 class="text-3xl font-bold">
+      {{ esEdicion ? 'Editar ticket' : 'Nuevo ticket' }}
+    </h1>
+
+    <p class="mt-2 text-on-surface-variant">
+      Registra los datos de la solicitud de soporte técnico.
+    </p>
+
+  </header>
+
+  @if (error()) {
+
+    <div
+      class="mb-5 rounded-xl bg-red-50 p-4 text-red-700"
+      role="alert"
+    >
+      {{ error() }}
+    </div>
+
+  }
+
+  @if (cargando() || empresa.cargando()) {
+
+    <div class="flex justify-center p-12">
+      <mat-spinner diameter="36" />
+    </div>
+
+  } @else if (!empresa.empresaId) {
+
+    <div class="rounded-2xl border bg-surface p-8 text-center">
+      Selecciona una empresa.
+    </div>
+
+  } @else {
+
+    <form
+      [formGroup]="form"
+      (ngSubmit)="guardar()"
+      class="rounded-2xl border bg-surface p-6"
+    >
+
+      <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
+
+        <!-- TITULO -->
+
+        <mat-form-field class="w-full md:col-span-2">
+
+          <mat-label>Título del ticket</mat-label>
+
+          <input
+            matInput
+            formControlName="titulo"
+            maxlength="200"
+            placeholder="Ej. Impresora no imprime"
+          />
+
+          @if (form.controls.titulo.hasError('required')) {
+            <mat-error>
+              El título es obligatorio.
+            </mat-error>
+          }
+
+        </mat-form-field>
+
+        <!-- DESCRIPCION -->
+
+        <mat-form-field class="w-full md:col-span-2">
+
+          <mat-label>Descripción del problema</mat-label>
+
+          <textarea
+            matInput
+            formControlName="descripcion"
+            rows="5"
+            placeholder="Describe el problema o solicitud"
+          ></textarea>
+
+          @if (form.controls.descripcion.hasError('required')) {
+            <mat-error>
+              La descripción es obligatoria.
+            </mat-error>
+          }
+
+        </mat-form-field>
+
+        <!-- CATEGORIA -->
+
+        <mat-form-field class="w-full">
+
+          <mat-label>Categoría</mat-label>
+
+          <mat-select formControlName="categoriaTicketId">
+
+            <mat-option value="">
+              Sin categoría
+            </mat-option>
+
+            @for (categoria of categorias(); track categoria.id) {
+
+              <mat-option
+                [value]="categoria.id"
+                [disabled]="!categoria.activo"
+              >
+                {{ categoria.nombre }}
+                {{ categoria.activo ? '' : '(Inactiva)' }}
+              </mat-option>
+
+            }
+
+          </mat-select>
+
+        </mat-form-field>
+
+        <!-- PRIORIDAD -->
+
+        <mat-form-field class="w-full">
+
+          <mat-label>Prioridad</mat-label>
+
+          <mat-select formControlName="prioridadTicketId">
+
+            @for (prioridad of prioridades(); track prioridad.id) {
+
+              <mat-option [value]="prioridad.id">
+                {{ prioridad.nombre }}
+              </mat-option>
+
+            }
+
+          </mat-select>
+
+          @if (form.controls.prioridadTicketId.hasError('min')) {
+            <mat-error>
+              Selecciona una prioridad.
+            </mat-error>
+          }
+
+        </mat-form-field>
+
+        <!-- ACTIVO -->
+
+        <mat-form-field class="w-full md:col-span-2">
+
+          <mat-label>Activo relacionado</mat-label>
+
+          <mat-select formControlName="activoId">
+
+            <mat-option value="">
+              Sin activo relacionado
+            </mat-option>
+
+            @for (activo of activos(); track activo.id) {
+
+              <mat-option [value]="activo.id">
+
+                {{ activo.codigo }} —
+                {{ activo.nombre }}
+
+                @if (activo.numeroSerie) {
+                  ({{ activo.numeroSerie }})
+                }
+
+              </mat-option>
+
+            }
+
+          </mat-select>
+
+        </mat-form-field>
+
+      </div>
+
+      <!-- ACCIONES -->
+
+      <div class="mt-6 flex justify-end gap-3">
+
+        <button
+          mat-stroked-button
+          type="button"
+          (click)="cancelar()"
+        >
+          Cancelar
+        </button>
+
+        <button
+          mat-flat-button
+          type="submit"
+          [disabled]="guardando() || form.invalid"
+        >
+
+          @if (guardando()) {
+            Guardando...
+          } @else {
+            {{ esEdicion ? 'Actualizar ticket' : 'Crear ticket' }}
+          }
+
+        </button>
+
+      </div>
+
+    </form>
+
+  }
+
+</div>

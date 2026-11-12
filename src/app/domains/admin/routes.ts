@@ -27,33 +27,47 @@ const routes: Routes = [
       { path: 'asignaciones', canActivate: [roleGuard], data: { roles: [AUTH_ROLES.ADMINISTRADOR, AUTH_ROLES.ADMIN_EMPRESA, AUTH_ROLES.OPERADOR, AUTH_ROLES.CONSULTA,], }, loadChildren: () => import('./modules/activo-asignaciones/routes'), },
       { path: 'movimientos', canActivate: [roleGuard], data: { roles: [AUTH_ROLES.ADMINISTRADOR, AUTH_ROLES.ADMIN_EMPRESA, AUTH_ROLES.OPERADOR, AUTH_ROLES.CONSULTA,], }, loadChildren: () => import('./modules/activo-movimientos/routes'), },
       {
-  path: 'categorias-ticket',
-  canActivate: [roleGuard],
-  data: {
-    roles: [
-      AUTH_ROLES.ADMINISTRADOR,
-      AUTH_ROLES.ADMIN_EMPRESA,
-      AUTH_ROLES.OPERADOR,
-      AUTH_ROLES.CONSULTA,
-    ],
-  },
-  loadChildren: () =>
-    import('./modules/categorias-ticket/routes'),
-},
-{
-  path: 'equipos-soporte',
-  canActivate: [roleGuard],
-  data: {
-    roles: [
-      AUTH_ROLES.ADMINISTRADOR,
-      AUTH_ROLES.ADMIN_EMPRESA,
-      AUTH_ROLES.OPERADOR,
-      AUTH_ROLES.CONSULTA,
-    ],
-  },
-  loadChildren: () =>
-    import('./modules/equipos-soporte/routes'),
-},
+        path: 'categorias-ticket',
+        canActivate: [roleGuard],
+        data: {
+          roles: [
+            AUTH_ROLES.ADMINISTRADOR,
+            AUTH_ROLES.ADMIN_EMPRESA,
+            AUTH_ROLES.OPERADOR,
+            AUTH_ROLES.CONSULTA,
+          ],
+        },
+        loadChildren: () =>
+          import('./modules/categorias-ticket/routes'),
+      },
+      {
+        path: 'equipos-soporte',
+        canActivate: [roleGuard],
+        data: {
+          roles: [
+            AUTH_ROLES.ADMINISTRADOR,
+            AUTH_ROLES.ADMIN_EMPRESA,
+            AUTH_ROLES.OPERADOR,
+            AUTH_ROLES.CONSULTA,
+          ],
+        },
+        loadChildren: () =>
+          import('./modules/equipos-soporte/routes'),
+      },
+      {
+        path: 'tickets',
+        canActivate: [roleGuard],
+        data: {
+          roles: [
+            AUTH_ROLES.ADMINISTRADOR,
+            AUTH_ROLES.ADMIN_EMPRESA,
+            AUTH_ROLES.OPERADOR,
+            AUTH_ROLES.CONSULTA,
+          ],
+        },
+        loadChildren: () =>
+          import('./modules/tickets/routes'),
+      },
       { path: '**', redirectTo: 'inicio' },
     ],
   },
