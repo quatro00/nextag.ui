@@ -186,6 +186,36 @@ export const NAVIGATION: NavigationItem[] = [
     ],
   },
   {
+    id: 'soporte',
+    label: 'Soporte técnico',
+    children: [
+      {
+        id: 'soporte/categorias-ticket',
+        label: 'Categorías de tickets',
+        icon: 'tags',
+        route: '/admin/categorias-ticket',
+        roles: [
+          AUTH_ROLES.ADMINISTRADOR,
+          AUTH_ROLES.ADMIN_EMPRESA,
+          AUTH_ROLES.OPERADOR,
+          AUTH_ROLES.CONSULTA,
+        ],
+      },
+      {
+        id: 'soporte/equipos-soporte',
+        label: 'Equipos de soporte',
+        icon: 'users',
+        route: '/admin/equipos-soporte',
+        roles: [
+          AUTH_ROLES.ADMINISTRADOR,
+          AUTH_ROLES.ADMIN_EMPRESA,
+          AUTH_ROLES.OPERADOR,
+          AUTH_ROLES.CONSULTA,
+        ],
+      },
+    ],
+  },
+  {
     id: 'administracion',
     label: 'Administración',
     children: [

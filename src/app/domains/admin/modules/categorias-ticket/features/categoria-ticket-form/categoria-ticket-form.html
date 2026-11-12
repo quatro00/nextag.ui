@@ -1,0 +1,58 @@
+<div class="mx-auto flex w-full max-w-4xl flex-col p-6 sm:p-8">
+
+  <header class="mb-7">
+    <h1 class="text-3xl font-bold">
+      {{ esEdicion ? 'Editar categoría de ticket' : 'Nueva categoría de ticket' }}
+    </h1>
+    <p class="mt-2 text-on-surface-variant">
+      Define cómo se clasificarán las solicitudes de soporte.
+    </p>
+  </header>
+
+  @if (error()) {
+    <div class="mb-5 rounded-xl bg-red-50 p-4 text-red-700">
+      {{ error() }}
+    </div>
+  }
+
+  @if (cargando()) {
+    <div class="flex justify-center p-12">
+      <mat-spinner diameter="36" />
+    </div>
+  } @else {
+    <form [formGroup]="form" (ngSubmit)="guardar()"
+      class="rounded-2xl border bg-surface p-6">
+
+      <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
+
+        <mat-form-field class="w-full">
+          <mat-label>Clave</mat-label>
+          <input matInput formControlName="clave" maxlength="40" />
+        </mat-form-field>
+
+        <mat-form-field class="w-full">
+          <mat-label>Nombre</mat-label>
+          <input matInput formControlName="nombre" maxlength="150" />
+        </mat-form-field>
+
+        <mat-form-field class="w-full md:col-span-2">
+          <mat-label>Descripción</mat-label>
+          <textarea matInput formControlName="descripcion"
+            rows="4" maxlength="500"></textarea>
+        </mat-form-field>
+
+      </div>
+
+      <div class="mt-6 flex justify-end gap-3">
+        <button mat-stroked-button type="button" (click)="cancelar()">
+          Cancelar
+        </button>
+
+        <button mat-flat-button type="submit"
+          [disabled]="guardando() || form.invalid">
+          Guardar
+        </button>
+      </div>
+    </form>
+  }
+</div>
