@@ -202,6 +202,28 @@ export const NAVIGATION: NavigationItem[] = [
         ],
       },
       {
+        id: 'soporte/mis-tickets',
+        label: 'Mis tickets',
+        icon: 'user',
+        route: '/admin/tickets/mis-tickets',
+        roles: [
+          AUTH_ROLES.ADMINISTRADOR,
+          AUTH_ROLES.ADMIN_EMPRESA,
+          AUTH_ROLES.OPERADOR,
+        ],
+      },
+      {
+        id: 'soporte/mis-equipos',
+        label: 'Tickets de mis equipos',
+        icon: 'users',
+        route: '/admin/tickets/mis-equipos',
+        roles: [
+          AUTH_ROLES.ADMINISTRADOR,
+          AUTH_ROLES.ADMIN_EMPRESA,
+          AUTH_ROLES.OPERADOR,
+        ],
+      },
+      {
         id: 'soporte/categorias-ticket',
         label: 'Categorías de tickets',
         icon: 'tags',

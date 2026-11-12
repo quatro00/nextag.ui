@@ -1,0 +1,452 @@
+<div class="mx-auto flex w-full max-w-7xl flex-col p-6 sm:p-8">
+
+  <!-- ====================================== -->
+  <!-- ENCABEZADO -->
+  <!-- ====================================== -->
+
+  <header class="mb-7 flex flex-wrap items-center justify-between gap-4">
+
+    <div>
+
+      <h1 class="text-3xl font-bold">
+        {{ titulo() }}
+      </h1>
+
+      <p class="mt-2 text-on-surface-variant">
+        {{ descripcion() }}
+      </p>
+
+    </div>
+
+    <button
+      mat-stroked-button
+      [disabled]="loading()"
+      (click)="recargar()"
+    >
+      <mat-icon svgIcon="refresh-cw" />
+      Actualizar
+    </button>
+
+  </header>
+
+  <!-- ====================================== -->
+  <!-- NAVEGACION ENTRE BANDEJAS -->
+  <!-- ====================================== -->
+
+  <section class="mb-6 rounded-2xl border bg-surface p-4">
+
+    <div class="flex flex-wrap gap-3">
+
+      <button
+        mat-stroked-button
+        [disabled]="tipoBandeja === 'MIS_TICKETS'"
+        (click)="irMisTickets()"
+      >
+        <mat-icon svgIcon="user" />
+        Mis tickets
+      </button>
+
+      <button
+        mat-stroked-button
+        [disabled]="tipoBandeja === 'MIS_EQUIPOS'"
+        (click)="irMisEquipos()"
+      >
+        <mat-icon svgIcon="users" />
+        Tickets de mis equipos
+      </button>
+
+      <button
+        mat-stroked-button
+        (click)="irTodos()"
+      >
+        <mat-icon svgIcon="clipboard-list" />
+        Todos los tickets
+      </button>
+
+    </div>
+
+  </section>
+
+  <!-- ====================================== -->
+  <!-- ERROR -->
+  <!-- ====================================== -->
+
+  @if (error()) {
+
+    <div
+      class="mb-5 rounded-xl bg-red-50 p-4 text-red-700"
+      role="alert"
+    >
+      {{ error() }}
+    </div>
+
+  }
+
+  <!-- ====================================== -->
+  <!-- RESUMEN -->
+  <!-- ====================================== -->
+
+  <section class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+
+    <div class="rounded-2xl border bg-surface p-5">
+
+      <p class="text-sm text-on-surface-variant">
+        Total de tickets
+      </p>
+
+      <p class="mt-2 text-3xl font-bold">
+        {{ totalTickets() }}
+      </p>
+
+    </div>
+
+    <div class="rounded-2xl border bg-surface p-5">
+
+      <p class="text-sm text-on-surface-variant">
+        Resultados de búsqueda
+      </p>
+
+      <p class="mt-2 text-3xl font-bold">
+        {{ totalFiltrados() }}
+      </p>
+
+    </div>
+
+  </section>
+
+  <!-- ====================================== -->
+  <!-- FILTROS -->
+  <!-- ====================================== -->
+
+  <section class="mb-6 rounded-2xl border bg-surface p-5">
+
+    <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+
+      <!-- BUSCAR -->
+
+      <mat-form-field class="w-full">
+
+        <mat-label>Buscar ticket</mat-label>
+
+        <input
+          matInput
+          [value]="texto()"
+          (input)="cambiarTexto($event)"
+          (keyup.enter)="buscar()"
+          placeholder="Folio, título o activo"
+        />
+
+      </mat-form-field>
+
+      <!-- ESTADO -->
+
+      <mat-form-field class="w-full">
+
+        <mat-label>Estado</mat-label>
+
+        <mat-select
+          [value]="estado()"
+          (selectionChange)="cambiarEstado($event.value)"
+        >
+
+          <mat-option [value]="null">
+            Todos
+          </mat-option>
+
+          @for (item of estados(); track item) {
+
+            <mat-option [value]="item">
+              {{ item }}
+            </mat-option>
+
+          }
+
+        </mat-select>
+
+      </mat-form-field>
+
+      <!-- PRIORIDAD -->
+
+      <mat-form-field class="w-full">
+
+        <mat-label>Prioridad</mat-label>
+
+        <mat-select
+          [value]="prioridad()"
+          (selectionChange)="cambiarPrioridad($event.value)"
+        >
+
+          <mat-option [value]="null">
+            Todas
+          </mat-option>
+
+          @for (item of prioridades(); track item) {
+
+            <mat-option [value]="item">
+              {{ item }}
+            </mat-option>
+
+          }
+
+        </mat-select>
+
+      </mat-form-field>
+
+    </div>
+
+    <div class="mt-4 flex flex-wrap justify-end gap-3">
+
+      <button
+        mat-stroked-button
+        (click)="limpiar()"
+      >
+        Limpiar
+      </button>
+
+      <button
+        mat-flat-button
+        (click)="buscar()"
+      >
+        <mat-icon svgIcon="search" />
+        Buscar
+      </button>
+
+    </div>
+
+  </section>
+
+  <!-- ====================================== -->
+  <!-- LISTADO -->
+  <!-- ====================================== -->
+
+  @if (loading() || empresa.cargando()) {
+
+    <div class="flex justify-center p-12">
+
+      <mat-spinner diameter="36" />
+
+    </div>
+
+  } @else if (!empresa.empresaId) {
+
+    <div class="rounded-2xl border bg-surface p-8 text-center">
+
+      Selecciona una empresa para consultar tus tickets.
+
+    </div>
+
+  } @else {
+
+    <section class="overflow-hidden rounded-2xl border bg-surface">
+
+      <div class="overflow-x-auto">
+
+        <table class="w-full text-left text-sm">
+
+          <thead class="border-b bg-neutral-50 dark:bg-neutral-900/50">
+
+            <tr>
+              <th class="p-4">Folio</th>
+              <th class="p-4">Título</th>
+              <th class="p-4">Activo</th>
+              <th class="p-4">Categoría</th>
+              <th class="p-4">Prioridad</th>
+              <th class="p-4">Estado</th>
+              <th class="p-4">Solicitante</th>
+              <th class="p-4">Fecha</th>
+              <th class="p-4 text-right">Acciones</th>
+            </tr>
+
+          </thead>
+
+          <tbody>
+
+            @for (item of ticketsPagina(); track item.id) {
+
+              <tr class="border-b last:border-0">
+
+                <!-- FOLIO -->
+
+                <td class="p-4 font-medium whitespace-nowrap">
+                  {{ item.folio }}
+                </td>
+
+                <!-- TITULO -->
+
+                <td class="p-4">
+
+                  <div class="font-medium">
+                    {{ item.titulo }}
+                  </div>
+
+                  <div class="text-xs text-on-surface-variant">
+                    Origen: {{ item.origen }}
+                  </div>
+
+                </td>
+
+                <!-- ACTIVO -->
+
+                <td class="p-4">
+
+                  @if (item.activoNombre) {
+
+                    <div>
+                      {{ item.activoNombre }}
+                    </div>
+
+                    <div class="text-xs text-on-surface-variant">
+                      {{ item.activoCodigo }}
+                    </div>
+
+                  } @else {
+
+                    —
+
+                  }
+
+                </td>
+
+                <!-- CATEGORIA -->
+
+                <td class="p-4">
+                  {{ item.categoriaNombre || '—' }}
+                </td>
+
+                <!-- PRIORIDAD -->
+
+                <td class="p-4">
+
+                  <span class="rounded-full bg-blue-100 px-3 py-1 text-xs text-blue-700">
+                    {{ item.prioridadNombre }}
+                  </span>
+
+                </td>
+
+                <!-- ESTADO -->
+
+                <td class="p-4">
+
+                  <span class="rounded-full bg-neutral-100 px-3 py-1 text-xs text-neutral-700">
+                    {{ item.estadoNombre }}
+                  </span>
+
+                </td>
+
+                <!-- SOLICITANTE -->
+
+                <td class="p-4">
+                  {{ item.solicitanteNombre || '—' }}
+                </td>
+
+                <!-- FECHA -->
+
+                <td class="p-4 whitespace-nowrap">
+
+                  {{ item.fechaApertura | date:'dd/MM/yyyy HH:mm' }}
+
+                </td>
+
+                <!-- ACCIONES -->
+
+                <td class="p-4 text-right whitespace-nowrap">
+
+                  <button
+                    mat-icon-button
+                    aria-label="Ver ticket"
+                    title="Ver y atender ticket"
+                    (click)="detalle(item.id)"
+                  >
+
+                    <mat-icon svgIcon="eye" />
+
+                  </button>
+
+                </td>
+
+              </tr>
+
+            } @empty {
+
+              <tr>
+
+                <td
+                  colspan="9"
+                  class="p-10 text-center text-on-surface-variant"
+                >
+
+                  @if (totalTickets() === 0) {
+
+                    @if (tipoBandeja === 'MIS_TICKETS') {
+
+                      No tienes tickets asignados actualmente.
+
+                    } @else {
+
+                      Tus equipos no tienen tickets asignados actualmente.
+
+                    }
+
+                  } @else {
+
+                    No se encontraron tickets con los filtros seleccionados.
+
+                  }
+
+                </td>
+
+              </tr>
+
+            }
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+      <!-- ====================================== -->
+      <!-- PAGINACION -->
+      <!-- ====================================== -->
+
+      <div class="flex flex-wrap items-center justify-between gap-4 border-t p-5">
+
+        <span class="text-sm text-on-surface-variant">
+
+          {{ totalFiltrados() }} tickets encontrados
+
+        </span>
+
+        <div class="flex items-center gap-3">
+
+          <button
+            mat-stroked-button
+            [disabled]="pagina() <= 1"
+            (click)="cambiarPagina(pagina() - 1)"
+          >
+            Anterior
+          </button>
+
+          <span class="text-sm">
+
+            Página {{ pagina() }} de {{ totalPaginas() }}
+
+          </span>
+
+          <button
+            mat-stroked-button
+            [disabled]="pagina() >= totalPaginas()"
+            (click)="cambiarPagina(pagina() + 1)"
+          >
+            Siguiente
+          </button>
+
+        </div>
+
+      </div>
+
+    </section>
+
+  }
+
+</div>

@@ -4,188 +4,198 @@ import { Observable } from 'rxjs';
 
 import { API_URL } from '@/app/core/config/api.config';
 
-import { TicketDetalle } from '../types/ticket.types';
+import { TicketDetalle, TicketList } from '../types/ticket.types';
 
 import {
-  TicketAsignacion,
-  TicketAsignar,
-  TicketReasignar,
-  TicketEstadoHistorial,
-  TicketSeguimiento,
+    TicketAsignacion,
+    TicketAsignar,
+    TicketReasignar,
+    TicketEstadoHistorial,
+    TicketSeguimiento,
 } from '../types/ticket-operacion.types';
 
 @Injectable({
-  providedIn: 'root',
+    providedIn: 'root',
 })
 export class TicketOperacionService {
 
-  private readonly http = inject(HttpClient);
+    private readonly http = inject(HttpClient);
 
-  private readonly endpoint =
-    `${inject(API_URL)}/tickets`;
+    private readonly endpoint =
+        `${inject(API_URL)}/tickets`;
 
-  private url(id: string): string {
-    return `${this.endpoint}/${id}`;
-  }
+    private url(id: string): string {
+        return `${this.endpoint}/${id}`;
+    }
 
-  // ==========================================
-  // ASIGNACIONES
-  // ==========================================
+    // ==========================================
+    // ASIGNACIONES
+    // ==========================================
 
-  getAsignacionVigente(
-    id: string
-  ): Observable<TicketAsignacion | null> {
+    getAsignacionVigente(
+        id: string
+    ): Observable<TicketAsignacion | null> {
 
-    return this.http.get<TicketAsignacion | null>(
-      `${this.url(id)}/asignacion-vigente`
-    );
-  }
+        return this.http.get<TicketAsignacion | null>(
+            `${this.url(id)}/asignacion-vigente`
+        );
+    }
 
-  getHistorialAsignaciones(
-    id: string
-  ): Observable<TicketAsignacion[]> {
+    getHistorialAsignaciones(
+        id: string
+    ): Observable<TicketAsignacion[]> {
 
-    return this.http.get<TicketAsignacion[]>(
-      `${this.url(id)}/historial-asignaciones`
-    );
-  }
+        return this.http.get<TicketAsignacion[]>(
+            `${this.url(id)}/historial-asignaciones`
+        );
+    }
 
-  asignar(
-    id: string,
-    dto: TicketAsignar
-  ): Observable<TicketAsignacion> {
+    asignar(
+        id: string,
+        dto: TicketAsignar
+    ): Observable<TicketAsignacion> {
 
-    return this.http.post<TicketAsignacion>(
-      `${this.url(id)}/asignaciones`,
-      dto
-    );
-  }
+        return this.http.post<TicketAsignacion>(
+            `${this.url(id)}/asignaciones`,
+            dto
+        );
+    }
 
-  reasignar(
-    id: string,
-    dto: TicketReasignar
-  ): Observable<TicketAsignacion> {
+    reasignar(
+        id: string,
+        dto: TicketReasignar
+    ): Observable<TicketAsignacion> {
 
-    return this.http.post<TicketAsignacion>(
-      `${this.url(id)}/reasignaciones`,
-      dto
-    );
-  }
+        return this.http.post<TicketAsignacion>(
+            `${this.url(id)}/reasignaciones`,
+            dto
+        );
+    }
 
-  // ==========================================
-  // ESTADOS
-  // ==========================================
+    // ==========================================
+    // ESTADOS
+    // ==========================================
 
-  getHistorialEstados(
-    id: string
-  ): Observable<TicketEstadoHistorial[]> {
+    getHistorialEstados(
+        id: string
+    ): Observable<TicketEstadoHistorial[]> {
 
-    return this.http.get<TicketEstadoHistorial[]>(
-      `${this.url(id)}/historial-estados`
-    );
-  }
+        return this.http.get<TicketEstadoHistorial[]>(
+            `${this.url(id)}/historial-estados`
+        );
+    }
 
-  iniciar(
-    id: string
-  ): Observable<TicketDetalle> {
+    iniciar(
+        id: string
+    ): Observable<TicketDetalle> {
 
-    return this.http.patch<TicketDetalle>(
-      `${this.url(id)}/iniciar`,
-      {}
-    );
-  }
+        return this.http.patch<TicketDetalle>(
+            `${this.url(id)}/iniciar`,
+            {}
+        );
+    }
 
-  resolver(
-    id: string,
-    solucion: string
-  ): Observable<TicketDetalle> {
+    resolver(
+        id: string,
+        solucion: string
+    ): Observable<TicketDetalle> {
 
-    return this.http.patch<TicketDetalle>(
-      `${this.url(id)}/resolver`,
-      { solucion }
-    );
-  }
+        return this.http.patch<TicketDetalle>(
+            `${this.url(id)}/resolver`,
+            { solucion }
+        );
+    }
 
-  cerrar(
-    id: string
-  ): Observable<TicketDetalle> {
+    cerrar(
+        id: string
+    ): Observable<TicketDetalle> {
 
-    return this.http.patch<TicketDetalle>(
-      `${this.url(id)}/cerrar`,
-      {}
-    );
-  }
+        return this.http.patch<TicketDetalle>(
+            `${this.url(id)}/cerrar`,
+            {}
+        );
+    }
 
-  reabrir(
-    id: string,
-    motivo: string
-  ): Observable<TicketDetalle> {
+    reabrir(
+        id: string,
+        motivo: string
+    ): Observable<TicketDetalle> {
 
-    return this.http.patch<TicketDetalle>(
-      `${this.url(id)}/reabrir`,
-      { motivo }
-    );
-  }
+        return this.http.patch<TicketDetalle>(
+            `${this.url(id)}/reabrir`,
+            { motivo }
+        );
+    }
 
-  cancelar(
-    id: string,
-    motivo: string
-  ): Observable<TicketDetalle> {
+    cancelar(
+        id: string,
+        motivo: string
+    ): Observable<TicketDetalle> {
 
-    return this.http.patch<TicketDetalle>(
-      `${this.url(id)}/cancelar`,
-      { motivo }
-    );
-  }
+        return this.http.patch<TicketDetalle>(
+            `${this.url(id)}/cancelar`,
+            { motivo }
+        );
+    }
 
-  // ==========================================
-  // SEGUIMIENTOS
-  // ==========================================
+    // ==========================================
+    // SEGUIMIENTOS
+    // ==========================================
 
-  getSeguimientos(
-    id: string
-  ): Observable<TicketSeguimiento[]> {
+    getSeguimientos(
+        id: string
+    ): Observable<TicketSeguimiento[]> {
 
-    return this.http.get<TicketSeguimiento[]>(
-      `${this.url(id)}/seguimientos`
-    );
-  }
+        return this.http.get<TicketSeguimiento[]>(
+            `${this.url(id)}/seguimientos`
+        );
+    }
 
-  agregarComentario(
-    id: string,
-    comentario: string
-  ): Observable<TicketSeguimiento> {
+    agregarComentario(
+        id: string,
+        comentario: string
+    ): Observable<TicketSeguimiento> {
 
-    return this.http.post<TicketSeguimiento>(
-      `${this.url(id)}/comentarios`,
-      { comentario }
-    );
-  }
+        return this.http.post<TicketSeguimiento>(
+            `${this.url(id)}/comentarios`,
+            { comentario }
+        );
+    }
 
-  agregarNotaInterna(
-    id: string,
-    comentario: string
-  ): Observable<TicketSeguimiento> {
+    agregarNotaInterna(
+        id: string,
+        comentario: string
+    ): Observable<TicketSeguimiento> {
 
-    return this.http.post<TicketSeguimiento>(
-      `${this.url(id)}/notas-internas`,
-      { comentario }
-    );
-  }
+        return this.http.post<TicketSeguimiento>(
+            `${this.url(id)}/notas-internas`,
+            { comentario }
+        );
+    }
 
-  // ==========================================
-  // BANDEJAS
-  // ==========================================
+    // ==========================================
+    // BANDEJAS
+    // ==========================================
 
-  getMisTickets() {
-    return this.http.get(
-      `${this.endpoint}/mis-tickets`
-    );
-  }
+    // ==========================================
+    // MIS TICKETS
+    // ==========================================
 
-  getTicketsMisEquipos() {
-    return this.http.get(
-      `${this.endpoint}/mis-equipos`
-    );
-  }
+    getMisTickets(): Observable<TicketList[]> {
+
+        return this.http.get<TicketList[]>(
+            `${this.endpoint}/mis-tickets`
+        );
+    }
+
+    // ==========================================
+    // TICKETS DE MIS EQUIPOS
+    // ==========================================
+
+    getTicketsMisEquipos(): Observable<TicketList[]> {
+
+        return this.http.get<TicketList[]>(
+            `${this.endpoint}/mis-equipos`
+        );
+    }
 }
