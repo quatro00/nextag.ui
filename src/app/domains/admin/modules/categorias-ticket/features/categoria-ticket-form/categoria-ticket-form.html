@@ -15,7 +15,7 @@
     </div>
   }
 
-  @if (cargando()) {
+  @if (cargando() || empresa.cargando()) {
     <div class="flex justify-center p-12">
       <mat-spinner diameter="36" />
     </div>

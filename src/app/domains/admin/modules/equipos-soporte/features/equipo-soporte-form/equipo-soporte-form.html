@@ -1,0 +1,174 @@
+<div class="mx-auto flex w-full max-w-4xl flex-col p-6 sm:p-8">
+
+  <header class="mb-7">
+    <h1 class="text-3xl font-bold">
+      {{ esEdicion ? 'Editar equipo de soporte' : 'Nuevo equipo de soporte' }}
+    </h1>
+
+    <p class="mt-2 text-on-surface-variant">
+      Configura los equipos responsables de atender solicitudes.
+    </p>
+  </header>
+
+  @if (error()) {
+    <div class="mb-5 rounded-xl bg-red-50 p-4 text-red-700">
+      {{ error() }}
+    </div>
+  }
+
+  @if (cargando() || empresa.cargando()) {
+
+    <div class="flex justify-center p-12">
+      <mat-spinner diameter="36" />
+    </div>
+
+  } @else if (!empresa.empresaId) {
+
+    <div class="rounded-2xl border bg-surface p-8 text-center">
+      Selecciona una empresa.
+    </div>
+
+  } @else {
+
+    <form
+      [formGroup]="form"
+      (ngSubmit)="guardar()"
+      class="rounded-2xl border bg-surface p-6"
+    >
+
+      <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
+
+        <mat-form-field class="w-full">
+          <mat-label>Clave</mat-label>
+
+          <input
+            matInput
+            formControlName="clave"
+            maxlength="40"
+          />
+
+          @if (form.controls.clave.hasError('required')) {
+            <mat-error>
+              La clave es obligatoria.
+            </mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field class="w-full">
+          <mat-label>Nombre</mat-label>
+
+          <input
+            matInput
+            formControlName="nombre"
+            maxlength="150"
+          />
+
+          @if (form.controls.nombre.hasError('required')) {
+            <mat-error>
+              El nombre es obligatorio.
+            </mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field class="w-full md:col-span-2">
+          <mat-label>Descripción</mat-label>
+
+          <textarea
+            matInput
+            formControlName="descripcion"
+            maxlength="500"
+            rows="3"
+          ></textarea>
+        </mat-form-field>
+
+        <mat-form-field class="w-full">
+          <mat-label>Tipo de equipo</mat-label>
+
+          <mat-select
+            formControlName="tipo"
+            (selectionChange)="cambiarTipo($event.value)"
+          >
+            <mat-option value="INTERNO">
+              Interno
+            </mat-option>
+
+            <mat-option value="EXTERNO">
+              Externo
+            </mat-option>
+
+            <mat-option value="MIXTO">
+              Mixto
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        @if (form.controls.tipo.value !== 'INTERNO') {
+
+          <mat-form-field class="w-full">
+            <mat-label>Proveedor</mat-label>
+
+            <mat-select formControlName="proveedorId">
+
+              <mat-option value="">
+                Selecciona un proveedor
+              </mat-option>
+
+              @for (proveedor of proveedores(); track proveedor.id) {
+                <mat-option [value]="proveedor.id">
+                  {{ proveedor.nombre }}
+                </mat-option>
+              }
+
+            </mat-select>
+          </mat-form-field>
+
+        }
+
+        <mat-form-field class="w-full md:col-span-2">
+          <mat-label>Correo de contacto</mat-label>
+
+          <input
+            matInput
+            type="email"
+            formControlName="correoContacto"
+            maxlength="200"
+          />
+
+          @if (form.controls.correoContacto.hasError('email')) {
+            <mat-error>
+              Introduce un correo electrónico válido.
+            </mat-error>
+          }
+        </mat-form-field>
+
+      </div>
+
+      <div class="mt-6 flex justify-end gap-3">
+
+        <button
+          mat-stroked-button
+          type="button"
+          (click)="cancelar()"
+        >
+          Cancelar
+        </button>
+
+        <button
+          mat-flat-button
+          type="submit"
+          [disabled]="guardando() || form.invalid"
+        >
+          @if (guardando()) {
+            Guardando...
+          } @else {
+            Guardar equipo
+          }
+        </button>
+
+      </div>
+
+    </form>
+
+  }
+
+</div>
