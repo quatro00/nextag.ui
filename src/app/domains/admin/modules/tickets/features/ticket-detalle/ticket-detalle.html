@@ -1,0 +1,754 @@
+<div class="mx-auto flex w-full max-w-7xl flex-col p-6 sm:p-8">
+
+  <!-- ENCABEZADO -->
+
+  <header class="mb-7 flex flex-wrap items-center justify-between gap-4">
+
+    <div>
+      <button
+        mat-stroked-button
+        class="mb-4"
+        (click)="regresar()"
+      >
+        <mat-icon svgIcon="arrow-left" />
+        Volver a tickets
+      </button>
+
+      <h1 class="text-3xl font-bold">
+        Ticket {{ ticket()?.folio || '' }}
+      </h1>
+
+      <p class="mt-2 text-on-surface-variant">
+        {{ ticket()?.titulo }}
+      </p>
+    </div>
+
+    @if (puedeOperar() && ticket()) {
+      <button mat-stroked-button (click)="editar()">
+        <mat-icon svgIcon="pencil" />
+        Editar
+      </button>
+    }
+
+  </header>
+
+  <!-- MENSAJES -->
+
+  @if (error()) {
+    <div class="mb-5 rounded-xl bg-red-50 p-4 text-red-700">
+      {{ error() }}
+    </div>
+  }
+
+  @if (mensaje()) {
+    <div class="mb-5 rounded-xl bg-green-50 p-4 text-green-700">
+      {{ mensaje() }}
+    </div>
+  }
+
+  @if (loading() || empresa.cargando()) {
+
+    <div class="flex justify-center p-12">
+      <mat-spinner diameter="36" />
+    </div>
+
+  } @else if (!empresa.empresaId) {
+
+    <div class="rounded-2xl border bg-surface p-8 text-center">
+      Selecciona una empresa.
+    </div>
+
+  } @else if (ticket(); as t) {
+
+    <!-- INFORMACION GENERAL -->
+
+    <section class="mb-6 rounded-2xl border bg-surface p-6">
+
+      <div class="mb-5 flex items-center justify-between">
+
+        <h2 class="text-xl font-semibold">
+          Información general
+        </h2>
+
+        <span class="rounded-full bg-blue-100 px-3 py-1 text-sm text-blue-700">
+          {{ t.estadoNombre }}
+        </span>
+
+      </div>
+
+      <div class="grid grid-cols-1 gap-5 md:grid-cols-3">
+
+        <div>
+          <div class="text-xs text-on-surface-variant">
+            Folio
+          </div>
+
+          <div class="font-semibold">
+            {{ t.folio }}
+          </div>
+        </div>
+
+        <div>
+          <div class="text-xs text-on-surface-variant">
+            Prioridad
+          </div>
+
+          <div class="font-semibold">
+            {{ t.prioridadNombre }}
+          </div>
+        </div>
+
+        <div>
+          <div class="text-xs text-on-surface-variant">
+            Categoría
+          </div>
+
+          <div class="font-semibold">
+            {{ t.categoriaNombre || 'Sin categoría' }}
+          </div>
+        </div>
+
+        <div>
+          <div class="text-xs text-on-surface-variant">
+            Activo
+          </div>
+
+          <div class="font-semibold">
+            {{ t.activoNombre || 'Sin activo relacionado' }}
+          </div>
+
+          @if (t.activoCodigo) {
+            <div class="text-xs text-on-surface-variant">
+              {{ t.activoCodigo }}
+            </div>
+          }
+        </div>
+
+        <div>
+          <div class="text-xs text-on-surface-variant">
+            Solicitante
+          </div>
+
+          <div class="font-semibold">
+            {{ t.solicitanteNombre || 'No especificado' }}
+          </div>
+
+          @if (t.solicitanteCorreo) {
+            <div class="text-xs text-on-surface-variant">
+              {{ t.solicitanteCorreo }}
+            </div>
+          }
+        </div>
+
+        <div>
+          <div class="text-xs text-on-surface-variant">
+            Fecha de apertura
+          </div>
+
+          <div class="font-semibold">
+            {{ t.fechaApertura | date:'dd/MM/yyyy HH:mm' }}
+          </div>
+        </div>
+
+        <div class="md:col-span-3">
+          <div class="mb-2 text-xs text-on-surface-variant">
+            Descripción
+          </div>
+
+          <div class="whitespace-pre-line">
+            {{ t.descripcion }}
+          </div>
+        </div>
+
+        @if (t.motivoCancelacion) {
+          <div class="md:col-span-3 rounded-xl bg-red-50 p-4">
+            <div class="font-semibold text-red-700">
+              Motivo de cancelación
+            </div>
+
+            <div class="mt-1 text-red-700">
+              {{ t.motivoCancelacion }}
+            </div>
+          </div>
+        }
+
+      </div>
+
+    </section>
+
+    <!-- ASIGNACION -->
+
+    <section class="mb-6 rounded-2xl border bg-surface p-6">
+
+      <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
+
+        <h2 class="text-xl font-semibold">
+          Asignación de soporte
+        </h2>
+
+        @if (puedeAsignar()) {
+          <button
+            mat-stroked-button
+            [disabled]="guardando()"
+            (click)="abrirAsignacion()"
+          >
+            <mat-icon svgIcon="users" />
+
+            {{ asignacion() ? 'Reasignar' : 'Asignar' }}
+          </button>
+        }
+
+      </div>
+
+      @if (asignacion(); as a) {
+
+        <div class="grid grid-cols-1 gap-5 md:grid-cols-3">
+
+          <div>
+            <div class="text-xs text-on-surface-variant">
+              Equipo
+            </div>
+
+            <div class="font-semibold">
+              {{ a.equipoSoporteNombre }}
+            </div>
+          </div>
+
+          <div>
+            <div class="text-xs text-on-surface-variant">
+              Técnico
+            </div>
+
+            <div class="font-semibold">
+              {{ a.usuarioTecnicoNombre || 'Sin técnico asignado' }}
+            </div>
+          </div>
+
+          <div>
+            <div class="text-xs text-on-surface-variant">
+              Fecha de asignación
+            </div>
+
+            <div class="font-semibold">
+              {{ a.fechaAsignacion | date:'dd/MM/yyyy HH:mm' }}
+            </div>
+          </div>
+
+        </div>
+
+      } @else {
+
+        <div class="text-on-surface-variant">
+          El ticket todavía no tiene un equipo asignado.
+        </div>
+
+      }
+
+      <!-- FORMULARIO DE ASIGNACION -->
+
+      @if (mostrarAsignacion() && puedeAsignar()) {
+
+        <div class="mt-6 rounded-xl border p-5">
+
+          <h3 class="mb-5 font-semibold">
+            {{ asignacion() ? 'Reasignar ticket' : 'Asignar ticket' }}
+          </h3>
+
+          <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+
+            <mat-form-field class="w-full">
+
+              <mat-label>Equipo de soporte</mat-label>
+
+              <mat-select
+                [value]="equipoId()"
+                (selectionChange)="cambiarEquipo($event.value)"
+              >
+
+                @for (equipo of equipos(); track equipo.id) {
+
+                  <mat-option
+                    [value]="equipo.id"
+                    [disabled]="!equipo.activo"
+                  >
+                    {{ equipo.nombre }}
+                  </mat-option>
+
+                }
+
+              </mat-select>
+
+            </mat-form-field>
+
+            <mat-form-field class="w-full">
+
+              <mat-label>Técnico responsable</mat-label>
+
+              <mat-select
+                [value]="tecnicoId()"
+                (selectionChange)="seleccionarTecnico($event.value)"
+              >
+
+                <mat-option value="">
+                  Sin técnico específico
+                </mat-option>
+
+                @for (tecnico of tecnicos(); track tecnico.id) {
+
+                  <mat-option [value]="tecnico.id">
+                    {{ tecnico.nombreCompleto }}
+                  </mat-option>
+
+                }
+
+              </mat-select>
+
+            </mat-form-field>
+
+            <mat-form-field class="w-full md:col-span-2">
+
+              <mat-label>
+                {{ asignacion() ? 'Motivo de reasignación' : 'Observaciones' }}
+              </mat-label>
+
+              <textarea
+                matInput
+                rows="3"
+                maxlength="300"
+                [value]="motivoAsignacion()"
+                (input)="cambiarMotivoAsignacion($event)"
+              ></textarea>
+
+            </mat-form-field>
+
+          </div>
+
+          <div class="mt-4 flex justify-end gap-3">
+
+            <button
+              mat-stroked-button
+              (click)="mostrarAsignacion.set(false)"
+            >
+              Cancelar
+            </button>
+
+            <button
+              mat-flat-button
+              [disabled]="guardando() || !equipoId()"
+              (click)="guardarAsignacion()"
+            >
+              Guardar asignación
+            </button>
+
+          </div>
+
+        </div>
+
+      }
+
+    </section>
+
+    <!-- ACCIONES DE ATENCION -->
+
+    <section class="mb-6 rounded-2xl border bg-surface p-6">
+
+      <h2 class="mb-5 text-xl font-semibold">
+        Atención del ticket
+      </h2>
+
+      <div class="flex flex-wrap gap-3">
+
+        @if (puedeIniciar()) {
+          <button
+            mat-flat-button
+            [disabled]="guardando()"
+            (click)="iniciar()"
+          >
+            Iniciar atención
+          </button>
+        }
+
+        @if (puedeResolver()) {
+          <button
+            mat-flat-button
+            [disabled]="guardando()"
+            (click)="abrirAccion('RESOLVER')"
+          >
+            Resolver
+          </button>
+        }
+
+        @if (puedeCerrar()) {
+          <button
+            mat-flat-button
+            [disabled]="guardando()"
+            (click)="cerrar()"
+          >
+            Cerrar ticket
+          </button>
+        }
+
+        @if (puedeReabrir()) {
+          <button
+            mat-stroked-button
+            [disabled]="guardando()"
+            (click)="abrirAccion('REABRIR')"
+          >
+            Reabrir
+          </button>
+        }
+
+        @if (puedeCancelar()) {
+          <button
+            mat-stroked-button
+            [disabled]="guardando()"
+            (click)="abrirAccion('CANCELAR')"
+          >
+            Cancelar ticket
+          </button>
+        }
+
+      </div>
+
+      <!-- FORMULARIO DE RESOLUCION / MOTIVO -->
+
+      @if (accion()) {
+
+        <div class="mt-6 rounded-xl border p-5">
+
+          <h3 class="mb-4 font-semibold">
+
+            @switch (accion()) {
+
+              @case ('RESOLVER') {
+                Registrar solución
+              }
+
+              @case ('REABRIR') {
+                Motivo de reapertura
+              }
+
+              @case ('CANCELAR') {
+                Motivo de cancelación
+              }
+
+            }
+
+          </h3>
+
+          <mat-form-field class="w-full">
+
+            <mat-label>Descripción</mat-label>
+
+            <textarea
+              matInput
+              rows="4"
+              [attr.maxlength]="accion() === 'RESOLVER' ? null : 500"
+              [value]="textoAccion()"
+              (input)="cambiarTextoAccion($event)"
+            ></textarea>
+
+          </mat-form-field>
+
+          <div class="flex justify-end gap-3">
+
+            <button
+              mat-stroked-button
+              (click)="cancelarAccion()"
+            >
+              Cancelar
+            </button>
+
+            <button
+              mat-flat-button
+              [disabled]="guardando() || textoAccion().trim().length < 5"
+              (click)="ejecutarAccion()"
+            >
+              Confirmar
+            </button>
+
+          </div>
+
+        </div>
+
+      }
+
+    </section>
+
+    <!-- SEGUIMIENTO -->
+
+    <section class="mb-6 rounded-2xl border bg-surface p-6">
+
+      <h2 class="mb-5 text-xl font-semibold">
+        Seguimiento
+      </h2>
+
+      @if (puedeComentar()) {
+
+        <div class="mb-6 rounded-xl border p-5">
+
+          <div class="mb-4 flex flex-wrap gap-3">
+
+            <button
+              mat-stroked-button
+              [disabled]="guardando()"
+              (click)="cambiarTipoComentario('COMENTARIO')"
+            >
+              Comentario
+            </button>
+
+            <button
+              mat-stroked-button
+              [disabled]="guardando()"
+              (click)="cambiarTipoComentario('NOTA_INTERNA')"
+            >
+              Nota interna
+            </button>
+
+          </div>
+
+          <p class="mb-3 text-sm text-on-surface-variant">
+
+            @if (tipoComentario() === 'NOTA_INTERNA') {
+              Esta nota será visible únicamente para el personal autorizado de soporte.
+            } @else {
+              Este comentario podrá ser visible para el solicitante.
+            }
+
+          </p>
+
+          <mat-form-field class="w-full">
+
+            <mat-label>
+              {{ tipoComentario() === 'COMENTARIO'
+                ? 'Escribir comentario'
+                : 'Escribir nota interna' }}
+            </mat-label>
+
+            <textarea
+              matInput
+              rows="4"
+              maxlength="10000"
+              [value]="comentario()"
+              (input)="cambiarComentario($event)"
+            ></textarea>
+
+          </mat-form-field>
+
+          <div class="flex justify-end">
+
+            <button
+              mat-flat-button
+              [disabled]="guardando() || comentario().trim().length < 3"
+              (click)="guardarComentario()"
+            >
+              Agregar seguimiento
+            </button>
+
+          </div>
+
+        </div>
+
+      }
+
+      <!-- HISTORIAL DE SEGUIMIENTOS -->
+
+      <div class="space-y-4">
+
+        @for (item of seguimientos(); track item.id) {
+
+          <div class="rounded-xl border p-5">
+
+            <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
+
+              <div class="flex items-center gap-3">
+
+                <span class="font-semibold">
+                  {{ item.autorNombre || 'Sistema' }}
+                </span>
+
+                @if (item.tipo === 'NOTA_INTERNA') {
+
+                  <span class="rounded-full bg-amber-100 px-3 py-1 text-xs text-amber-800">
+                    Nota interna
+                  </span>
+
+                } @else if (item.tipo === 'SOLUCION') {
+
+                  <span class="rounded-full bg-green-100 px-3 py-1 text-xs text-green-800">
+                    Solución
+                  </span>
+
+                } @else {
+
+                  <span class="rounded-full bg-blue-100 px-3 py-1 text-xs text-blue-800">
+                    Comentario
+                  </span>
+
+                }
+
+              </div>
+
+              <span class="text-xs text-on-surface-variant">
+                {{ item.fechaCreacion | date:'dd/MM/yyyy HH:mm' }}
+              </span>
+
+            </div>
+
+            <div class="whitespace-pre-line">
+              {{ item.comentario }}
+            </div>
+
+          </div>
+
+        } @empty {
+
+          <div class="py-8 text-center text-on-surface-variant">
+            No hay seguimientos registrados.
+          </div>
+
+        }
+
+      </div>
+
+    </section>
+
+    <!-- HISTORIAL DE ESTADOS -->
+
+    <section class="mb-6 rounded-2xl border bg-surface p-6">
+
+      <h2 class="mb-5 text-xl font-semibold">
+        Historial de estados
+      </h2>
+
+      <div class="space-y-3">
+
+        @for (item of historialEstados(); track item.id) {
+
+          <div class="rounded-xl border p-4">
+
+            <div class="flex flex-wrap items-center justify-between gap-3">
+
+              <div>
+                <span class="font-medium">
+                  {{ item.estadoAnteriorNombre || 'Inicial' }}
+                </span>
+
+                <span class="mx-2">→</span>
+
+                <span class="font-semibold">
+                  {{ item.estadoNuevoNombre }}
+                </span>
+              </div>
+
+              <span class="text-xs text-on-surface-variant">
+                {{ item.fechaCambio | date:'dd/MM/yyyy HH:mm' }}
+              </span>
+
+            </div>
+
+            @if (item.motivo) {
+              <div class="mt-2 text-sm text-on-surface-variant">
+                {{ item.motivo }}
+              </div>
+            }
+
+          </div>
+
+        } @empty {
+
+          <div class="py-6 text-center text-on-surface-variant">
+            No hay cambios de estado registrados.
+          </div>
+
+        }
+
+      </div>
+
+    </section>
+
+    <!-- HISTORIAL DE ASIGNACIONES -->
+
+    <section class="mb-6 rounded-2xl border bg-surface p-6">
+
+      <h2 class="mb-5 text-xl font-semibold">
+        Historial de asignaciones
+      </h2>
+
+      <div class="overflow-x-auto">
+
+        <table class="w-full text-left text-sm">
+
+          <thead class="border-b">
+            <tr>
+              <th class="p-4">Fecha</th>
+              <th class="p-4">Equipo</th>
+              <th class="p-4">Técnico</th>
+              <th class="p-4">Motivo</th>
+              <th class="p-4">Estado</th>
+            </tr>
+          </thead>
+
+          <tbody>
+
+            @for (item of historialAsignaciones(); track item.id) {
+
+              <tr class="border-b last:border-0">
+
+                <td class="p-4 whitespace-nowrap">
+                  {{ item.fechaAsignacion | date:'dd/MM/yyyy HH:mm' }}
+                </td>
+
+                <td class="p-4">
+                  {{ item.equipoSoporteNombre }}
+                </td>
+
+                <td class="p-4">
+                  {{ item.usuarioTecnicoNombre || '—' }}
+                </td>
+
+                <td class="p-4">
+                  {{ item.motivo || '—' }}
+                </td>
+
+                <td class="p-4">
+
+                  @if (item.vigente) {
+
+                    <span class="rounded-full bg-green-100 px-3 py-1 text-xs text-green-700">
+                      Vigente
+                    </span>
+
+                  } @else {
+
+                    <span class="rounded-full bg-neutral-100 px-3 py-1 text-xs text-neutral-700">
+                      Histórica
+                    </span>
+
+                  }
+
+                </td>
+
+              </tr>
+
+            } @empty {
+
+              <tr>
+                <td colspan="5" class="p-8 text-center text-on-surface-variant">
+                  No hay asignaciones registradas.
+                </td>
+              </tr>
+
+            }
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+    </section>
+
+  }
+
+</div>

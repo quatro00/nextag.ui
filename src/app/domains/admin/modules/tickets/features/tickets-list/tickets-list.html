@@ -1,320 +1,283 @@
 <div class="mx-auto flex w-full max-w-7xl flex-col p-6 sm:p-8">
 
-  <!-- ENCABEZADO -->
+    <!-- ENCABEZADO -->
 
-  <header class="mb-7 flex flex-wrap items-center justify-between gap-4">
+    <header class="mb-7 flex flex-wrap items-center justify-between gap-4">
 
-    <div>
-      <h1 class="text-3xl font-bold">
-        Tickets de soporte
-      </h1>
+        <div>
+            <h1 class="text-3xl font-bold">
+                Tickets de soporte
+            </h1>
 
-      <p class="mt-2 text-on-surface-variant">
-        Consulta y administra las solicitudes de soporte técnico.
-      </p>
+            <p class="mt-2 text-on-surface-variant">
+                Consulta y administra las solicitudes de soporte técnico.
+            </p>
+        </div>
+
+        @if (puedeGestionar()) {
+        <button mat-flat-button (click)="nuevo()">
+            <mat-icon svgIcon="plus" />
+            Nuevo ticket
+        </button>
+        }
+
+    </header>
+
+    <!-- ERRORES -->
+
+    @if (error()) {
+    <div class="mb-5 rounded-xl bg-red-50 p-4 text-red-700" role="alert">
+        {{ error() }}
     </div>
-
-    @if (puedeGestionar()) {
-      <button mat-flat-button (click)="nuevo()">
-        <mat-icon svgIcon="plus" />
-        Nuevo ticket
-      </button>
     }
 
-  </header>
-
-  <!-- ERRORES -->
-
-  @if (error()) {
-    <div
-      class="mb-5 rounded-xl bg-red-50 p-4 text-red-700"
-      role="alert"
-    >
-      {{ error() }}
-    </div>
-  }
-
-  <!-- FILTROS -->
-
-  <section class="mb-6 rounded-2xl border bg-surface p-5">
-
-    <div class="grid grid-cols-1 gap-4 md:grid-cols-3 xl:grid-cols-4">
-
-      <mat-form-field class="w-full">
-        <mat-label>Buscar ticket</mat-label>
-
-        <input
-          matInput
-          [value]="texto()"
-          (input)="cambiarTexto($event)"
-          (keyup.enter)="buscar()"
-          placeholder="Folio, título o descripción"
-        />
-      </mat-form-field>
-
-      <mat-form-field class="w-full">
-        <mat-label>Estado</mat-label>
-
-        <mat-select
-          [value]="estadoId()"
-          (selectionChange)="cambiarEstado($event.value)"
-        >
-          <mat-option [value]="null">
-            Todos
-          </mat-option>
-
-          @for (estado of estados(); track estado.id) {
-            <mat-option [value]="estado.id">
-              {{ estado.nombre }}
-            </mat-option>
-          }
-        </mat-select>
-      </mat-form-field>
-
-      <mat-form-field class="w-full">
-        <mat-label>Prioridad</mat-label>
-
-        <mat-select
-          [value]="prioridadId()"
-          (selectionChange)="cambiarPrioridad($event.value)"
-        >
-          <mat-option [value]="null">
-            Todas
-          </mat-option>
-
-          @for (prioridad of prioridades(); track prioridad.id) {
-            <mat-option [value]="prioridad.id">
-              {{ prioridad.nombre }}
-            </mat-option>
-          }
-        </mat-select>
-      </mat-form-field>
-
-      <mat-form-field class="w-full">
-        <mat-label>Categoría</mat-label>
-
-        <mat-select
-          [value]="categoriaId()"
-          (selectionChange)="cambiarCategoria($event.value)"
-        >
-          <mat-option [value]="null">
-            Todas
-          </mat-option>
-
-          @for (categoria of categorias(); track categoria.id) {
-            <mat-option [value]="categoria.id">
-              {{ categoria.nombre }}
-            </mat-option>
-          }
-        </mat-select>
-      </mat-form-field>
-
-      <mat-form-field class="w-full">
-        <mat-label>Fecha inicial</mat-label>
-
-        <input
-          matInput
-          type="date"
-          [value]="fechaInicio()"
-          (change)="cambiarFechaInicio($event)"
-        />
-      </mat-form-field>
-
-      <mat-form-field class="w-full">
-        <mat-label>Fecha final</mat-label>
-
-        <input
-          matInput
-          type="date"
-          [value]="fechaFin()"
-          (change)="cambiarFechaFin($event)"
-        />
-      </mat-form-field>
-
-    </div>
-
-    <div class="mt-4 flex flex-wrap justify-end gap-3">
-
-      <button mat-stroked-button (click)="limpiar()">
-        Limpiar
-      </button>
-
-      <button mat-flat-button (click)="buscar()">
-        <mat-icon svgIcon="search" />
-        Buscar
-      </button>
-
-    </div>
-
-  </section>
-
-  <!-- LISTADO -->
-
-  @if (loading() || empresa.cargando()) {
-
-    <div class="flex justify-center p-12">
-      <mat-spinner diameter="36" />
-    </div>
-
-  } @else if (!empresa.empresaId) {
-
-    <div class="rounded-2xl border bg-surface p-8 text-center">
-      Selecciona una empresa.
-    </div>
-
-  } @else {
-
-    <section class="overflow-hidden rounded-2xl border bg-surface">
-
-      <div class="overflow-x-auto">
-
-        <table class="w-full text-left text-sm">
-
-          <thead class="border-b bg-neutral-50 dark:bg-neutral-900/50">
-
-            <tr>
-              <th class="p-4">Folio</th>
-              <th class="p-4">Ticket</th>
-              <th class="p-4">Activo</th>
-              <th class="p-4">Categoría</th>
-              <th class="p-4">Prioridad</th>
-              <th class="p-4">Estado</th>
-              <th class="p-4">Solicitante</th>
-              <th class="p-4">Fecha</th>
-              <th class="p-4 text-right">Acciones</th>
-            </tr>
-
-          </thead>
-
-          <tbody>
-
-            @for (item of items(); track item.id) {
-
-              <tr class="border-b last:border-0">
-
-                <td class="p-4 font-medium whitespace-nowrap">
-                  {{ item.folio }}
-                </td>
-
-                <td class="p-4">
-                  <div class="font-medium">
-                    {{ item.titulo }}
-                  </div>
-
-                  <div class="text-xs text-on-surface-variant">
-                    Origen: {{ item.origen }}
-                  </div>
-                </td>
-
-                <td class="p-4">
-                  @if (item.activoNombre) {
-                    <div>
-                      {{ item.activoNombre }}
-                    </div>
-
-                    <div class="text-xs text-on-surface-variant">
-                      {{ item.activoCodigo }}
-                    </div>
-                  } @else {
-                    —
-                  }
-                </td>
-
-                <td class="p-4">
-                  {{ item.categoriaNombre || '—' }}
-                </td>
-
-                <td class="p-4">
-                  <span class="rounded-full bg-blue-100 px-3 py-1 text-xs text-blue-700">
-                    {{ item.prioridadNombre }}
-                  </span>
-                </td>
-
-                <td class="p-4">
-                  <span class="rounded-full bg-neutral-100 px-3 py-1 text-xs text-neutral-700">
-                    {{ item.estadoNombre }}
-                  </span>
-                </td>
-
-                <td class="p-4">
-                  {{ item.solicitanteNombre || '—' }}
-                </td>
-
-                <td class="p-4 whitespace-nowrap">
-                  {{ item.fechaApertura | date:'dd/MM/yyyy HH:mm' }}
-                </td>
-
-                <td class="p-4 text-right whitespace-nowrap">
-
-                  @if (puedeGestionar()) {
-                    <button
-                      mat-icon-button
-                      aria-label="Editar ticket"
-                      (click)="editar(item.id)"
-                    >
-                      <mat-icon svgIcon="pencil" />
-                    </button>
-                  }
-
-                </td>
-
-              </tr>
-
-            } @empty {
-
-              <tr>
-                <td
-                  colspan="9"
-                  class="p-10 text-center text-on-surface-variant"
-                >
-                  No se encontraron tickets.
-                </td>
-              </tr>
-
-            }
-
-          </tbody>
-
-        </table>
-
-      </div>
-
-      <!-- PAGINACION -->
-
-      <div class="flex flex-wrap items-center justify-between gap-4 border-t p-5">
-
-        <span class="text-sm text-on-surface-variant">
-          {{ totalRegistros() }} tickets registrados
-        </span>
-
-        <div class="flex items-center gap-3">
-
-          <button
-            mat-stroked-button
-            [disabled]="pagina() <= 1"
-            (click)="cambiarPagina(pagina() - 1)"
-          >
-            Anterior
-          </button>
-
-          <span class="text-sm">
-            Página {{ pagina() }} de {{ totalPaginas() }}
-          </span>
-
-          <button
-            mat-stroked-button
-            [disabled]="pagina() >= totalPaginas()"
-            (click)="cambiarPagina(pagina() + 1)"
-          >
-            Siguiente
-          </button>
+    <!-- FILTROS -->
+
+    <section class="mb-6 rounded-2xl border bg-surface p-5">
+
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-3 xl:grid-cols-4">
+
+            <mat-form-field class="w-full">
+                <mat-label>Buscar ticket</mat-label>
+
+                <input matInput [value]="texto()" (input)="cambiarTexto($event)" (keyup.enter)="buscar()"
+                    placeholder="Folio, título o descripción" />
+            </mat-form-field>
+
+            <mat-form-field class="w-full">
+                <mat-label>Estado</mat-label>
+
+                <mat-select [value]="estadoId()" (selectionChange)="cambiarEstado($event.value)">
+                    <mat-option [value]="null">
+                        Todos
+                    </mat-option>
+
+                    @for (estado of estados(); track estado.id) {
+                    <mat-option [value]="estado.id">
+                        {{ estado.nombre }}
+                    </mat-option>
+                    }
+                </mat-select>
+            </mat-form-field>
+
+            <mat-form-field class="w-full">
+                <mat-label>Prioridad</mat-label>
+
+                <mat-select [value]="prioridadId()" (selectionChange)="cambiarPrioridad($event.value)">
+                    <mat-option [value]="null">
+                        Todas
+                    </mat-option>
+
+                    @for (prioridad of prioridades(); track prioridad.id) {
+                    <mat-option [value]="prioridad.id">
+                        {{ prioridad.nombre }}
+                    </mat-option>
+                    }
+                </mat-select>
+            </mat-form-field>
+
+            <mat-form-field class="w-full">
+                <mat-label>Categoría</mat-label>
+
+                <mat-select [value]="categoriaId()" (selectionChange)="cambiarCategoria($event.value)">
+                    <mat-option [value]="null">
+                        Todas
+                    </mat-option>
+
+                    @for (categoria of categorias(); track categoria.id) {
+                    <mat-option [value]="categoria.id">
+                        {{ categoria.nombre }}
+                    </mat-option>
+                    }
+                </mat-select>
+            </mat-form-field>
+
+            <mat-form-field class="w-full">
+                <mat-label>Fecha inicial</mat-label>
+
+                <input matInput type="date" [value]="fechaInicio()" (change)="cambiarFechaInicio($event)" />
+            </mat-form-field>
+
+            <mat-form-field class="w-full">
+                <mat-label>Fecha final</mat-label>
+
+                <input matInput type="date" [value]="fechaFin()" (change)="cambiarFechaFin($event)" />
+            </mat-form-field>
 
         </div>
 
-      </div>
+        <div class="mt-4 flex flex-wrap justify-end gap-3">
+
+            <button mat-stroked-button (click)="limpiar()">
+                Limpiar
+            </button>
+
+            <button mat-flat-button (click)="buscar()">
+                <mat-icon svgIcon="search" />
+                Buscar
+            </button>
+
+        </div>
 
     </section>
 
-  }
+    <!-- LISTADO -->
+
+    @if (loading() || empresa.cargando()) {
+
+    <div class="flex justify-center p-12">
+        <mat-spinner diameter="36" />
+    </div>
+
+    } @else if (!empresa.empresaId) {
+
+    <div class="rounded-2xl border bg-surface p-8 text-center">
+        Selecciona una empresa.
+    </div>
+
+    } @else {
+
+    <section class="overflow-hidden rounded-2xl border bg-surface">
+
+        <div class="overflow-x-auto">
+
+            <table class="w-full text-left text-sm">
+
+                <thead class="border-b bg-neutral-50 dark:bg-neutral-900/50">
+
+                    <tr>
+                        <th class="p-4">Folio</th>
+                        <th class="p-4">Ticket</th>
+                        <th class="p-4">Activo</th>
+                        <th class="p-4">Categoría</th>
+                        <th class="p-4">Prioridad</th>
+                        <th class="p-4">Estado</th>
+                        <th class="p-4">Solicitante</th>
+                        <th class="p-4">Fecha</th>
+                        <th class="p-4 text-right">Acciones</th>
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    @for (item of items(); track item.id) {
+
+                    <tr class="border-b last:border-0">
+
+                        <td class="p-4 font-medium whitespace-nowrap">
+                            {{ item.folio }}
+                        </td>
+
+                        <td class="p-4">
+                            <div class="font-medium">
+                                {{ item.titulo }}
+                            </div>
+
+                            <div class="text-xs text-on-surface-variant">
+                                Origen: {{ item.origen }}
+                            </div>
+                        </td>
+
+                        <td class="p-4">
+                            @if (item.activoNombre) {
+                            <div>
+                                {{ item.activoNombre }}
+                            </div>
+
+                            <div class="text-xs text-on-surface-variant">
+                                {{ item.activoCodigo }}
+                            </div>
+                            } @else {
+                            —
+                            }
+                        </td>
+
+                        <td class="p-4">
+                            {{ item.categoriaNombre || '—' }}
+                        </td>
+
+                        <td class="p-4">
+                            <span class="rounded-full bg-blue-100 px-3 py-1 text-xs text-blue-700">
+                                {{ item.prioridadNombre }}
+                            </span>
+                        </td>
+
+                        <td class="p-4">
+                            <span class="rounded-full bg-neutral-100 px-3 py-1 text-xs text-neutral-700">
+                                {{ item.estadoNombre }}
+                            </span>
+                        </td>
+
+                        <td class="p-4">
+                            {{ item.solicitanteNombre || '—' }}
+                        </td>
+
+                        <td class="p-4 whitespace-nowrap">
+                            {{ item.fechaApertura | date:'dd/MM/yyyy HH:mm' }}
+                        </td>
+
+                        <td class="p-4 text-right whitespace-nowrap">
+
+                            <button mat-icon-button aria-label="Ver ticket" title="Ver detalle"
+                                (click)="detalle(item.id)">
+                                <mat-icon svgIcon="eye" />
+                            </button>
+                            @if (puedeGestionar()) {
+                            <button mat-icon-button aria-label="Editar ticket" (click)="editar(item.id)">
+                                <mat-icon svgIcon="pencil" />
+                            </button>
+                            }
+
+                        </td>
+
+                    </tr>
+
+                    } @empty {
+
+                    <tr>
+                        <td colspan="9" class="p-10 text-center text-on-surface-variant">
+                            No se encontraron tickets.
+                        </td>
+                    </tr>
+
+                    }
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+        <!-- PAGINACION -->
+
+        <div class="flex flex-wrap items-center justify-between gap-4 border-t p-5">
+
+            <span class="text-sm text-on-surface-variant">
+                {{ totalRegistros() }} tickets registrados
+            </span>
+
+            <div class="flex items-center gap-3">
+
+                <button mat-stroked-button [disabled]="pagina() <= 1" (click)="cambiarPagina(pagina() - 1)">
+                    Anterior
+                </button>
+
+                <span class="text-sm">
+                    Página {{ pagina() }} de {{ totalPaginas() }}
+                </span>
+
+                <button mat-stroked-button [disabled]="pagina() >= totalPaginas()"
+                    (click)="cambiarPagina(pagina() + 1)">
+                    Siguiente
+                </button>
+
+            </div>
+
+        </div>
+
+    </section>
+
+    }
 
 </div>

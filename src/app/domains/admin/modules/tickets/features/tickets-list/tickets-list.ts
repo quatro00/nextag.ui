@@ -352,6 +352,14 @@ export default class TicketsList {
   // CONSULTA
   // ==========================================
 
+  protected detalle(id: string): void {
+
+  void this.router.navigate([
+        '/admin/tickets',
+        id,
+    ]);
+    }
+
   protected async recargar(): Promise<void> {
 
     const empresaId = this.empresa.empresaId;
