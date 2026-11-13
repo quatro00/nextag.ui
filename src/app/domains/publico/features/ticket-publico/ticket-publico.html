@@ -1,0 +1,514 @@
+<div class="min-h-screen bg-slate-50 text-slate-900">
+
+  <!-- ====================================== -->
+  <!-- ENCABEZADO -->
+  <!-- ====================================== -->
+
+  <header class="border-b border-slate-200 bg-white">
+
+    <div class="mx-auto flex max-w-3xl items-center justify-between px-5 py-4">
+
+      <div class="flex items-center gap-3">
+
+        <div
+          class="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-600 text-white"
+        >
+          <mat-icon svgIcon="wrench"></mat-icon>
+        </div>
+
+        <div>
+
+          <div class="text-xl font-bold tracking-tight">
+            Nextag
+          </div>
+
+          <div class="text-xs text-slate-500">
+            Solicitud de soporte técnico
+          </div>
+
+        </div>
+
+      </div>
+
+      <div class="text-xs font-medium text-slate-400">
+        NFC / QR
+      </div>
+
+    </div>
+
+  </header>
+
+  <!-- ====================================== -->
+  <!-- CONTENIDO -->
+  <!-- ====================================== -->
+
+  <main class="mx-auto max-w-3xl px-4 py-8 sm:px-6">
+
+    <!-- CARGANDO -->
+
+    @if (cargando()) {
+
+      <div class="flex flex-col items-center justify-center rounded-2xl border border-slate-200 bg-white p-12">
+
+        <mat-spinner diameter="42"></mat-spinner>
+
+        <p class="mt-5 text-sm text-slate-500">
+          Preparando formulario de soporte...
+        </p>
+
+      </div>
+
+    }
+
+    <!-- ERROR DE CARGA -->
+
+    @else if (errorCarga()) {
+
+      <div class="rounded-2xl border border-red-100 bg-white p-8 text-center shadow-sm">
+
+        <div class="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-red-50 text-red-600">
+          <mat-icon svgIcon="circle-alert"></mat-icon>
+        </div>
+
+        <h1 class="text-xl font-semibold">
+          Solicitud no disponible
+        </h1>
+
+        <p class="mt-3 text-sm text-slate-500">
+          {{ errorCarga() }}
+        </p>
+
+        <div class="mt-6 flex flex-wrap justify-center gap-3">
+
+          <button
+            mat-stroked-button
+            type="button"
+            (click)="regresar()"
+          >
+            Volver al equipo
+          </button>
+
+          <button
+            mat-flat-button
+            type="button"
+            (click)="cargarDatos()"
+          >
+            Reintentar
+          </button>
+
+        </div>
+
+      </div>
+
+    }
+
+    <!-- ====================================== -->
+    <!-- CONFIRMACION -->
+    <!-- ====================================== -->
+
+    @else if (resultado(); as ticket) {
+
+      <section class="rounded-2xl border border-green-100 bg-white p-8 text-center shadow-sm">
+
+        <div class="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-green-50 text-green-600">
+          <mat-icon svgIcon="circle-check"></mat-icon>
+        </div>
+
+        <h1 class="text-2xl font-bold">
+          ¡Solicitud registrada!
+        </h1>
+
+        <p class="mt-3 text-sm text-slate-600">
+          Tu solicitud de soporte fue registrada correctamente.
+        </p>
+
+        <div class="mt-8 rounded-2xl border border-green-100 bg-green-50 p-6">
+
+          <p class="text-sm text-green-700">
+            Folio de seguimiento
+          </p>
+
+          <p class="mt-2 text-3xl font-bold tracking-wide text-green-800">
+            {{ ticket.folio }}
+          </p>
+
+          <p class="mt-3 text-xs text-green-700">
+            {{ ticket.fechaApertura | date:'dd/MM/yyyy HH:mm' }}
+          </p>
+
+        </div>
+
+        <p class="mt-6 text-sm text-slate-500">
+          Conserva este folio como referencia de tu solicitud.
+          El personal de soporte podrá utilizarlo para identificar tu reporte.
+        </p>
+
+        <button
+          mat-flat-button
+          type="button"
+          class="mt-8"
+          (click)="regresar()"
+        >
+          Volver a la información del equipo
+        </button>
+
+      </section>
+
+    }
+
+    <!-- ====================================== -->
+    <!-- FORMULARIO -->
+    <!-- ====================================== -->
+
+    @else if (etiqueta(); as e) {
+
+      <div class="mb-6">
+
+        <button
+          mat-stroked-button
+          type="button"
+          (click)="regresar()"
+        >
+          <mat-icon svgIcon="arrow-left"></mat-icon>
+          Volver al equipo
+        </button>
+
+        <h1 class="mt-6 text-2xl font-bold sm:text-3xl">
+          Reportar un problema
+        </h1>
+
+        <p class="mt-2 text-sm text-slate-500">
+          Completa la siguiente información para solicitar soporte técnico.
+        </p>
+
+      </div>
+
+      <!-- ====================================== -->
+      <!-- INFORMACION DEL ACTIVO -->
+      <!-- ====================================== -->
+
+      @if (e.activo; as activo) {
+
+        <section class="mb-6 rounded-2xl border border-blue-100 bg-blue-50 p-5">
+
+          <div class="flex items-center gap-4">
+
+            <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-100 text-blue-600">
+              <mat-icon svgIcon="monitor"></mat-icon>
+            </div>
+
+            <div class="min-w-0">
+
+              <p class="text-xs font-medium uppercase tracking-wide text-blue-600">
+                Equipo relacionado
+              </p>
+
+              <h2 class="mt-1 text-lg font-semibold">
+                {{ activo.nombre || 'Equipo registrado' }}
+              </h2>
+
+              @if (activo.codigo) {
+                <p class="mt-1 text-sm text-slate-600">
+                  Código: {{ activo.codigo }}
+                </p>
+              }
+
+              @if (activo.ubicacion) {
+                <p class="mt-1 text-sm text-slate-600">
+                  Ubicación: {{ activo.ubicacion }}
+                </p>
+              }
+
+            </div>
+
+          </div>
+
+          <p class="mt-4 text-xs text-blue-700">
+            El equipo se asociará automáticamente con tu solicitud.
+          </p>
+
+        </section>
+
+      }
+
+      <!-- ====================================== -->
+      <!-- ERROR -->
+      <!-- ====================================== -->
+
+      @if (error()) {
+
+        <div
+          class="mb-6 rounded-xl border border-red-100 bg-red-50 p-4 text-sm text-red-700"
+          role="alert"
+        >
+          {{ error() }}
+        </div>
+
+      }
+
+      <!-- ====================================== -->
+      <!-- FORMULARIO -->
+      <!-- ====================================== -->
+
+      <form
+        [formGroup]="form"
+        (ngSubmit)="guardar()"
+        novalidate
+      >
+
+        <!-- ================================== -->
+        <!-- DATOS DEL SOLICITANTE -->
+        <!-- ================================== -->
+
+        <section class="mb-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+
+          <h2 class="mb-2 text-lg font-semibold">
+            Datos del solicitante
+          </h2>
+
+          <p class="mb-6 text-sm text-slate-500">
+            Proporciona tus datos para que el personal de soporte pueda comunicarse contigo.
+          </p>
+
+          <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
+
+            <!-- NOMBRE -->
+
+            <mat-form-field class="w-full sm:col-span-2">
+
+              <mat-label>Nombre completo</mat-label>
+
+              <input
+                matInput
+                formControlName="nombre"
+                maxlength="150"
+                autocomplete="name"
+              />
+
+              @if (form.controls.nombre.hasError('required')) {
+                <mat-error>
+                  El nombre es obligatorio.
+                </mat-error>
+              }
+
+              @else if (form.controls.nombre.hasError('minlength')) {
+                <mat-error>
+                  Escribe al menos 3 caracteres.
+                </mat-error>
+              }
+
+            </mat-form-field>
+
+            <!-- CORREO -->
+
+            <mat-form-field class="w-full">
+
+              <mat-label>Correo electrónico</mat-label>
+
+              <input
+                matInput
+                type="email"
+                formControlName="correo"
+                maxlength="254"
+                autocomplete="email"
+              />
+
+              @if (form.controls.correo.hasError('email')) {
+                <mat-error>
+                  Ingresa un correo válido.
+                </mat-error>
+              }
+
+            </mat-form-field>
+
+            <!-- TELEFONO -->
+
+            <mat-form-field class="w-full">
+
+              <mat-label>Teléfono</mat-label>
+
+              <input
+                matInput
+                type="tel"
+                formControlName="telefono"
+                maxlength="30"
+                autocomplete="tel"
+              />
+
+            </mat-form-field>
+
+          </div>
+
+          <p class="mt-2 text-xs text-slate-500">
+            Debes proporcionar al menos un medio de contacto:
+            correo electrónico o teléfono.
+          </p>
+
+        </section>
+
+        <!-- ================================== -->
+        <!-- INFORMACION DEL PROBLEMA -->
+        <!-- ================================== -->
+
+        <section class="mb-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+
+          <h2 class="mb-2 text-lg font-semibold">
+            Información del problema
+          </h2>
+
+          <p class="mb-6 text-sm text-slate-500">
+            Describe la falla que presenta el equipo.
+          </p>
+
+          <div class="space-y-4">
+
+            <!-- CATEGORIA -->
+
+            <mat-form-field class="w-full">
+
+              <mat-label>Categoría del problema</mat-label>
+
+              <mat-select formControlName="categoriaTicketId">
+
+                <mat-option value="">
+                  Sin categoría
+                </mat-option>
+
+                @for (categoria of categorias(); track categoria.id) {
+
+                  <mat-option [value]="categoria.id">
+                    {{ categoria.nombre }}
+                  </mat-option>
+
+                }
+
+              </mat-select>
+
+            </mat-form-field>
+
+            <!-- TITULO -->
+
+            <mat-form-field class="w-full">
+
+              <mat-label>Título del problema</mat-label>
+
+              <input
+                matInput
+                formControlName="titulo"
+                maxlength="200"
+                placeholder="Ej. La impresora no funciona"
+              />
+
+              @if (form.controls.titulo.hasError('required')) {
+                <mat-error>
+                  El título es obligatorio.
+                </mat-error>
+              }
+
+              @else if (form.controls.titulo.hasError('minlength')) {
+                <mat-error>
+                  Escribe al menos 5 caracteres.
+                </mat-error>
+              }
+
+            </mat-form-field>
+
+            <!-- DESCRIPCION -->
+
+            <mat-form-field class="w-full">
+
+              <mat-label>Descripción del problema</mat-label>
+
+              <textarea
+                matInput
+                formControlName="descripcion"
+                rows="5"
+                maxlength="5000"
+                placeholder="Describe lo que sucede con el equipo..."
+              ></textarea>
+
+              @if (form.controls.descripcion.hasError('required')) {
+                <mat-error>
+                  La descripción es obligatoria.
+                </mat-error>
+              }
+
+              @else if (form.controls.descripcion.hasError('minlength')) {
+                <mat-error>
+                  Escribe al menos 10 caracteres.
+                </mat-error>
+              }
+
+            </mat-form-field>
+
+          </div>
+
+        </section>
+
+        <!-- ================================== -->
+        <!-- CONFIRMACION -->
+        <!-- ================================== -->
+
+        <section class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+
+          <div class="mb-5 rounded-xl bg-slate-50 p-4">
+
+            <p class="text-sm text-slate-600">
+              Al registrar tu solicitud, se generará un folio de soporte.
+              Conserva ese número para futuras referencias.
+            </p>
+
+          </div>
+
+          <button
+            mat-flat-button
+            type="submit"
+            class="w-full"
+            [disabled]="guardando()"
+          >
+
+            @if (guardando()) {
+
+              <mat-spinner diameter="20"></mat-spinner>
+
+              Registrando solicitud...
+
+            } @else {
+
+              <mat-icon svgIcon="send"></mat-icon>
+
+              Registrar solicitud
+
+            }
+
+          </button>
+
+          <p class="mt-4 text-center text-xs text-slate-400">
+            No necesitas una cuenta de Nextag para registrar esta solicitud.
+          </p>
+
+        </section>
+
+      </form>
+
+    }
+
+  </main>
+
+  <!-- ====================================== -->
+  <!-- FOOTER -->
+  <!-- ====================================== -->
+
+  <footer class="px-4 py-8 text-center">
+
+    <div class="text-sm font-semibold text-slate-600">
+      Nextag
+    </div>
+
+    <p class="mt-1 text-xs text-slate-400">
+      Gestión inteligente de activos y soporte técnico
+    </p>
+
+  </footer>
+
+</div>

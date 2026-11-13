@@ -4,7 +4,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { catchError, finalize, of, switchMap } from 'rxjs';
 import { EtiquetaPublicaService } from '../../services/etiqueta-publica.service';
 import {
@@ -24,6 +24,7 @@ import {
 export default class FichaActivoComponent {
 
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   private readonly service = inject(EtiquetaPublicaService);
   private readonly destroyRef = inject(DestroyRef);
 
@@ -80,6 +81,32 @@ export default class FichaActivoComponent {
       .subscribe(resultado => {
         this.etiqueta.set(resultado);
       });
+  }
+
+  protected reportarProblema(): void {
+
+    const etiqueta = this.etiqueta();
+
+    if (
+      !etiqueta ||
+      etiqueta.estatus !== 'ACTIVO' ||
+      !etiqueta.activo ||
+      !etiqueta.permitirTicketPublico
+    ) {
+      return;
+    }
+
+    const token = this.token();
+
+    if (!token) {
+      return;
+    }
+
+    void this.router.navigate([
+      '/e',
+      token,
+      'ticket',
+    ]);
   }
 
   protected reintentar(): void {
