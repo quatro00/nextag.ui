@@ -1,53 +1,185 @@
 <div class="mx-auto flex w-full max-w-7xl flex-auto flex-col p-6 sm:p-8">
   <header class="mb-7 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-    <div class="flex items-center gap-4"><div class="flex size-12 items-center justify-center rounded-xl bg-primary text-on-primary"><mat-icon svgIcon="scan-line" /></div><div><h1 class="text-3xl font-bold tracking-tight">Administración de etiquetas</h1><p class="mt-1 text-on-surface-variant">Etiquetas NFC/QR de <strong>{{ empresa.seleccionada()?.nombre || 'la empresa seleccionada' }}</strong>.</p></div></div>
-    @if (puedeGestionar()) {<button mat-flat-button [disabled]="!empresa.empresaId || loading()" (click)="toggleGenerador()"><mat-icon svgIcon="plus" /><span class="ml-2">{{ mostrarGenerador() ? 'Cerrar generador' : 'Generar etiquetas' }}</span></button>}
-  </header>
-  @if (error()) {<div role="alert" class="mb-5 rounded-xl bg-red-50 p-4 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-300">{{ error() }}</div>}
-  @if (exito()) {<div role="status" class="mb-5 rounded-xl bg-green-50 p-4 text-sm text-green-700 dark:bg-green-900/20 dark:text-green-300">{{ exito() }}</div>}
-  @if (mostrarGenerador() && puedeGestionar()) {
-    <section class="mb-6 overflow-hidden rounded-2xl border bg-surface shadow-sm">
-      <div class="border-b p-5"><h2 class="text-lg font-semibold">Generar lote de etiquetas</h2><p class="mt-1 text-sm text-on-surface-variant">Los identificadores se crean antes de imprimir y pueden quedar disponibles sin activo.</p></div>
-      <form class="p-6" [formGroup]="generador" (ngSubmit)="generar()">
-        <div class="flex flex-col gap-4 md:flex-row md:items-center">
-          <mat-form-field class="w-full md:max-w-xs"><mat-label>Cantidad (1 a 250)</mat-label><input matInput type="number" min="1" max="250" step="1" formControlName="cantidad" />@if(generador.controls.cantidad.invalid){<mat-error>Entre 1 y 250 etiquetas.</mat-error>}</mat-form-field>
-          <mat-checkbox formControlName="tieneNfc">Contiene NFC</mat-checkbox>
-          <mat-checkbox formControlName="tieneQr">Contiene QR</mat-checkbox>
-          <mat-checkbox formControlName="esAntimetal">NFC antimetal</mat-checkbox>
-        </div>
-        <div class="mt-4 flex justify-end"><button mat-flat-button type="submit" [disabled]="generando() || generador.invalid || !empresa.empresaId"><mat-icon svgIcon="tags" /><span class="ml-2">{{ generando() ? 'Generando...' : 'Generar lote' }}</span></button></div>
-      </form>
-      @if (generado().length) {
-        <div class="flex flex-col gap-3 border-t p-5 sm:flex-row sm:items-center sm:justify-between"><p class="text-sm">Último lote generado: <strong>{{ generado().length }}</strong> etiquetas. Conserva el CSV para enviarlo al impresor.</p><button mat-stroked-button (click)="exportarCsv()"><mat-icon svgIcon="download" /><span class="ml-2">Exportar lote a CSV</span></button></div>
-      }
-    </section>
-  }
-  <div class="mb-5 grid grid-cols-1 gap-4 sm:grid-cols-3"><div class="rounded-2xl border bg-surface p-5"><div class="text-sm text-on-surface-variant">Etiquetas según filtros</div><div class="mt-2 text-3xl font-bold">{{ total() }}</div></div><div class="rounded-2xl border bg-surface p-5"><div class="text-sm text-on-surface-variant">En esta página</div><div class="mt-2 text-3xl font-bold">{{ items().length }}</div></div><div class="rounded-2xl border bg-surface p-5"><div class="text-sm text-on-surface-variant">Página</div><div class="mt-2 text-3xl font-bold">{{ pagina() }} <span class="text-base font-normal text-on-surface-variant">de {{ paginas() }}</span></div></div></div>
-  <section class="overflow-hidden rounded-2xl border bg-surface shadow-sm">
-    <div class="border-b p-5">
-      <div class="mb-4 flex items-center justify-between gap-3"><div><h2 class="text-lg font-semibold">Etiquetas registradas</h2><p class="text-sm text-on-surface-variant">Consulta estado, tipo y activo asociado.</p></div><button mat-button (click)="limpiar()" [disabled]="!empresa.empresaId || loading()">Limpiar filtros</button></div>
-      <div class="grid grid-cols-1 gap-3 md:grid-cols-4">
-        <mat-form-field class="w-full md:col-span-2"><mat-label>Buscar código o UID NFC</mat-label><mat-icon matPrefix svgIcon="search" /><input matInput [value]="texto()" (input)="cambiarTexto($event)" (keyup.enter)="buscar()" /></mat-form-field>
-        <mat-form-field class="w-full"><mat-label>Estatus</mat-label><mat-select [value]="estatus()" (selectionChange)="cambiarEstatus($event.value)"><mat-option value="">Todos</mat-option><mat-option value="DISPONIBLE">Disponible</mat-option><mat-option value="VINCULADA">Vinculada</mat-option><mat-option value="RETIRADA">Retirada</mat-option></mat-select></mat-form-field>
-        <mat-form-field class="w-full"><mat-label>Tipo</mat-label><mat-select [value]="tipo()" (selectionChange)="cambiarTipo($event.value)"><mat-option value="todos">Todos</mat-option><mat-option value="nfc">Solo NFC</mat-option><mat-option value="qr">Solo QR</mat-option><mat-option value="ambos">NFC y QR</mat-option></mat-select></mat-form-field>
-      </div>
-      <div class="flex justify-end"><button mat-stroked-button [disabled]="loading() || !empresa.empresaId" (click)="buscar()"><mat-icon svgIcon="search" /><span class="ml-2">Buscar</span></button></div>
+
+  <!-- TITULO -->
+  <div class="flex items-center gap-4">
+
+    <div class="flex size-12 items-center justify-center rounded-xl bg-primary text-on-primary">
+      <mat-icon svgIcon="scan-line" />
     </div>
-    @if (loading() || empresa.cargando()) {<div class="flex items-center justify-center gap-3 p-12"><mat-spinner diameter="30" /> Cargando etiquetas...</div>}
-    @else if (!empresa.empresaId) {<div class="p-12 text-center text-on-surface-variant">Selecciona una empresa.</div>}
-    @else {
-      <div class="overflow-x-auto"><table class="w-full text-left text-sm"><thead class="border-b bg-neutral-50/80 dark:bg-neutral-900/50"><tr><th class="px-5 py-4">Código</th><th class="px-5 py-4">Tecnología</th><th class="px-5 py-4">Activo</th><th class="px-5 py-4">Bloqueo NFC</th><th class="px-5 py-4">Estatus</th><th class="px-5 py-4 text-right">Acciones</th></tr></thead><tbody>
-        @for (e of items(); track e.id) {
-          <tr class="border-b last:border-b-0 hover:bg-neutral-50/70 dark:hover:bg-neutral-900/40">
-            <td class="px-5 py-4 font-mono font-semibold">{{ e.codigo }}</td><td class="px-5 py-4">{{ e.tieneNfc ? 'NFC' : '' }}{{ e.tieneNfc && e.tieneQr ? ' + ' : '' }}{{ e.tieneQr ? 'QR' : '' }}@if(e.esAntimetal){<div class="text-xs text-on-surface-variant">Antimetal</div>}</td>
-            <td class="px-5 py-4">{{ e.activoCodigo || '—' }}</td><td class="px-5 py-4">{{ e.tieneNfc ? (e.nfcBloqueado ? 'Confirmado' : 'No confirmado') : 'No aplica' }}</td>
-            <td class="px-5 py-4"><span class="rounded-full px-3 py-1 text-xs font-semibold" [class]="e.estatus === 'DISPONIBLE' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' : e.estatus === 'VINCULADA' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' : 'bg-neutral-200 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-200'">{{ e.estatus }}</span></td>
-            <td class="px-5 py-4 text-right"><button matIconButton matTooltip="Consultar etiqueta" (click)="ver(e.id)"><mat-icon svgIcon="eye" /></button></td>
-          </tr>
-        } @empty {<tr><td colspan="6" class="p-12 text-center text-on-surface-variant">No existen etiquetas con estos filtros.</td></tr>}
-      </tbody></table></div>
-      <div class="flex items-center justify-between gap-3 border-t px-5 py-4 text-sm"><span class="text-on-surface-variant">{{ total() }} resultados · {{ tamanoPagina }} por página</span><div class="flex items-center gap-3"><button mat-stroked-button [disabled]="pagina() <= 1 || loading()" (click)="cambiarPagina(pagina() - 1)">Anterior</button><span>{{ pagina() }} / {{ paginas() }}</span><button mat-stroked-button [disabled]="pagina() >= paginas() || loading()" (click)="cambiarPagina(pagina() + 1)">Siguiente</button></div></div>
+
+    <div>
+      <h1 class="text-3xl font-bold tracking-tight">
+        Administración de etiquetas
+      </h1>
+
+      <p class="mt-1 text-on-surface-variant">
+        Etiquetas NFC/QR de
+        <strong>
+          {{ empresa.seleccionada()?.nombre || 'la empresa seleccionada' }}
+        </strong>.
+      </p>
+    </div>
+
+  </div>
+
+  <!-- BOTONES -->
+  <div class="flex flex-wrap items-center gap-3">
+
+    <!-- NUEVO: CONFIGURACIÓN -->
+    <button
+      mat-stroked-button
+      type="button"
+      [disabled]="!empresa.empresaId"
+      (click)="configurar()"
+    >
+      <mat-icon svgIcon="settings" />
+      <span class="ml-2">Configuración</span>
+    </button>
+
+    <!-- EXISTENTE: GENERAR ETIQUETAS -->
+    @if (puedeGestionar()) {
+
+      <button
+        mat-flat-button
+        type="button"
+        [disabled]="!empresa.empresaId || loading()"
+        (click)="toggleGenerador()"
+      >
+        <mat-icon svgIcon="plus" />
+
+        <span class="ml-2">
+          {{ mostrarGenerador() ? 'Cerrar generador' : 'Generar etiquetas' }}
+        </span>
+      </button>
+
+    }
+
+  </div>
+
+</header>
+  @if (error()) {<div role="alert"
+    class="mb-5 rounded-xl bg-red-50 p-4 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-300">{{ error() }}</div>}
+  @if (exito()) {<div role="status"
+    class="mb-5 rounded-xl bg-green-50 p-4 text-sm text-green-700 dark:bg-green-900/20 dark:text-green-300">{{ exito()
+    }}</div>}
+  @if (mostrarGenerador() && puedeGestionar()) {
+  <section class="mb-6 overflow-hidden rounded-2xl border bg-surface shadow-sm">
+    <div class="border-b p-5">
+      <h2 class="text-lg font-semibold">Generar lote de etiquetas</h2>
+      <p class="mt-1 text-sm text-on-surface-variant">Los identificadores se crean antes de imprimir y pueden quedar
+        disponibles sin activo.</p>
+    </div>
+    <form class="p-6" [formGroup]="generador" (ngSubmit)="generar()">
+      <div class="flex flex-col gap-4 md:flex-row md:items-center">
+        <mat-form-field class="w-full md:max-w-xs"><mat-label>Cantidad (1 a 250)</mat-label><input matInput
+            type="number" min="1" max="250" step="1"
+            formControlName="cantidad" />@if(generador.controls.cantidad.invalid){<mat-error>Entre 1 y 250
+            etiquetas.</mat-error>}</mat-form-field>
+        <mat-checkbox formControlName="tieneNfc">Contiene NFC</mat-checkbox>
+        <mat-checkbox formControlName="tieneQr">Contiene QR</mat-checkbox>
+        <mat-checkbox formControlName="esAntimetal">NFC antimetal</mat-checkbox>
+      </div>
+      <div class="mt-4 flex justify-end"><button mat-flat-button type="submit"
+          [disabled]="generando() || generador.invalid || !empresa.empresaId"><mat-icon svgIcon="tags" /><span
+            class="ml-2">{{ generando() ? 'Generando...' : 'Generar lote' }}</span></button></div>
+    </form>
+    @if (generado().length) {
+    <div class="flex flex-col gap-3 border-t p-5 sm:flex-row sm:items-center sm:justify-between">
+      <p class="text-sm">Último lote generado: <strong>{{ generado().length }}</strong> etiquetas. Conserva el CSV para
+        enviarlo al impresor.</p><button mat-stroked-button (click)="exportarCsv()"><mat-icon svgIcon="download" /><span
+          class="ml-2">Exportar lote a CSV</span></button>
+    </div>
     }
   </section>
-  <p class="mt-4 text-sm text-on-surface-variant">El CSV contiene códigos y URLs. La generación gráfica del QR, la impresión y la escritura física del NFC son etapas posteriores.</p>
+  }
+  <div class="mb-5 grid grid-cols-1 gap-4 sm:grid-cols-3">
+    <div class="rounded-2xl border bg-surface p-5">
+      <div class="text-sm text-on-surface-variant">Etiquetas según filtros</div>
+      <div class="mt-2 text-3xl font-bold">{{ total() }}</div>
+    </div>
+    <div class="rounded-2xl border bg-surface p-5">
+      <div class="text-sm text-on-surface-variant">En esta página</div>
+      <div class="mt-2 text-3xl font-bold">{{ items().length }}</div>
+    </div>
+    <div class="rounded-2xl border bg-surface p-5">
+      <div class="text-sm text-on-surface-variant">Página</div>
+      <div class="mt-2 text-3xl font-bold">{{ pagina() }} <span class="text-base font-normal text-on-surface-variant">de
+          {{ paginas() }}</span></div>
+    </div>
+  </div>
+  <section class="overflow-hidden rounded-2xl border bg-surface shadow-sm">
+    <div class="border-b p-5">
+      <div class="mb-4 flex items-center justify-between gap-3">
+        <div>
+          <h2 class="text-lg font-semibold">Etiquetas registradas</h2>
+          <p class="text-sm text-on-surface-variant">Consulta estado, tipo y activo asociado.</p>
+        </div><button mat-button (click)="limpiar()" [disabled]="!empresa.empresaId || loading()">Limpiar
+          filtros</button>
+      </div>
+      <div class="grid grid-cols-1 gap-3 md:grid-cols-4">
+        <mat-form-field class="w-full md:col-span-2"><mat-label>Buscar código o UID NFC</mat-label><mat-icon matPrefix
+            svgIcon="search" /><input matInput [value]="texto()" (input)="cambiarTexto($event)"
+            (keyup.enter)="buscar()" /></mat-form-field>
+        <mat-form-field class="w-full"><mat-label>Estatus</mat-label><mat-select [value]="estatus()"
+            (selectionChange)="cambiarEstatus($event.value)"><mat-option value="">Todos</mat-option><mat-option
+              value="DISPONIBLE">Disponible</mat-option><mat-option value="VINCULADA">Vinculada</mat-option><mat-option
+              value="RETIRADA">Retirada</mat-option></mat-select></mat-form-field>
+        <mat-form-field class="w-full"><mat-label>Tipo</mat-label><mat-select [value]="tipo()"
+            (selectionChange)="cambiarTipo($event.value)"><mat-option value="todos">Todos</mat-option><mat-option
+              value="nfc">Solo NFC</mat-option><mat-option value="qr">Solo QR</mat-option><mat-option value="ambos">NFC
+              y QR</mat-option></mat-select></mat-form-field>
+      </div>
+      <div class="flex justify-end"><button mat-stroked-button [disabled]="loading() || !empresa.empresaId"
+          (click)="buscar()"><mat-icon svgIcon="search" /><span class="ml-2">Buscar</span></button></div>
+    </div>
+    @if (loading() || empresa.cargando()) {<div class="flex items-center justify-center gap-3 p-12"><mat-spinner
+        diameter="30" /> Cargando etiquetas...</div>}
+    @else if (!empresa.empresaId) {<div class="p-12 text-center text-on-surface-variant">Selecciona una empresa.</div>}
+    @else {
+    <div class="overflow-x-auto">
+      <table class="w-full text-left text-sm">
+        <thead class="border-b bg-neutral-50/80 dark:bg-neutral-900/50">
+          <tr>
+            <th class="px-5 py-4">Código</th>
+            <th class="px-5 py-4">Tecnología</th>
+            <th class="px-5 py-4">Activo</th>
+            <th class="px-5 py-4">Bloqueo NFC</th>
+            <th class="px-5 py-4">Estatus</th>
+            <th class="px-5 py-4 text-right">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (e of items(); track e.id) {
+          <tr class="border-b last:border-b-0 hover:bg-neutral-50/70 dark:hover:bg-neutral-900/40">
+            <td class="px-5 py-4 font-mono font-semibold">{{ e.codigo }}</td>
+            <td class="px-5 py-4">{{ e.tieneNfc ? 'NFC' : '' }}{{ e.tieneNfc && e.tieneQr ? ' + ' : '' }}{{ e.tieneQr ?
+              'QR' : '' }}@if(e.esAntimetal){<div class="text-xs text-on-surface-variant">Antimetal</div>}</td>
+            <td class="px-5 py-4">{{ e.activoCodigo || '—' }}</td>
+            <td class="px-5 py-4">{{ e.tieneNfc ? (e.nfcBloqueado ? 'Confirmado' : 'No confirmado') : 'No aplica' }}
+            </td>
+            <td class="px-5 py-4"><span class="rounded-full px-3 py-1 text-xs font-semibold"
+                [class]="e.estatus === 'DISPONIBLE' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' : e.estatus === 'VINCULADA' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' : 'bg-neutral-200 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-200'">{{
+                e.estatus }}</span></td>
+            <td class="px-5 py-4 text-right"><button matIconButton matTooltip="Consultar etiqueta"
+                (click)="ver(e.id)"><mat-icon svgIcon="eye" /></button></td>
+          </tr>
+          } @empty {<tr>
+            <td colspan="6" class="p-12 text-center text-on-surface-variant">No existen etiquetas con estos filtros.
+            </td>
+          </tr>}
+        </tbody>
+      </table>
+    </div>
+    <div class="flex items-center justify-between gap-3 border-t px-5 py-4 text-sm"><span
+        class="text-on-surface-variant">{{ total() }} resultados · {{ tamanoPagina }} por página</span>
+      <div class="flex items-center gap-3"><button mat-stroked-button [disabled]="pagina() <= 1 || loading()"
+          (click)="cambiarPagina(pagina() - 1)">Anterior</button><span>{{ pagina() }} / {{ paginas() }}</span><button
+          mat-stroked-button [disabled]="pagina() >= paginas() || loading()"
+          (click)="cambiarPagina(pagina() + 1)">Siguiente</button></div>
+    </div>
+    }
+  </section>
+  <p class="mt-4 text-sm text-on-surface-variant">El CSV contiene códigos y URLs. La generación gráfica del QR, la
+    impresión y la escritura física del NFC son etapas posteriores.</p>
 </div>

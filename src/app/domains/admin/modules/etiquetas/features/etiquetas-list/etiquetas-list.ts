@@ -13,9 +13,10 @@ import { firstValueFrom } from 'rxjs';
 import { EmpresaContextoService } from '@/app/core/empresa-contexto.service';
 import { AUTH_ROLES } from '@/app/domains/auth/constants/auth.roles';
 import { AuthService } from '@/app/domains/auth/services/auth.services';
-import { mensajeApi } from '../../../shared/api-error';
 import { EtiquetasService } from '../../services/etiquetas.service';
 import { Etiqueta, EtiquetaPagina, EstatusEtiqueta } from '../../types/etiqueta.types';
+import { mensajeApi } from '../../../shared/api-error';
+
 
 @Component({
   selector: 'app-etiquetas-list',
@@ -87,6 +88,13 @@ export default class EtiquetasList {
     this.pagina.set(valor); void this.recargar();
   }
   protected ver(id: string): void { void this.router.navigate(['/admin/etiquetas', id]); }
+  protected configurar(): void {
+
+  void this.router.navigate([
+    '/admin/etiquetas',
+    'configuracion',
+  ]);
+}
   protected toggleGenerador(): void { this.mostrarGenerador.update(x => !x); }
   protected limpiar(): void {
     this.texto.set(''); this.buscarTexto.set(''); this.estatus.set(''); this.tipo.set('todos');

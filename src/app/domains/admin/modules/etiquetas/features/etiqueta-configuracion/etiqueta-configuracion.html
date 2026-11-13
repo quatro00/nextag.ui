@@ -1,0 +1,531 @@
+<div class="mx-auto flex w-full max-w-5xl flex-auto flex-col p-6 sm:p-8">
+
+  <!-- ====================================== -->
+  <!-- ENCABEZADO -->
+  <!-- ====================================== -->
+
+  <header class="mb-7 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+
+    <div class="flex items-center gap-4">
+
+      <div class="flex size-12 items-center justify-center rounded-xl bg-primary text-on-primary">
+        <mat-icon svgIcon="settings"></mat-icon>
+      </div>
+
+      <div>
+
+        <h1 class="text-3xl font-bold tracking-tight">
+          Configuración de etiquetas
+        </h1>
+
+        <p class="mt-1 text-on-surface-variant">
+          Personaliza el comportamiento público de las etiquetas NFC/QR.
+        </p>
+
+        <p class="mt-1 text-sm text-on-surface-variant">
+          Empresa:
+          <strong>
+            {{ empresa.seleccionada()?.nombre || 'Sin empresa seleccionada' }}
+          </strong>
+        </p>
+
+      </div>
+
+    </div>
+
+    <button
+      mat-stroked-button
+      type="button"
+      (click)="volver()"
+    >
+      <mat-icon svgIcon="arrow-left"></mat-icon>
+      Volver a etiquetas
+    </button>
+
+  </header>
+
+  <!-- ====================================== -->
+  <!-- MENSAJES -->
+  <!-- ====================================== -->
+
+  @if (error()) {
+
+    <div
+      role="alert"
+      class="mb-5 rounded-xl bg-red-50 p-4 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-300"
+    >
+      {{ error() }}
+    </div>
+
+  }
+
+  @if (exito()) {
+
+    <div
+      role="status"
+      class="mb-5 rounded-xl bg-green-50 p-4 text-sm text-green-700 dark:bg-green-900/20 dark:text-green-300"
+    >
+      {{ exito() }}
+    </div>
+
+  }
+
+  <!-- ====================================== -->
+  <!-- CARGANDO -->
+  <!-- ====================================== -->
+
+  @if (cargando() || empresa.cargando()) {
+
+    <div class="flex items-center justify-center gap-3 rounded-2xl border bg-surface p-12">
+
+      <mat-spinner diameter="32"></mat-spinner>
+
+      <span>Cargando configuración...</span>
+
+    </div>
+
+  }
+
+  @else if (!empresa.empresaId) {
+
+    <div class="rounded-2xl border bg-surface p-12 text-center text-on-surface-variant">
+
+      <mat-icon svgIcon="building-2"></mat-icon>
+
+      <p class="mt-3">
+        Selecciona una empresa para consultar su configuración.
+      </p>
+
+    </div>
+
+  }
+
+  @else if (configuracion()) {
+
+    <!-- ====================================== -->
+    <!-- AVISO INFORMATIVO -->
+    <!-- ====================================== -->
+
+    <section class="mb-6 rounded-2xl border border-blue-200 bg-blue-50 p-5 dark:border-blue-900 dark:bg-blue-900/20">
+
+      <div class="flex items-start gap-3">
+
+        <mat-icon
+          svgIcon="info"
+          class="text-blue-600"
+        ></mat-icon>
+
+        <div>
+
+          <h2 class="font-semibold text-blue-800 dark:text-blue-300">
+            Configuración por empresa
+          </h2>
+
+          <p class="mt-2 text-sm text-blue-700 dark:text-blue-200">
+            Estas opciones se aplicarán a las etiquetas NFC/QR
+            de la empresa seleccionada.
+          </p>
+
+          <p class="mt-2 text-sm text-blue-700 dark:text-blue-200">
+            Los cambios en la información pública también
+            se reflejarán en las etiquetas que ya fueron generadas.
+          </p>
+
+        </div>
+
+      </div>
+
+    </section>
+
+    @if (!puedeGestionar()) {
+
+      <div class="mb-6 rounded-xl border bg-surface p-4 text-sm text-on-surface-variant">
+
+        Puedes consultar la configuración, pero no tienes permisos
+        para modificarla.
+
+      </div>
+
+    }
+
+    <!-- ====================================== -->
+    <!-- FORMULARIO -->
+    <!-- ====================================== -->
+
+    <form
+      [formGroup]="form"
+      (ngSubmit)="guardar()"
+    >
+
+      <!-- ================================== -->
+      <!-- CONFIGURACION GENERAL -->
+      <!-- ================================== -->
+
+      <section class="mb-6 overflow-hidden rounded-2xl border bg-surface shadow-sm">
+
+        <div class="border-b p-6">
+
+          <div class="flex items-center gap-3">
+
+            <mat-icon
+              svgIcon="scan-line"
+              class="text-primary"
+            ></mat-icon>
+
+            <h2 class="text-lg font-semibold">
+              Configuración general
+            </h2>
+
+          </div>
+
+          <p class="mt-2 text-sm text-on-surface-variant">
+            Controla el acceso público a la información
+            de los activos y a las solicitudes de soporte.
+          </p>
+
+        </div>
+
+        <div class="space-y-6 p-6">
+
+          <!-- FICHA PUBLICA -->
+
+          <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+
+            <div class="flex-1">
+
+              <h3 class="font-medium">
+                Habilitar ficha pública
+              </h3>
+
+              <p class="mt-1 text-sm text-on-surface-variant">
+                Permite consultar la información del activo
+                al escanear una etiqueta NFC o QR.
+              </p>
+
+            </div>
+
+            <mat-slide-toggle
+              formControlName="activo"
+              aria-label="Habilitar ficha pública"
+            ></mat-slide-toggle>
+
+          </div>
+
+          <div class="border-t"></div>
+
+          <!-- TICKETS PUBLICOS -->
+
+          <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+
+            <div class="flex-1">
+
+              <h3 class="font-medium">
+                Permitir tickets públicos
+              </h3>
+
+              <p class="mt-1 text-sm text-on-surface-variant">
+                Permite que cualquier persona que escanee
+                una etiqueta vinculada registre una solicitud
+                de soporte sin iniciar sesión.
+              </p>
+
+              <p class="mt-2 text-xs text-on-surface-variant">
+                Los tickets se asociarán automáticamente
+                con el activo correspondiente.
+              </p>
+
+            </div>
+
+            <mat-slide-toggle
+              formControlName="permitirTicketPublico"
+              aria-label="Permitir tickets públicos"
+            ></mat-slide-toggle>
+
+          </div>
+
+        </div>
+
+      </section>
+
+      <!-- ================================== -->
+      <!-- INFORMACION DEL ACTIVO -->
+      <!-- ================================== -->
+
+      <section class="mb-6 overflow-hidden rounded-2xl border bg-surface shadow-sm">
+
+        <div class="border-b p-6">
+
+          <div class="flex items-center gap-3">
+
+            <mat-icon
+              svgIcon="monitor"
+              class="text-primary"
+            ></mat-icon>
+
+            <h2 class="text-lg font-semibold">
+              Información pública del activo
+            </h2>
+
+          </div>
+
+          <p class="mt-2 text-sm text-on-surface-variant">
+            Selecciona qué información podrá consultar
+            una persona que escanee la etiqueta del equipo.
+          </p>
+
+        </div>
+
+        <div class="grid grid-cols-1 gap-5 p-6 md:grid-cols-2">
+
+          <!-- NOMBRE -->
+
+          <div class="rounded-xl border p-4">
+
+            <mat-slide-toggle formControlName="mostrarNombreActivo">
+              Mostrar nombre del activo
+            </mat-slide-toggle>
+
+            <p class="mt-2 text-xs text-on-surface-variant">
+              Nombre registrado para identificar el equipo.
+            </p>
+
+          </div>
+
+          <!-- CODIGO -->
+
+          <div class="rounded-xl border p-4">
+
+            <mat-slide-toggle formControlName="mostrarCodigoActivo">
+              Mostrar código del activo
+            </mat-slide-toggle>
+
+            <p class="mt-2 text-xs text-on-surface-variant">
+              Código interno de identificación.
+            </p>
+
+          </div>
+
+          <!-- INVENTARIO -->
+
+          <div class="rounded-xl border p-4">
+
+            <mat-slide-toggle formControlName="mostrarNumeroInventario">
+              Mostrar número de inventario
+            </mat-slide-toggle>
+
+            <p class="mt-2 text-xs text-on-surface-variant">
+              Identificador utilizado en el inventario.
+            </p>
+
+          </div>
+
+          <!-- SERIE -->
+
+          <div class="rounded-xl border p-4">
+
+            <mat-slide-toggle formControlName="mostrarNumeroSerie">
+              Mostrar número de serie
+            </mat-slide-toggle>
+
+            <p class="mt-2 text-xs text-on-surface-variant">
+              Número de serie del fabricante.
+            </p>
+
+          </div>
+
+          <!-- CATEGORIA -->
+
+          <div class="rounded-xl border p-4">
+
+            <mat-slide-toggle formControlName="mostrarCategoria">
+              Mostrar categoría
+            </mat-slide-toggle>
+
+            <p class="mt-2 text-xs text-on-surface-variant">
+              Clasificación del activo.
+            </p>
+
+          </div>
+
+          <!-- MARCA Y MODELO -->
+
+          <div class="rounded-xl border p-4">
+
+            <mat-slide-toggle formControlName="mostrarMarcaModelo">
+              Mostrar marca y modelo
+            </mat-slide-toggle>
+
+            <p class="mt-2 text-xs text-on-surface-variant">
+              Información del fabricante y modelo.
+            </p>
+
+          </div>
+
+          <!-- SUCURSAL -->
+
+          <div class="rounded-xl border p-4">
+
+            <mat-slide-toggle formControlName="mostrarSucursal">
+              Mostrar sucursal
+            </mat-slide-toggle>
+
+            <p class="mt-2 text-xs text-on-surface-variant">
+              Sucursal donde está registrado el equipo.
+            </p>
+
+          </div>
+
+          <!-- UBICACION -->
+
+          <div class="rounded-xl border p-4">
+
+            <mat-slide-toggle formControlName="mostrarUbicacion">
+              Mostrar ubicación
+            </mat-slide-toggle>
+
+            <p class="mt-2 text-xs text-on-surface-variant">
+              Ubicación actual del activo.
+            </p>
+
+          </div>
+
+          <!-- ESTADO -->
+
+          <div class="rounded-xl border p-4">
+
+            <mat-slide-toggle formControlName="mostrarEstadoActivo">
+              Mostrar estado del activo
+            </mat-slide-toggle>
+
+            <p class="mt-2 text-xs text-on-surface-variant">
+              Estado administrativo del equipo.
+            </p>
+
+          </div>
+
+          <!-- RESPONSABLE -->
+
+          <div class="rounded-xl border p-4">
+
+            <mat-slide-toggle
+              formControlName="mostrarResponsable"
+              [disabled]="true"
+            >
+              Mostrar responsable
+            </mat-slide-toggle>
+
+            <p class="mt-2 text-xs text-amber-600">
+              Próximamente. Requiere habilitar
+              el responsable en la ficha pública.
+            </p>
+
+          </div>
+
+        </div>
+
+      </section>
+
+      <!-- ================================== -->
+      <!-- INFORMACION DE LA EMPRESA -->
+      <!-- ================================== -->
+
+      <section class="mb-6 overflow-hidden rounded-2xl border bg-surface shadow-sm">
+
+        <div class="border-b p-6">
+
+          <div class="flex items-center gap-3">
+
+            <mat-icon
+              svgIcon="building-2"
+              class="text-primary"
+            ></mat-icon>
+
+            <h2 class="text-lg font-semibold">
+              Información de la empresa
+            </h2>
+
+          </div>
+
+          <p class="mt-2 text-sm text-on-surface-variant">
+            Controla si la ficha pública mostrará
+            los datos de la empresa propietaria.
+          </p>
+
+        </div>
+
+        <div class="p-6">
+
+          <mat-slide-toggle formControlName="mostrarDatosEmpresa">
+            Mostrar información de la empresa
+          </mat-slide-toggle>
+
+          <p class="mt-2 text-sm text-on-surface-variant">
+            Se mostrará el nombre de la empresa
+            y su logotipo, si está configurado.
+          </p>
+
+        </div>
+
+      </section>
+
+      <!-- ================================== -->
+      <!-- CAMBIOS PENDIENTES -->
+      <!-- ================================== -->
+
+      @if (cambios()) {
+
+        <div class="mb-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800 dark:bg-amber-900/20 dark:text-amber-300">
+
+          Tienes cambios pendientes de guardar.
+
+        </div>
+
+      }
+
+      <!-- ================================== -->
+      <!-- ACCIONES -->
+      <!-- ================================== -->
+
+      <div class="flex flex-col gap-3 sm:flex-row sm:justify-end">
+
+        @if (puedeGestionar()) {
+
+          <button
+            mat-stroked-button
+            type="button"
+            [disabled]="guardando() || !cambios()"
+            (click)="restablecer()"
+          >
+            <mat-icon svgIcon="rotate-ccw"></mat-icon>
+            Restablecer cambios
+          </button>
+
+          <button
+            mat-flat-button
+            type="submit"
+            [disabled]="guardando() || !cambios() || !empresa.empresaId"
+          >
+
+            @if (guardando()) {
+
+              <mat-spinner diameter="20"></mat-spinner>
+              Guardando...
+
+            } @else {
+
+              <mat-icon svgIcon="save"></mat-icon>
+              Guardar configuración
+
+            }
+
+          </button>
+
+        }
+
+      </div>
+
+    </form>
+
+  }
+
+</div>
