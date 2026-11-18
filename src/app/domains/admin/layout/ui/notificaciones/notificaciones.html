@@ -2,44 +2,25 @@
 <!-- BOTON CAMPANITA -->
 <!-- ========================================== -->
 
-<button
-    matIconButton
-    [matMenuTriggerFor]="notificacionesMenu"
-    (menuOpened)="abrirMenu()"
-    matTooltip="Notificaciones"
-    aria-label="Notificaciones"
->
-    <mat-icon
-        svgIcon="bell"
-        [matBadge]="noLeidas() > 99 ? '99+' : noLeidas().toString()"
-        [matBadgeHidden]="noLeidas() === 0"
-        matBadgeColor="warn"
-        matBadgeSize="small"
-    />
+<button matIconButton [matMenuTriggerFor]="notificacionesMenu" (menuOpened)="abrirMenu()" matTooltip="Notificaciones"
+    aria-label="Notificaciones">
+    <mat-icon svgIcon="bell" [matBadge]="noLeidas() > 99 ? '99+' : noLeidas().toString()"
+        [matBadgeHidden]="noLeidas() === 0" matBadgeColor="warn" matBadgeSize="small" />
 </button>
 
 <!-- ========================================== -->
 <!-- MENU -->
 <!-- ========================================== -->
 
-<mat-menu
-    #notificacionesMenu="matMenu"
-    xPosition="before"
-    class="notificaciones-menu"
->
+<mat-menu #notificacionesMenu="matMenu" xPosition="before" class="notificaciones-menu">
 
-    <div
-        class="w-[340px] max-w-[calc(100vw-32px)] sm:w-[390px]"
-        (click)="$event.stopPropagation()"
-    >
+    <div class="w-[340px] max-w-[calc(100vw-32px)] sm:w-[390px]" (click)="$event.stopPropagation()">
 
         <!-- ====================================== -->
         <!-- ENCABEZADO -->
         <!-- ====================================== -->
 
-        <div
-            class="flex items-center justify-between border-b px-4 py-3"
-        >
+        <div class="flex items-center justify-between border-b px-4 py-3">
 
             <div>
 
@@ -55,14 +36,9 @@
 
             @if (noLeidas() > 0) {
 
-                <button
-                    mat-button
-                    type="button"
-                    [disabled]="procesando()"
-                    (click)="marcarTodas()"
-                >
-                    Marcar todas
-                </button>
+            <button mat-button type="button" [disabled]="procesando()" (click)="marcarTodas()">
+                Marcar todas
+            </button>
 
             }
 
@@ -74,11 +50,9 @@
 
         @if (error()) {
 
-            <div
-                class="border-b px-4 py-3 text-sm text-red-600"
-            >
-                {{ error() }}
-            </div>
+        <div class="border-b px-4 py-3 text-sm text-red-600">
+            {{ error() }}
+        </div>
 
         }
 
@@ -88,119 +62,92 @@
 
         @if (cargando()) {
 
-            <div
-                class="flex justify-center py-10"
-            >
-                <mat-spinner diameter="28" />
-            </div>
+        <div class="flex justify-center py-10">
+            <mat-spinner diameter="28" />
+        </div>
 
         } @else {
 
-            <!-- ================================== -->
-            <!-- LISTA -->
-            <!-- ================================== -->
+        <!-- ================================== -->
+        <!-- LISTA -->
+        <!-- ================================== -->
 
-            <div class="max-h-[420px] overflow-y-auto">
+        <div class="max-h-[420px] overflow-y-auto">
 
-                @for (
-                    notificacion of notificaciones();
-                    track notificacion.id
-                ) {
+            @for (
+            notificacion of notificaciones();
+            track notificacion.id
+            ) {
 
-                    <button
-                        type="button"
-                        class="flex w-full items-start gap-3 border-b px-4 py-3 text-left transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-800"
-                        [class.bg-primary/5]="!notificacion.leida"
-                        [disabled]="procesando()"
-                        (click)="abrirNotificacion(notificacion)"
-                    >
+            <button type="button"
+                class="flex w-full items-start gap-3 border-b px-4 py-3 text-left transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                [class]="!notificacion.leida ? 'bg-primary/5' : ''" [disabled]="procesando()"
+                (click)="abrirNotificacion(notificacion)">
 
-                        <!-- ICONO -->
+                <!-- ICONO -->
 
-                        <div
-                            class="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary"
-                        >
+                <div class="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
 
-                            <mat-icon
-                                [svgIcon]="obtenerIcono(notificacion.eventoClave)"
-                            />
+                    <mat-icon [svgIcon]="obtenerIcono(notificacion.eventoClave)" />
 
-                        </div>
+                </div>
 
-                        <!-- INFORMACION -->
+                <!-- INFORMACION -->
 
-                        <div class="min-w-0 flex-1">
+                <div class="min-w-0 flex-1">
 
-                            <div
-                                class="flex items-start justify-between gap-2"
-                            >
+                    <div class="flex items-start justify-between gap-2">
 
-                                <span
-                                    class="text-sm"
-                                    [class.font-semibold]="!notificacion.leida"
-                                >
-                                    {{ notificacion.titulo }}
-                                </span>
+                        <span class="text-sm" [class.font-semibold]="!notificacion.leida">
+                            {{ notificacion.titulo }}
+                        </span>
 
-                                @if (!notificacion.leida) {
+                        @if (!notificacion.leida) {
 
-                                    <span
-                                        class="mt-1 size-2 shrink-0 rounded-full bg-primary"
-                                    ></span>
+                        <span class="mt-1 size-2 shrink-0 rounded-full bg-primary"></span>
 
-                                }
-
-                            </div>
-
-                            <p
-                                class="mt-1 line-clamp-2 text-xs text-on-surface-variant"
-                            >
-                                {{ notificacion.mensaje }}
-                            </p>
-
-                            <p
-                                class="mt-2 text-xs text-on-surface-variant"
-                            >
-                                {{
-                                    notificacion.fechaCreacion
-                                    | date:'dd/MM/yyyy HH:mm'
-                                }}
-                            </p>
-
-                        </div>
-
-                    </button>
-
-                } @empty {
-
-                    <!-- ================================== -->
-                    <!-- SIN NOTIFICACIONES -->
-                    <!-- ================================== -->
-
-                    <div
-                        class="flex flex-col items-center px-6 py-12 text-center"
-                    >
-
-                        <mat-icon
-                            svgIcon="bell-off"
-                            class="mb-3"
-                        />
-
-                        <p class="font-medium">
-                            Sin notificaciones
-                        </p>
-
-                        <p
-                            class="mt-1 text-sm text-on-surface-variant"
-                        >
-                            Aquí aparecerán los avisos de tus tickets.
-                        </p>
+                        }
 
                     </div>
 
-                }
+                    <p class="mt-1 line-clamp-2 text-xs text-on-surface-variant">
+                        {{ notificacion.mensaje }}
+                    </p>
+
+                    <p class="mt-2 text-xs text-on-surface-variant">
+                        {{
+                        notificacion.fechaCreacion
+                        | date:'dd/MM/yyyy HH:mm'
+                        }}
+                    </p>
+
+                </div>
+
+            </button>
+
+            } @empty {
+
+            <!-- ================================== -->
+            <!-- SIN NOTIFICACIONES -->
+            <!-- ================================== -->
+
+            <div class="flex flex-col items-center px-6 py-12 text-center">
+
+                <mat-icon svgIcon="bell-off" class="mb-3" />
+
+                <p class="font-medium">
+                    Sin notificaciones
+                </p>
+
+                <p class="mt-1 text-sm text-on-surface-variant">
+                    Aquí aparecerán los avisos de tus tickets.
+                </p>
 
             </div>
+
+            }
+
+        </div>
 
         }
 
@@ -210,12 +157,7 @@
 
         <div class="border-t px-4 py-2 text-center">
 
-            <button
-                mat-button
-                type="button"
-                [disabled]="cargando()"
-                (click)="cargarNotificaciones()"
-            >
+            <button mat-button type="button" [disabled]="cargando()" (click)="cargarNotificaciones()">
                 <mat-icon svgIcon="refresh-cw" />
 
                 Actualizar

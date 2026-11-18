@@ -423,7 +423,7 @@ export class AdminNotificaciones {
                 return 'message-square';
 
             case 'TICKET_RESUELTO':
-                return 'check-circle';
+                return 'circle-check';
 
             case 'TICKET_CERRADO':
                 return 'circle-check';
