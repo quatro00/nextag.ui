@@ -86,6 +86,13 @@ export class TicketAdjuntosComponent {
     protected readonly archivos =
         signal<TicketAdjunto[]>([]);
 
+    // ==========================================
+    // VISIBILIDAD DEL NUEVO ARCHIVO
+    // ==========================================
+
+    protected readonly visibleSolicitante =
+        signal<boolean>(true);
+
     protected readonly loading = signal(false);
 
     protected readonly operacion =
@@ -195,10 +202,10 @@ export class TicketAdjuntosComponent {
             // ======================================
 
             this.archivos.set([]);
-
+            // Restablecer visibilidad predeterminada.
+            this.visibleSolicitante.set(true);
             this.error.set(null);
             this.mensaje.set(null);
-
             this.loading.set(
                 !!empresaId && !!ticketId
             );
@@ -371,8 +378,14 @@ export class TicketAdjuntosComponent {
 
                 this.archivos.set(archivos);
 
+                // ======================================
+                // RESTABLECER VISIBILIDAD
+                // ======================================
+                // Únicamente cuando terminó una carga.
+                if (this.operacion() === 'SUBIENDO') {
+                    this.visibleSolicitante.set(true);
+                }
                 this.mensaje.set(mensajeExito);
-
                 this.finalizarOperacion();
             },
 
@@ -398,6 +411,25 @@ export class TicketAdjuntosComponent {
                 this.finalizarOperacion();
             },
         });
+    }
+
+    // ==========================================
+    // CAMBIAR VISIBILIDAD
+    // ==========================================
+
+    protected cambiarVisibilidad(
+        visible: boolean
+    ): void {
+
+        if (
+            this.procesando() ||
+            this.loading() ||
+            !this.puedeSubir()
+        ) {
+            return;
+        }
+
+        this.visibleSolicitante.set(visible);
     }
 
     // ==========================================
@@ -481,11 +513,22 @@ export class TicketAdjuntosComponent {
 
         const ticketId = this.ticketId();
 
+        // ==========================================
+        // OBTENER VISIBILIDAD SELECCIONADA
+        // ==========================================
+
+        const visible = this.visibleSolicitante();
+
+        // ==========================================
+        // SUBIR ARCHIVO
+        // ==========================================
+
         this.ejecutarConRecarga(
 
             this.service.subir(
                 ticketId,
-                archivo
+                archivo,
+                visible
             ),
 
             'Archivo adjuntado correctamente.',

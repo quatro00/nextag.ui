@@ -60,6 +60,74 @@
 
     </p>
 
+    <!-- ========================================== -->
+    <!-- VISIBILIDAD DEL NUEVO ARCHIVO              -->
+    <!-- ========================================== -->
+
+    @if (puedeSubir()) {
+
+    <div class="mb-6 rounded-xl border bg-surface p-4">
+
+        <div class="mb-3">
+
+            <h3 class="font-semibold">
+                Visibilidad del nuevo archivo
+            </h3>
+
+            <p class="mt-1 text-sm text-on-surface-variant">
+                Selecciona quién podrá consultar el archivo
+                antes de adjuntarlo.
+            </p>
+
+        </div>
+
+        <!-- OPCION VISIBLE -->
+
+        <label class="mb-3 flex cursor-pointer items-start gap-3">
+
+            <input type="radio" name="visibilidadArchivo" class="mt-1" [checked]="visibleSolicitante()"
+                [disabled]="procesando() || loading()" (change)="cambiarVisibilidad(true)" />
+
+            <div>
+
+                <div class="font-medium">
+                    Visible para el solicitante
+                </div>
+
+                <p class="mt-1 text-sm text-on-surface-variant">
+                    El solicitante autenticado y el personal
+                    autorizado podrán consultar este archivo.
+                </p>
+
+            </div>
+
+        </label>
+
+        <!-- OPCION INTERNA -->
+
+        <label class="flex cursor-pointer items-start gap-3">
+
+            <input type="radio" name="visibilidadArchivo" class="mt-1" [checked]="!visibleSolicitante()"
+                [disabled]="procesando() || loading()" (change)="cambiarVisibilidad(false)" />
+
+            <div>
+
+                <div class="font-medium">
+                    Solo personal de soporte
+                </div>
+
+                <p class="mt-1 text-sm text-on-surface-variant">
+                    Únicamente administradores y personal
+                    de soporte autorizado podrán consultar
+                    este archivo.
+                </p>
+
+            </div>
+
+        </label>
+
+    </div>
+
     <!-- MENSAJES -->
 
     @if (error()) {

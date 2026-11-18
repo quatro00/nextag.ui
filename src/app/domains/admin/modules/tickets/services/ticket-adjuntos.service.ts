@@ -44,16 +44,34 @@ export class TicketAdjuntosService {
 
     subir(
         ticketId: string,
-        archivo: File
+        archivo: File,
+        visibleSolicitante: boolean
     ): Observable<TicketAdjunto> {
 
         const formData = new FormData();
+
+        // ======================================
+        // ARCHIVO
+        // ======================================
 
         formData.append(
             'archivo',
             archivo,
             archivo.name
         );
+
+        // ======================================
+        // VISIBILIDAD
+        // ======================================
+
+        formData.append(
+            'visibleSolicitante',
+            String(visibleSolicitante)
+        );
+
+        // ======================================
+        // PETICION
+        // ======================================
 
         return this.http.post<TicketAdjunto>(
             this.url(ticketId),
