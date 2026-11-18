@@ -14,6 +14,7 @@ import { Media } from '@/app/core/media';
 import { AuthService } from '@/app/domains/auth/services/auth.services';
 import { SchemeSwitcher } from './ui/scheme-switcher';
 import { AdminSidebar } from './ui/sidebar';
+import { AdminNotificaciones } from './ui/notificaciones/notificaciones';
 
 
 @Component({
@@ -29,6 +30,7 @@ import { AdminSidebar } from './ui/sidebar';
     MatSidenavContent,
     AdminSidebar,
     SchemeSwitcher,
+    AdminNotificaciones
   ],
   template: `
     <mat-sidenav-container>
@@ -82,16 +84,24 @@ import { AdminSidebar } from './ui/sidebar';
 }
           <scheme-switcher />
 
+          <!-- ====================================== -->
+          <!-- NOTIFICACIONES -->
+          <!-- ====================================== -->
+
+          <admin-notificaciones />
+
           <div class="mx-3 h-6 border-l"></div>
 
-        
+          <!-- ====================================== -->
+          <!-- CUENTA -->
+          <!-- ====================================== -->
 
           <button
-            matIconButton
-            [matMenuTriggerFor]="userMenu"
-            matTooltip="Cuenta"
+              matIconButton
+              [matMenuTriggerFor]="userMenu"
+              matTooltip="Cuenta"
           >
-            <mat-icon svgIcon="circle-user-round" />
+              <mat-icon svgIcon="circle-user-round" />
           </button>
 
           <mat-menu #userMenu>
