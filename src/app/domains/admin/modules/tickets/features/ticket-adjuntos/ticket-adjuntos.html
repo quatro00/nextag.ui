@@ -1,0 +1,270 @@
+<section class="mb-6 rounded-2xl border bg-surface p-6">
+
+    <!-- ENCABEZADO -->
+
+    <div
+        class="mb-5 flex flex-wrap items-center justify-between gap-3"
+    >
+
+        <div>
+
+            <h2 class="text-xl font-semibold">
+                Archivos adjuntos
+            </h2>
+
+            <p class="mt-1 text-sm text-on-surface-variant">
+                {{ totalArchivos() }} archivo(s) adjunto(s)
+            </p>
+
+        </div>
+
+        <!-- SUBIR ARCHIVO -->
+
+        @if (puedeSubir()) {
+
+            <label
+                class="inline-flex cursor-pointer items-center
+                       gap-2 rounded-lg bg-primary px-4 py-2
+                       text-sm font-medium text-on-primary"
+                [class.pointer-events-none]="guardando()"
+                [class.opacity-50]="guardando()"
+            >
+
+                @if (guardando()) {
+
+                    <mat-spinner diameter="18" />
+
+                } @else {
+
+                    <mat-icon svgIcon="arrow-up-tray" />
+
+                }
+
+                {{ guardando() ? 'Subiendo...' : 'Agregar archivo' }}
+
+                <input
+                    type="file"
+                    class="hidden"
+                    accept=".jpg,.png,.webp,.pdf"
+                    [disabled]="guardando()"
+                    (change)="seleccionarArchivo($event)"
+                />
+
+            </label>
+
+        }
+
+    </div>
+
+    <!-- INFORMACION -->
+
+    <p class="mb-5 text-sm text-on-surface-variant">
+
+        Formatos permitidos: JPG, PNG, WEBP y PDF.
+
+        Tamaño máximo: 10 MB por archivo.
+
+    </p>
+
+    <!-- MENSAJES -->
+
+    @if (error()) {
+
+        <div class="mb-5 rounded-xl bg-red-50 p-4 text-red-700">
+            {{ error() }}
+        </div>
+
+    }
+
+    @if (mensaje()) {
+
+        <div class="mb-5 rounded-xl bg-green-50 p-4 text-green-700">
+            {{ mensaje() }}
+        </div>
+
+    }
+
+    <!-- CARGANDO -->
+
+    @if (loading()) {
+
+        <div class="flex justify-center py-10">
+
+            <mat-spinner diameter="32" />
+
+        </div>
+
+    } @else {
+
+        <!-- LISTADO -->
+
+        <div class="space-y-3">
+
+            @for (archivo of archivos(); track archivo.id) {
+
+                <div
+                    class="flex flex-wrap items-center
+                           justify-between gap-4 rounded-xl
+                           border p-4"
+                >
+
+                    <!-- INFORMACION DEL ARCHIVO -->
+
+                    <div class="flex min-w-0 items-center gap-4">
+
+                        <!-- ICONO -->
+
+                        <div
+                            class="flex h-12 w-12 shrink-0
+                                   items-center justify-center
+                                   rounded-xl bg-neutral-100"
+                        >
+
+                            @if (esImagen(archivo)) {
+
+                                <mat-icon svgIcon="photo" />
+
+                            } @else if (esPdf(archivo)) {
+
+                                <mat-icon svgIcon="document-text" />
+
+                            } @else {
+
+                                <mat-icon svgIcon="paper-clip" />
+
+                            }
+
+                        </div>
+
+                        <!-- DATOS -->
+
+                        <div class="min-w-0">
+
+                            <div
+                                class="break-all font-medium"
+                            >
+                                {{ archivo.nombreOriginal }}
+                            </div>
+
+                            <div
+                                class="mt-1 text-xs
+                                       text-on-surface-variant"
+                            >
+
+                                {{ archivo.fechaCreacion
+                                    | date:'dd/MM/yyyy HH:mm' }}
+
+                                ·
+
+                                {{ tamanoMb(archivo.tamanoBytes)
+                                    | number:'1.2-2' }} MB
+
+                            </div>
+
+                            <!-- VISIBILIDAD -->
+
+                            @if (!archivo.visibleSolicitante) {
+
+                                <span
+                                    class="mt-2 inline-block rounded-full
+                                           bg-amber-100 px-3 py-1
+                                           text-xs text-amber-800"
+                                >
+                                    Archivo interno
+                                </span>
+
+                            }
+
+                        </div>
+
+                    </div>
+
+                    <!-- ACCIONES -->
+
+                    <div class="flex items-center gap-2">
+
+                        <!-- DESCARGAR -->
+
+                        <button
+                            mat-stroked-button
+                            [disabled]="descargandoId() === archivo.id"
+                            (click)="descargar(archivo)"
+                        >
+
+                            @if (descargandoId() === archivo.id) {
+
+                                <mat-spinner diameter="18" />
+
+                            } @else {
+
+                                <mat-icon svgIcon="arrow-down-tray" />
+
+                            }
+
+                            Descargar
+
+                        </button>
+
+                        <!-- ELIMINAR -->
+
+                        @if (puedeEliminar(archivo)) {
+
+                            <button
+                                mat-stroked-button
+                                [disabled]="eliminandoId() === archivo.id"
+                                (click)="eliminar(archivo)"
+                            >
+
+                                @if (eliminandoId() === archivo.id) {
+
+                                    <mat-spinner diameter="18" />
+
+                                } @else {
+
+                                    <mat-icon svgIcon="trash" />
+
+                                }
+
+                                Eliminar
+
+                            </button>
+
+                        }
+
+                    </div>
+
+                </div>
+
+            } @empty {
+
+                <div
+                    class="rounded-xl border border-dashed
+                           p-10 text-center"
+                >
+
+                    <mat-icon
+                        svgIcon="paper-clip"
+                        class="mb-3"
+                    />
+
+                    <p class="font-medium">
+                        No hay archivos adjuntos
+                    </p>
+
+                    <p
+                        class="mt-2 text-sm
+                               text-on-surface-variant"
+                    >
+                        Los archivos relacionados con el ticket
+                        aparecerán aquí.
+                    </p>
+
+                </div>
+
+            }
+
+        </div>
+
+    }
+
+</section>

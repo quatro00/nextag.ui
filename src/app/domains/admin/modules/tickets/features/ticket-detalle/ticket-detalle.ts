@@ -56,6 +56,7 @@ import {
     TicketEstadoHistorial,
     TicketSeguimiento,
 } from '../../types/ticket-operacion.types';
+import { TicketAdjuntosComponent } from '../ticket-adjuntos/ticket-adjuntos';
 
 type AccionTicket =
     | 'RESOLVER'
@@ -73,6 +74,7 @@ type AccionTicket =
         MatInputModule,
         MatSelectModule,
         MatProgressSpinnerModule,
+        TicketAdjuntosComponent,
     ],
 })
 export default class TicketDetalleComponent {
