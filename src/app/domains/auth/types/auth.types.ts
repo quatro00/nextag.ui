@@ -5,6 +5,7 @@ export interface LoginRequest {
 
 export interface AuthUser {
   id: string;
+  usuarioId: string;
   name: string;
   email: string;
   avatar: string;

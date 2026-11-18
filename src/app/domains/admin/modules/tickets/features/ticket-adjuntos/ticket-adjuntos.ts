@@ -9,7 +9,11 @@ import {
 
 import { DatePipe, DecimalPipe } from '@angular/common';
 
-import { firstValueFrom } from 'rxjs';
+import {
+    Observable,
+    Subscription,
+    switchMap,
+} from 'rxjs';
 
 import { MatButtonModule } from
     '@angular/material/button';
@@ -37,6 +41,11 @@ import { TicketAdjunto } from
 
 import { mensajeApi } from
     '../../../shared/api-error';
+
+type OperacionArchivo =
+    | 'SUBIENDO'
+    | 'DESCARGANDO'
+    | 'ELIMINANDO';
 
 @Component({
     selector: 'app-ticket-adjuntos',
@@ -79,12 +88,10 @@ export class TicketAdjuntosComponent {
 
     protected readonly loading = signal(false);
 
-    protected readonly guardando = signal(false);
+    protected readonly operacion =
+        signal<OperacionArchivo | null>(null);
 
-    protected readonly descargandoId =
-        signal<string | null>(null);
-
-    protected readonly eliminandoId =
+    protected readonly archivoProcesandoId =
         signal<string | null>(null);
 
     protected readonly error =
@@ -93,7 +100,17 @@ export class TicketAdjuntosComponent {
     protected readonly mensaje =
         signal<string | null>(null);
 
+    // ==========================================
+    // CONTROL DE SOLICITUDES
+    // ==========================================
+
     private solicitud = 0;
+
+    private operacionSub: Subscription | null = null;
+
+    // ==========================================
+    // CONFIGURACION
+    // ==========================================
 
     private readonly maximoBytes =
         10 * 1024 * 1024;
@@ -129,6 +146,14 @@ export class TicketAdjuntosComponent {
             .includes(this.estadoClave())
     );
 
+    // ==========================================
+    // PROCESAMIENTO
+    // ==========================================
+
+    protected readonly procesando = computed(() =>
+        this.operacion() !== null
+    );
+
     protected readonly puedeSubir = computed(() =>
         this.puedeOperar() &&
         !this.ticketCerrado()
@@ -153,16 +178,38 @@ export class TicketAdjuntosComponent {
 
             const req = ++this.solicitud;
 
+            // ======================================
+            // CANCELAR OPERACION ANTERIOR
+            // ======================================
+
+            this.operacionSub?.unsubscribe();
+
+            this.operacionSub = null;
+
+            this.operacion.set(null);
+
+            this.archivoProcesandoId.set(null);
+
+            // ======================================
+            // LIMPIAR INFORMACION
+            // ======================================
+
             this.archivos.set([]);
 
             this.error.set(null);
             this.mensaje.set(null);
 
-            this.loading.set(!!empresaId && !!ticketId);
+            this.loading.set(
+                !!empresaId && !!ticketId
+            );
 
             if (!empresaId || !ticketId) {
                 return;
             }
+
+            // ======================================
+            // CONSULTAR ARCHIVOS
+            // ======================================
 
             const sub = this.service
                 .getAll(ticketId)
@@ -172,7 +219,10 @@ export class TicketAdjuntosComponent {
 
                         if (
                             req !== this.solicitud ||
-                            this.empresa.empresaId !== empresaId
+                            !this.contextoValido(
+                                empresaId,
+                                ticketId
+                            )
                         ) {
                             return;
                         }
@@ -186,7 +236,10 @@ export class TicketAdjuntosComponent {
 
                         if (
                             req !== this.solicitud ||
-                            this.empresa.empresaId !== empresaId
+                            !this.contextoValido(
+                                empresaId,
+                                ticketId
+                            )
                         ) {
                             return;
                         }
@@ -202,70 +255,158 @@ export class TicketAdjuntosComponent {
                     },
                 });
 
-            onCleanup(() => sub.unsubscribe());
+            // ======================================
+            // LIMPIEZA
+            // ======================================
+
+            onCleanup(() => {
+
+                sub.unsubscribe();
+
+                this.operacionSub?.unsubscribe();
+
+                this.operacionSub = null;
+            });
         });
     }
 
     // ==========================================
-    // RECARGAR ARCHIVOS
+    // VALIDAR CONTEXTO ACTUAL
     // ==========================================
 
-    private async recargar(): Promise<void> {
+    private contextoValido(
+        empresaId: string,
+        ticketId: string
+    ): boolean {
+
+        return (
+            this.empresa.empresaId === empresaId &&
+            this.ticketId() === ticketId
+        );
+    }
+
+    // ==========================================
+    // INICIAR OPERACION
+    // ==========================================
+
+    private iniciarOperacion(
+        tipo: OperacionArchivo,
+        archivoId: string | null = null
+    ): boolean {
+
+        if (
+            this.procesando() ||
+            this.loading() ||
+            !this.empresa.empresaId ||
+            !this.ticketId()
+        ) {
+            return false;
+        }
+
+        this.operacion.set(tipo);
+
+        this.archivoProcesandoId.set(archivoId);
+
+        this.error.set(null);
+        this.mensaje.set(null);
+
+        return true;
+    }
+
+    // ==========================================
+    // FINALIZAR OPERACION
+    // ==========================================
+
+    private finalizarOperacion(): void {
+
+        this.operacion.set(null);
+
+        this.archivoProcesandoId.set(null);
+
+        this.operacionSub = null;
+    }
+
+    // ==========================================
+    // EJECUTAR OPERACION CON RECARGA
+    // ==========================================
+
+    private ejecutarConRecarga(
+        peticion: Observable<unknown>,
+        mensajeExito: string,
+        mensajeError: string
+    ): void {
 
         const empresaId = this.empresa.empresaId;
         const ticketId = this.ticketId();
 
-        if (!empresaId || !ticketId) return;
+        if (!empresaId || !ticketId) {
+            this.finalizarOperacion();
+            return;
+        }
 
         const req = ++this.solicitud;
 
-        this.loading.set(true);
+        this.operacionSub = peticion.pipe(
 
-        try {
+            // Después de subir o eliminar,
+            // consultar nuevamente el listado.
 
-            const archivos = await firstValueFrom(
+            switchMap(() =>
                 this.service.getAll(ticketId)
-            );
+            )
 
-            if (
-                req !== this.solicitud ||
-                this.empresa.empresaId !== empresaId ||
-                this.ticketId() !== ticketId
-            ) {
-                return;
-            }
+        ).subscribe({
 
-            this.archivos.set(archivos);
+            next: archivos => {
 
-        } catch (err) {
+                if (
+                    req !== this.solicitud ||
+                    !this.contextoValido(
+                        empresaId,
+                        ticketId
+                    )
+                ) {
+                    return;
+                }
 
-            if (
-                req === this.solicitud &&
-                this.empresa.empresaId === empresaId
-            ) {
+                this.archivos.set(archivos);
+
+                this.mensaje.set(mensajeExito);
+
+                this.finalizarOperacion();
+            },
+
+            error: err => {
+
+                if (
+                    req !== this.solicitud ||
+                    !this.contextoValido(
+                        empresaId,
+                        ticketId
+                    )
+                ) {
+                    return;
+                }
+
                 this.error.set(
                     mensajeApi(
                         err,
-                        'No fue posible actualizar los archivos.'
+                        mensajeError
                     )
                 );
-            }
 
-        } finally {
-
-            if (req === this.solicitud) {
-                this.loading.set(false);
-            }
-        }
+                this.finalizarOperacion();
+            },
+        });
     }
 
     // ==========================================
-    // SELECCIONAR Y SUBIR ARCHIVO
+    // SELECCIONAR ARCHIVO
     // ==========================================
 
-    protected async seleccionarArchivo(
+    protected seleccionarArchivo(
         event: Event
-    ): Promise<void> {
+    ): void {
 
         const inputElement =
             event.target as HTMLInputElement;
@@ -275,23 +416,31 @@ export class TicketAdjuntosComponent {
 
         inputElement.value = '';
 
-        if (!archivo) return;
-
-        if (!this.puedeSubir() || this.guardando()) {
+        if (!archivo) {
             return;
         }
+
+        if (
+            !this.puedeSubir() ||
+            this.procesando() ||
+            this.loading()
+        ) {
+            return;
+        }
+
+        // ======================================
+        // VALIDAR EXTENSION
+        // ======================================
 
         const extension =
             archivo.name.substring(
                 archivo.name.lastIndexOf('.')
             ).toLowerCase();
 
-        // ======================================
-        // VALIDAR EXTENSION
-        // ======================================
-
         if (
-            !this.extensionesPermitidas.includes(extension)
+            !this.extensionesPermitidas.includes(
+                extension
+            )
         ) {
             this.error.set(
                 'Formato no permitido. Utiliza JPG, PNG, WEBP o PDF.'
@@ -323,148 +472,140 @@ export class TicketAdjuntosComponent {
         }
 
         // ======================================
-        // GUARDAR
+        // INICIAR CARGA
         // ======================================
 
-        const empresaId = this.empresa.empresaId;
+        if (!this.iniciarOperacion('SUBIENDO')) {
+            return;
+        }
+
         const ticketId = this.ticketId();
 
-        if (!empresaId || !ticketId) return;
+        this.ejecutarConRecarga(
 
-        this.guardando.set(true);
+            this.service.subir(
+                ticketId,
+                archivo
+            ),
 
-        this.error.set(null);
-        this.mensaje.set(null);
+            'Archivo adjuntado correctamente.',
 
-        try {
-
-            await firstValueFrom(
-                this.service.subir(
-                    ticketId,
-                    archivo
-                )
-            );
-
-            if (
-                this.empresa.empresaId !== empresaId ||
-                this.ticketId() !== ticketId
-            ) {
-                return;
-            }
-
-            await this.recargar();
-
-            this.mensaje.set(
-                'Archivo adjuntado correctamente.'
-            );
-
-        } catch (err) {
-
-            if (
-                this.empresa.empresaId === empresaId &&
-                this.ticketId() === ticketId
-            ) {
-                this.error.set(
-                    mensajeApi(
-                        err,
-                        'No fue posible subir el archivo.'
-                    )
-                );
-            }
-
-        } finally {
-
-            this.guardando.set(false);
-        }
+            'No fue posible subir el archivo.'
+        );
     }
 
     // ==========================================
     // DESCARGAR ARCHIVO
     // ==========================================
 
-    protected async descargar(
+    protected descargar(
         archivo: TicketAdjunto
-    ): Promise<void> {
+    ): void {
 
-        if (this.descargandoId()) return;
+        if (
+            !this.iniciarOperacion(
+                'DESCARGANDO',
+                archivo.id
+            )
+        ) {
+            return;
+        }
 
         const empresaId = this.empresa.empresaId;
         const ticketId = this.ticketId();
 
-        if (!empresaId || !ticketId) return;
-
-        this.descargandoId.set(archivo.id);
-
-        this.error.set(null);
-
-        try {
-
-            const blob = await firstValueFrom(
-                this.service.descargar(
-                    ticketId,
-                    archivo.id
-                )
-            );
-
-            if (
-                this.empresa.empresaId !== empresaId ||
-                this.ticketId() !== ticketId
-            ) {
-                return;
-            }
-
-            const url = URL.createObjectURL(blob);
-
-            const enlace = document.createElement('a');
-
-            enlace.href = url;
-
-            enlace.download = archivo.nombreOriginal;
-
-            document.body.appendChild(enlace);
-
-            enlace.click();
-
-            enlace.remove();
-
-            // Liberar la URL después de iniciar
-            // la descarga.
-
-            setTimeout(() => {
-                URL.revokeObjectURL(url);
-            }, 1000);
-
-        } catch (err) {
-
-            if (
-                this.empresa.empresaId === empresaId &&
-                this.ticketId() === ticketId
-            ) {
-                this.error.set(
-                    mensajeApi(
-                        err,
-                        'No fue posible descargar el archivo.'
-                    )
-                );
-            }
-
-        } finally {
-
-            this.descargandoId.set(null);
+        if (!empresaId || !ticketId) {
+            this.finalizarOperacion();
+            return;
         }
+
+        const req = ++this.solicitud;
+
+        this.operacionSub = this.service
+            .descargar(
+                ticketId,
+                archivo.id
+            )
+            .subscribe({
+
+                next: blob => {
+
+                    if (
+                        req !== this.solicitud ||
+                        !this.contextoValido(
+                            empresaId,
+                            ticketId
+                        )
+                    ) {
+                        return;
+                    }
+
+                    // ==================================
+                    // GENERAR DESCARGA
+                    // ==================================
+
+                    const url =
+                        URL.createObjectURL(blob);
+
+                    const enlace =
+                        document.createElement('a');
+
+                    enlace.href = url;
+
+                    enlace.download =
+                        archivo.nombreOriginal;
+
+                    document.body.appendChild(enlace);
+
+                    enlace.click();
+
+                    enlace.remove();
+
+                    // Liberar URL temporal.
+
+                    setTimeout(() => {
+                        URL.revokeObjectURL(url);
+                    }, 1000);
+
+                    this.finalizarOperacion();
+                },
+
+                error: err => {
+
+                    if (
+                        req !== this.solicitud ||
+                        !this.contextoValido(
+                            empresaId,
+                            ticketId
+                        )
+                    ) {
+                        return;
+                    }
+
+                    this.error.set(
+                        mensajeApi(
+                            err,
+                            'No fue posible descargar el archivo.'
+                        )
+                    );
+
+                    this.finalizarOperacion();
+                },
+            });
     }
 
     // ==========================================
     // ELIMINAR ARCHIVO
     // ==========================================
 
-    protected async eliminar(
+    protected eliminar(
         archivo: TicketAdjunto
-    ): Promise<void> {
+    ): void {
 
         if (
             !this.puedeEliminar(archivo) ||
-            this.eliminandoId()
+            this.procesando() ||
+            this.loading()
         ) {
             return;
         }
@@ -473,80 +614,76 @@ export class TicketAdjuntosComponent {
             `¿Deseas eliminar el archivo "${archivo.nombreOriginal}"?`
         );
 
-        if (!confirmar) return;
+        if (!confirmar) {
+            return;
+        }
 
-        const empresaId = this.empresa.empresaId;
+        if (
+            !this.iniciarOperacion(
+                'ELIMINANDO',
+                archivo.id
+            )
+        ) {
+            return;
+        }
+
         const ticketId = this.ticketId();
 
-        if (!empresaId || !ticketId) return;
+        this.ejecutarConRecarga(
 
-        this.eliminandoId.set(archivo.id);
+            this.service.eliminar(
+                ticketId,
+                archivo.id
+            ),
 
-        this.error.set(null);
-        this.mensaje.set(null);
+            'Archivo eliminado correctamente.',
 
-        try {
-
-            await firstValueFrom(
-                this.service.eliminar(
-                    ticketId,
-                    archivo.id
-                )
-            );
-
-            if (
-                this.empresa.empresaId !== empresaId ||
-                this.ticketId() !== ticketId
-            ) {
-                return;
-            }
-
-            await this.recargar();
-
-            this.mensaje.set(
-                'Archivo eliminado correctamente.'
-            );
-
-        } catch (err) {
-
-            if (
-                this.empresa.empresaId === empresaId &&
-                this.ticketId() === ticketId
-            ) {
-                this.error.set(
-                    mensajeApi(
-                        err,
-                        'No fue posible eliminar el archivo.'
-                    )
-                );
-            }
-
-        } finally {
-
-            this.eliminandoId.set(null);
-        }
+            'No fue posible eliminar el archivo.'
+        );
     }
 
     // ==========================================
-    // VALIDAR PERMISO DE ELIMINACION
+    // PERMISO PARA ELIMINAR
     // ==========================================
 
     protected puedeEliminar(
         archivo: TicketAdjunto
     ): boolean {
 
+        // Administradores:
+        // Pueden eliminar archivos,
+        // incluso de tickets cerrados.
+
         if (this.esAdministrador()) {
             return true;
         }
 
-        if (!this.puedeOperar() || this.ticketCerrado()) {
+        // Operadores:
+        // No pueden eliminar archivos
+        // de tickets cerrados.
+
+        if (
+            !this.puedeOperar() ||
+            this.ticketCerrado()
+        ) {
             return false;
         }
 
-        const usuarioId = this.auth.user()?.id;
+        // ======================================
+        // USUARIO INTERNO
+        // ======================================
 
-        return !!usuarioId &&
-            archivo.usuarioCreacion === usuarioId;
+        const usuarioId =
+            this.auth.user()?.usuarioId;
+
+        if (!usuarioId) {
+            return false;
+        }
+
+        return (
+            archivo.usuarioCreacion?.toLowerCase() ===
+            usuarioId.toLowerCase()
+        );
     }
 
     // ==========================================
@@ -557,18 +694,21 @@ export class TicketAdjuntosComponent {
         archivo: TicketAdjunto
     ): boolean {
 
-        return archivo.mimeType.startsWith('image/');
+        return archivo.mimeType.startsWith(
+            'image/'
+        );
     }
 
     protected esPdf(
         archivo: TicketAdjunto
     ): boolean {
 
-        return archivo.mimeType === 'application/pdf';
+        return archivo.mimeType ===
+            'application/pdf';
     }
 
     // ==========================================
-    // TAMAÑO EN MB
+    // TAMAÑO
     // ==========================================
 
     protected tamanoMb(

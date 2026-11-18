@@ -2,9 +2,7 @@
 
     <!-- ENCABEZADO -->
 
-    <div
-        class="mb-5 flex flex-wrap items-center justify-between gap-3"
-    >
+    <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
 
         <div>
 
@@ -22,35 +20,31 @@
 
         @if (puedeSubir()) {
 
-            <label
-                class="inline-flex cursor-pointer items-center
-                       gap-2 rounded-lg bg-primary px-4 py-2
-                       text-sm font-medium text-on-primary"
-                [class.pointer-events-none]="guardando()"
-                [class.opacity-50]="guardando()"
-            >
+        <label class="inline-flex cursor-pointer items-center
+           gap-2 rounded-lg bg-primary px-4 py-2
+           text-sm font-medium text-on-primary" [class.pointer-events-none]="procesando() || loading()"
+            [class.opacity-50]="procesando() || loading()">
 
-                @if (guardando()) {
+            @if (operacion() === 'SUBIENDO') {
 
-                    <mat-spinner diameter="18" />
+            <mat-spinner diameter="18" />
 
-                } @else {
+            } @else {
 
-                    <mat-icon svgIcon="arrow-up-tray" />
+            <mat-icon svgIcon="arrow-up-tray" />
 
-                }
+            }
 
-                {{ guardando() ? 'Subiendo...' : 'Agregar archivo' }}
+            {{
+            operacion() === 'SUBIENDO'
+            ? 'Subiendo...'
+            : 'Agregar archivo'
+            }}
 
-                <input
-                    type="file"
-                    class="hidden"
-                    accept=".jpg,.png,.webp,.pdf"
-                    [disabled]="guardando()"
-                    (change)="seleccionarArchivo($event)"
-                />
+            <input type="file" class="hidden" accept=".jpg,.png,.webp,.pdf" [disabled]="procesando() || loading()"
+                (change)="seleccionarArchivo($event)" />
 
-            </label>
+        </label>
 
         }
 
@@ -70,17 +64,17 @@
 
     @if (error()) {
 
-        <div class="mb-5 rounded-xl bg-red-50 p-4 text-red-700">
-            {{ error() }}
-        </div>
+    <div class="mb-5 rounded-xl bg-red-50 p-4 text-red-700">
+        {{ error() }}
+    </div>
 
     }
 
     @if (mensaje()) {
 
-        <div class="mb-5 rounded-xl bg-green-50 p-4 text-green-700">
-            {{ mensaje() }}
-        </div>
+    <div class="mb-5 rounded-xl bg-green-50 p-4 text-green-700">
+        {{ mensaje() }}
+    </div>
 
     }
 
@@ -88,182 +82,163 @@
 
     @if (loading()) {
 
-        <div class="flex justify-center py-10">
+    <div class="flex justify-center py-10">
 
-            <mat-spinner diameter="32" />
+        <mat-spinner diameter="32" />
 
-        </div>
+    </div>
 
     } @else {
 
-        <!-- LISTADO -->
+    <!-- LISTADO -->
 
-        <div class="space-y-3">
+    <div class="space-y-3">
 
-            @for (archivo of archivos(); track archivo.id) {
+        @for (archivo of archivos(); track archivo.id) {
 
-                <div
-                    class="flex flex-wrap items-center
+        <div class="flex flex-wrap items-center
                            justify-between gap-4 rounded-xl
-                           border p-4"
-                >
+                           border p-4">
 
-                    <!-- INFORMACION DEL ARCHIVO -->
+            <!-- INFORMACION DEL ARCHIVO -->
 
-                    <div class="flex min-w-0 items-center gap-4">
+            <div class="flex min-w-0 items-center gap-4">
 
-                        <!-- ICONO -->
+                <!-- ICONO -->
 
-                        <div
-                            class="flex h-12 w-12 shrink-0
+                <div class="flex h-12 w-12 shrink-0
                                    items-center justify-center
-                                   rounded-xl bg-neutral-100"
-                        >
+                                   rounded-xl bg-neutral-100">
 
-                            @if (esImagen(archivo)) {
+                    @if (esImagen(archivo)) {
 
-                                <mat-icon svgIcon="photo" />
+                    <mat-icon svgIcon="photo" />
 
-                            } @else if (esPdf(archivo)) {
+                    } @else if (esPdf(archivo)) {
 
-                                <mat-icon svgIcon="document-text" />
+                    <mat-icon svgIcon="document-text" />
 
-                            } @else {
+                    } @else {
 
-                                <mat-icon svgIcon="paper-clip" />
+                    <mat-icon svgIcon="paper-clip" />
 
-                            }
+                    }
 
-                        </div>
+                </div>
 
-                        <!-- DATOS -->
+                <!-- DATOS -->
 
-                        <div class="min-w-0">
+                <div class="min-w-0">
 
-                            <div
-                                class="break-all font-medium"
-                            >
-                                {{ archivo.nombreOriginal }}
-                            </div>
+                    <div class="break-all font-medium">
+                        {{ archivo.nombreOriginal }}
+                    </div>
 
-                            <div
-                                class="mt-1 text-xs
-                                       text-on-surface-variant"
-                            >
+                    <div class="mt-1 text-xs
+                                       text-on-surface-variant">
 
-                                {{ archivo.fechaCreacion
-                                    | date:'dd/MM/yyyy HH:mm' }}
+                        {{ archivo.fechaCreacion
+                        | date:'dd/MM/yyyy HH:mm' }}
 
-                                ·
+                        ·
 
-                                {{ tamanoMb(archivo.tamanoBytes)
-                                    | number:'1.2-2' }} MB
+                        {{ tamanoMb(archivo.tamanoBytes)
+                        | number:'1.2-2' }} MB
 
-                            </div>
+                    </div>
 
-                            <!-- VISIBILIDAD -->
+                    <!-- VISIBILIDAD -->
 
-                            @if (!archivo.visibleSolicitante) {
+                    @if (!archivo.visibleSolicitante) {
 
-                                <span
-                                    class="mt-2 inline-block rounded-full
+                    <span class="mt-2 inline-block rounded-full
                                            bg-amber-100 px-3 py-1
-                                           text-xs text-amber-800"
-                                >
-                                    Archivo interno
-                                </span>
+                                           text-xs text-amber-800">
+                        Archivo interno
+                    </span>
 
-                            }
-
-                        </div>
-
-                    </div>
-
-                    <!-- ACCIONES -->
-
-                    <div class="flex items-center gap-2">
-
-                        <!-- DESCARGAR -->
-
-                        <button
-                            mat-stroked-button
-                            [disabled]="descargandoId() === archivo.id"
-                            (click)="descargar(archivo)"
-                        >
-
-                            @if (descargandoId() === archivo.id) {
-
-                                <mat-spinner diameter="18" />
-
-                            } @else {
-
-                                <mat-icon svgIcon="arrow-down-tray" />
-
-                            }
-
-                            Descargar
-
-                        </button>
-
-                        <!-- ELIMINAR -->
-
-                        @if (puedeEliminar(archivo)) {
-
-                            <button
-                                mat-stroked-button
-                                [disabled]="eliminandoId() === archivo.id"
-                                (click)="eliminar(archivo)"
-                            >
-
-                                @if (eliminandoId() === archivo.id) {
-
-                                    <mat-spinner diameter="18" />
-
-                                } @else {
-
-                                    <mat-icon svgIcon="trash" />
-
-                                }
-
-                                Eliminar
-
-                            </button>
-
-                        }
-
-                    </div>
+                    }
 
                 </div>
 
-            } @empty {
+            </div>
 
-                <div
-                    class="rounded-xl border border-dashed
-                           p-10 text-center"
-                >
+            <!-- ACCIONES -->
 
-                    <mat-icon
-                        svgIcon="paper-clip"
-                        class="mb-3"
-                    />
+            <div class="flex items-center gap-2">
 
-                    <p class="font-medium">
-                        No hay archivos adjuntos
-                    </p>
+                <!-- DESCARGAR -->
 
-                    <p
-                        class="mt-2 text-sm
-                               text-on-surface-variant"
-                    >
-                        Los archivos relacionados con el ticket
-                        aparecerán aquí.
-                    </p>
+                <button mat-stroked-button [disabled]="procesando() || loading()" (click)="descargar(archivo)">
 
-                </div>
+                    @if (
+                    operacion() === 'DESCARGANDO' &&
+                    archivoProcesandoId() === archivo.id
+                    ) {
 
-            }
+                    <mat-spinner diameter="18" />
+
+                    } @else {
+
+                    <mat-icon svgIcon="arrow-down-tray" />
+
+                    }
+
+                    Descargar
+
+                </button>
+
+                <!-- ELIMINAR -->
+
+                @if (puedeEliminar(archivo)) {
+
+                <button mat-stroked-button [disabled]="procesando() || loading()" (click)="eliminar(archivo)">
+
+                    @if (
+                    operacion() === 'ELIMINANDO' &&
+                    archivoProcesandoId() === archivo.id
+                    ) {
+
+                    <mat-spinner diameter="18" />
+
+                    } @else {
+
+                    <mat-icon svgIcon="trash" />
+
+                    }
+
+                    Eliminar
+
+                </button>
+
+                }
+
+            </div>
 
         </div>
+
+        } @empty {
+
+        <div class="rounded-xl border border-dashed
+                           p-10 text-center">
+
+            <mat-icon svgIcon="paper-clip" class="mb-3" />
+
+            <p class="font-medium">
+                No hay archivos adjuntos
+            </p>
+
+            <p class="mt-2 text-sm
+                               text-on-surface-variant">
+                Los archivos relacionados con el ticket
+                aparecerán aquí.
+            </p>
+
+        </div>
+
+        }
+
+    </div>
 
     }
 
