@@ -1,11 +1,12 @@
 <section class="mb-6 rounded-2xl border bg-surface p-6">
 
-    <!-- ENCABEZADO -->
+    <!-- ========================================== -->
+    <!-- ENCABEZADO                                 -->
+    <!-- ========================================== -->
 
     <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
 
         <div>
-
             <h2 class="text-xl font-semibold">
                 Archivos adjuntos
             </h2>
@@ -13,17 +14,15 @@
             <p class="mt-1 text-sm text-on-surface-variant">
                 {{ totalArchivos() }} archivo(s) adjunto(s)
             </p>
-
         </div>
 
-        <!-- SUBIR ARCHIVO -->
+        <!-- AGREGAR ARCHIVO -->
 
         @if (puedeSubir()) {
 
-        <label class="inline-flex cursor-pointer items-center
-           gap-2 rounded-lg bg-primary px-4 py-2
-           text-sm font-medium text-on-primary" [class.pointer-events-none]="procesando() || loading()"
-            [class.opacity-50]="procesando() || loading()">
+        <label
+            class="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-on-primary"
+            [class.pointer-events-none]="procesando() || loading()" [class.opacity-50]="procesando() || loading()">
 
             @if (operacion() === 'SUBIENDO') {
 
@@ -50,14 +49,13 @@
 
     </div>
 
-    <!-- INFORMACION -->
+    <!-- ========================================== -->
+    <!-- INFORMACION                                -->
+    <!-- ========================================== -->
 
     <p class="mb-5 text-sm text-on-surface-variant">
-
         Formatos permitidos: JPG, PNG, WEBP y PDF.
-
         Tamaño máximo: 10 MB por archivo.
-
     </p>
 
     <!-- ========================================== -->
@@ -81,7 +79,7 @@
 
         </div>
 
-        <!-- OPCION VISIBLE -->
+        <!-- VISIBLE PARA EL SOLICITANTE -->
 
         <label class="mb-3 flex cursor-pointer items-start gap-3">
 
@@ -103,7 +101,7 @@
 
         </label>
 
-        <!-- OPCION INTERNA -->
+        <!-- SOLO PERSONAL DE SOPORTE -->
 
         <label class="flex cursor-pointer items-start gap-3">
 
@@ -128,7 +126,11 @@
 
     </div>
 
-    <!-- MENSAJES -->
+    }
+
+    <!-- ========================================== -->
+    <!-- MENSAJES                                   -->
+    <!-- ========================================== -->
 
     @if (error()) {
 
@@ -146,27 +148,27 @@
 
     }
 
-    <!-- CARGANDO -->
+    <!-- ========================================== -->
+    <!-- CARGANDO                                   -->
+    <!-- ========================================== -->
 
     @if (loading()) {
 
     <div class="flex justify-center py-10">
-
         <mat-spinner diameter="32" />
-
     </div>
 
     } @else {
 
-    <!-- LISTADO -->
+    <!-- ====================================== -->
+    <!-- LISTADO DE ARCHIVOS                    -->
+    <!-- ====================================== -->
 
     <div class="space-y-3">
 
         @for (archivo of archivos(); track archivo.id) {
 
-        <div class="flex flex-wrap items-center
-                           justify-between gap-4 rounded-xl
-                           border p-4">
+        <div class="flex flex-wrap items-center justify-between gap-4 rounded-xl border p-4">
 
             <!-- INFORMACION DEL ARCHIVO -->
 
@@ -174,9 +176,7 @@
 
                 <!-- ICONO -->
 
-                <div class="flex h-12 w-12 shrink-0
-                                   items-center justify-center
-                                   rounded-xl bg-neutral-100">
+                <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-neutral-100">
 
                     @if (esImagen(archivo)) {
 
@@ -198,20 +198,27 @@
 
                 <div class="min-w-0">
 
+                    <!-- NOMBRE -->
+
                     <div class="break-all font-medium">
                         {{ archivo.nombreOriginal }}
                     </div>
 
-                    <div class="mt-1 text-xs
-                                       text-on-surface-variant">
+                    <!-- FECHA Y TAMAÑO -->
 
-                        {{ archivo.fechaCreacion
-                        | date:'dd/MM/yyyy HH:mm' }}
+                    <div class="mt-1 text-xs text-on-surface-variant">
+
+                        {{
+                        archivo.fechaCreacion
+                        | date:'dd/MM/yyyy HH:mm'
+                        }}
 
                         ·
 
-                        {{ tamanoMb(archivo.tamanoBytes)
-                        | number:'1.2-2' }} MB
+                        {{
+                        tamanoMb(archivo.tamanoBytes)
+                        | number:'1.2-2'
+                        }} MB
 
                     </div>
 
@@ -219,9 +226,7 @@
 
                     @if (!archivo.visibleSolicitante) {
 
-                    <span class="mt-2 inline-block rounded-full
-                                           bg-amber-100 px-3 py-1
-                                           text-xs text-amber-800">
+                    <span class="mt-2 inline-block rounded-full bg-amber-100 px-3 py-1 text-xs text-amber-800">
                         Archivo interno
                     </span>
 
@@ -231,7 +236,9 @@
 
             </div>
 
-            <!-- ACCIONES -->
+            <!-- ================================== -->
+            <!-- ACCIONES                           -->
+            <!-- ================================== -->
 
             <div class="flex items-center gap-2">
 
@@ -287,8 +294,11 @@
 
         } @empty {
 
-        <div class="rounded-xl border border-dashed
-                           p-10 text-center">
+        <!-- ================================== -->
+        <!-- SIN ARCHIVOS                       -->
+        <!-- ================================== -->
+
+        <div class="rounded-xl border border-dashed p-10 text-center">
 
             <mat-icon svgIcon="paper-clip" class="mb-3" />
 
@@ -296,8 +306,7 @@
                 No hay archivos adjuntos
             </p>
 
-            <p class="mt-2 text-sm
-                               text-on-surface-variant">
+            <p class="mt-2 text-sm text-on-surface-variant">
                 Los archivos relacionados con el ticket
                 aparecerán aquí.
             </p>
