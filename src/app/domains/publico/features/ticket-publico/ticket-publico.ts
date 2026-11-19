@@ -180,6 +180,13 @@ export default class TicketPublicoComponent {
 
   constructor() {
     void this.cargarDatos();
+    this.form.controls.recibirWhatsapp.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(habilitado => {
+        if (!habilitado) {
+          this.form.controls.consentimientoWhatsapp.setValue(false);
+        }
+      });
   }
 
   // ==========================================
@@ -361,43 +368,43 @@ export default class TicketPublicoComponent {
 
     const dto: TicketPublicoCrear = {
 
-    nombre: valores.nombre.trim(),
+      nombre: valores.nombre.trim(),
 
-    correo:
+      correo:
         valores.correo.trim() || null,
 
-    telefono:
+      telefono:
         valores.telefono.trim() || null,
 
-    categoriaTicketId:
+      categoriaTicketId:
         valores.categoriaTicketId || null,
 
-    titulo:
+      titulo:
         valores.titulo.trim(),
 
-    descripcion:
+      descripcion:
         valores.descripcion.trim(),
 
-    // ======================================
-    // PREFERENCIAS
-    // ======================================
+      // ======================================
+      // PREFERENCIAS
+      // ======================================
 
-    recibirCorreo:
+      recibirCorreo:
         valores.recibirCorreo,
 
-    recibirWhatsapp:
+      recibirWhatsapp:
         valores.recibirWhatsapp,
 
-    consentimientoWhatsapp:
+      consentimientoWhatsapp:
         valores.recibirWhatsapp &&
         valores.consentimientoWhatsapp,
 
-    versionAvisoWhatsapp:
+      versionAvisoWhatsapp:
         valores.recibirWhatsapp &&
-        valores.consentimientoWhatsapp
-            ? 'v1'
-            : null,
-};
+          valores.consentimientoWhatsapp
+          ? 'v1'
+          : null,
+    };
 
     // Validar nuevamente después de Trim().
     if (
