@@ -48,6 +48,7 @@ import {
   TicketPublicoCrear,
   TicketPublicoResultado,
 } from '../../types/ticket-publico.types';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 
 @Component({
   selector: 'app-ticket-publico',
@@ -62,6 +63,7 @@ import {
     MatSelectModule,
     MatIconModule,
     MatProgressSpinnerModule,
+    MatCheckboxModule,
   ],
 })
 export default class TicketPublicoComponent {
@@ -164,6 +166,12 @@ export default class TicketPublicoComponent {
       ],
     ],
 
+    // ======================================
+    // PREFERENCIAS DE NOTIFICACION
+    // ======================================
+    recibirCorreo: [false],
+    recibirWhatsapp: [false],
+    consentimientoWhatsapp: [false],
   });
 
   // ==========================================
@@ -311,26 +319,85 @@ export default class TicketPublicoComponent {
 
     const valores = this.form.getRawValue();
 
+    // ======================================
+    // VALIDAR CORREO
+    // ======================================
+
+    if (
+      valores.recibirCorreo &&
+      !valores.correo.trim()
+    ) {
+      this.error.set(
+        'Debes proporcionar un correo para recibir notificaciones.'
+      );
+
+      return;
+    }
+
+    // ======================================
+    // VALIDAR WHATSAPP
+    // ======================================
+
+    if (valores.recibirWhatsapp) {
+
+      if (!valores.telefono.trim()) {
+
+        this.error.set(
+          'Debes proporcionar un teléfono para recibir notificaciones por WhatsApp.'
+        );
+
+        return;
+      }
+
+      if (!valores.consentimientoWhatsapp) {
+
+        this.error.set(
+          'Debes aceptar el consentimiento para recibir notificaciones por WhatsApp.'
+        );
+
+        return;
+      }
+    }
+
     const dto: TicketPublicoCrear = {
 
-      nombre: valores.nombre.trim(),
+    nombre: valores.nombre.trim(),
 
-      correo:
+    correo:
         valores.correo.trim() || null,
 
-      telefono:
+    telefono:
         valores.telefono.trim() || null,
 
-      categoriaTicketId:
+    categoriaTicketId:
         valores.categoriaTicketId || null,
 
-      titulo:
+    titulo:
         valores.titulo.trim(),
 
-      descripcion:
+    descripcion:
         valores.descripcion.trim(),
 
-    };
+    // ======================================
+    // PREFERENCIAS
+    // ======================================
+
+    recibirCorreo:
+        valores.recibirCorreo,
+
+    recibirWhatsapp:
+        valores.recibirWhatsapp,
+
+    consentimientoWhatsapp:
+        valores.recibirWhatsapp &&
+        valores.consentimientoWhatsapp,
+
+    versionAvisoWhatsapp:
+        valores.recibirWhatsapp &&
+        valores.consentimientoWhatsapp
+            ? 'v1'
+            : null,
+};
 
     // Validar nuevamente después de Trim().
     if (

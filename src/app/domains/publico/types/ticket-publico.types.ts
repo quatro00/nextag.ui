@@ -4,12 +4,19 @@ export interface CategoriaTicketPublica {
 }
 
 export interface TicketPublicoCrear {
-  nombre: string;
-  correo: string | null;
-  telefono: string | null;
-  categoriaTicketId: string | null;
-  titulo: string;
-  descripcion: string;
+    nombre: string;
+    correo: string | null;
+    telefono: string | null;
+    categoriaTicketId: string | null;
+    titulo: string;
+    descripcion: string;
+    // ======================================
+    // NOTIFICACIONES
+    // ======================================
+    recibirCorreo: boolean;
+    recibirWhatsapp: boolean;
+    consentimientoWhatsapp: boolean;
+    versionAvisoWhatsapp: string | null;
 }
 
 export interface TicketPublicoResultado {
