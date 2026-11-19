@@ -58,30 +58,30 @@ import { AdminNotificaciones } from './ui/notificaciones/notificaciones';
           <div class="font-semibold">NEXTAG</div>
 
           <div class="flex-auto"></div>
-@if (empresaContexto.cargando()) {
-  <span class="text-sm text-on-surface-variant">Cargando empresas...</span>
-} @else if (empresaContexto.empresas().length) {
-  <button mat-button [matMenuTriggerFor]="empresaMenu">
-    <mat-icon svgIcon="building-2" />
-    <span class="ml-2 max-w-24 truncate sm:max-w-48">
-      {{ empresaContexto.seleccionada()?.nombre }}
-    </span>
-    <mat-icon svgIcon="chevron-down" />
-  </button>
+          @if (empresaContexto.cargando()) {
+            <span class="text-sm text-on-surface-variant">Cargando empresas...</span>
+          } @else if (empresaContexto.empresas().length) {
+            <button mat-button [matMenuTriggerFor]="empresaMenu">
+              <mat-icon svgIcon="building-2" />
+              <span class="ml-2 max-w-24 truncate sm:max-w-48">
+                {{ empresaContexto.seleccionada()?.nombre }}
+              </span>
+              <mat-icon svgIcon="chevron-down" />
+            </button>
 
-  <mat-menu #empresaMenu="matMenu">
-    @for (empresa of empresaContexto.empresas(); track empresa.id) {
-      <button mat-menu-item (click)="cambiarEmpresa(empresa.id)">
-        <mat-icon [svgIcon]="empresa.id === empresaContexto.empresaId ? 'check' : 'building-2'" />
-        <span>{{ empresa.nombre }}</span>
-      </button>
-    }
-  </mat-menu>
-} @else {
-  <span class="text-xs text-on-surface-variant">
-    {{ empresaContexto.error() || 'Sin empresas asignadas' }}
-  </span>
-}
+            <mat-menu #empresaMenu="matMenu">
+              @for (empresa of empresaContexto.empresas(); track empresa.id) {
+                <button mat-menu-item (click)="cambiarEmpresa(empresa.id)">
+                  <mat-icon [svgIcon]="empresa.id === empresaContexto.empresaId ? 'check' : 'building-2'" />
+                  <span>{{ empresa.nombre }}</span>
+                </button>
+              }
+            </mat-menu>
+          } @else {
+            <span class="text-xs text-on-surface-variant">
+              {{ empresaContexto.error() || 'Sin empresas asignadas' }}
+            </span>
+          }
           <scheme-switcher />
 
           <!-- ====================================== -->
@@ -137,10 +137,34 @@ import { AdminNotificaciones } from './ui/notificaciones/notificaciones';
 
             <div class="my-1 border-t"></div>
 
-            <button mat-menu-item (click)="logout()">
-              <mat-icon svgIcon="log-out" />
-              <span>Cerrar sesión</span>
-            </button>
+<!-- ====================================== -->
+<!-- PREFERENCIAS DE NOTIFICACIONES -->
+<!-- ====================================== -->
+
+<button
+    mat-menu-item
+    (click)="abrirPreferenciasNotificaciones()"
+>
+    <mat-icon svgIcon="bell" />
+
+    <span>
+        Preferencias de notificaciones
+    </span>
+</button>
+
+<div class="my-1 border-t"></div>
+
+<!-- ====================================== -->
+<!-- CERRAR SESION -->
+<!-- ====================================== -->
+
+<button mat-menu-item (click)="logout()">
+
+    <mat-icon svgIcon="log-out" />
+
+    <span>Cerrar sesión</span>
+
+</button>
           </mat-menu>
         </div>
 
@@ -168,6 +192,17 @@ export class AdminLayout implements OnInit {
     if (this.empresaContexto.seleccionar(id)) {
       void this.router.navigateByUrl('/admin/inicio');
     }
+  }
+
+  // ==========================================
+  // ABRIR PREFERENCIAS
+  // ==========================================
+
+  protected abrirPreferenciasNotificaciones(): void {
+
+    void this.router.navigateByUrl(
+      '/admin/preferencias-notificaciones'
+    );
   }
 
   protected isMobile = computed(() =>

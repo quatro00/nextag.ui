@@ -1,0 +1,485 @@
+<div class="mx-auto flex w-full max-w-6xl flex-col gap-6 p-4 sm:p-6">
+
+    <!-- ====================================== -->
+    <!-- ENCABEZADO -->
+    <!-- ====================================== -->
+
+    <div class="flex flex-wrap items-start justify-between gap-4">
+
+        <div>
+
+            <h1 class="text-2xl font-semibold">
+                Preferencias de notificaciones
+            </h1>
+
+            <p class="mt-1 text-sm text-on-surface-variant">
+                Configura cómo deseas recibir las notificaciones
+                relacionadas con tus tickets.
+            </p>
+
+            @if (empresa.seleccionada()) {
+
+                <p class="mt-2 text-sm">
+
+                    <span class="text-on-surface-variant">
+                        Empresa:
+                    </span>
+
+                    <span class="font-medium">
+                        {{ empresa.seleccionada()?.nombre }}
+                    </span>
+
+                </p>
+            }
+
+        </div>
+
+        <button
+            mat-stroked-button
+            type="button"
+            [disabled]="cargando()"
+            (click)="recargar()"
+        >
+
+            <mat-icon svgIcon="refresh-cw" />
+
+            Recargar
+
+        </button>
+
+    </div>
+
+
+    <!-- ====================================== -->
+    <!-- INFORMACION -->
+    <!-- ====================================== -->
+
+    <div class="rounded-xl border bg-surface-container-low p-4">
+
+        <div class="flex items-start gap-3">
+
+            <mat-icon
+                svgIcon="info"
+                class="mt-0.5 text-primary"
+            />
+
+            <div class="text-sm">
+
+                <p class="font-medium">
+                    Configuración personal
+                </p>
+
+                <p class="mt-1 text-on-surface-variant">
+
+                    Estas preferencias se aplican únicamente
+                    a tu usuario dentro de la empresa
+                    seleccionada.
+
+                    Puedes elegir las notificaciones internas,
+                    por correo electrónico y por WhatsApp.
+
+                </p>
+
+                <p class="mt-2 text-on-surface-variant">
+
+                    Los cambios se guardan individualmente
+                    para cada tipo de evento.
+
+                </p>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ====================================== -->
+    <!-- ERROR -->
+    <!-- ====================================== -->
+
+    @if (error()) {
+
+        <div
+            role="alert"
+            class="rounded-lg border border-red-300 bg-red-50 p-4 text-sm text-red-700"
+        >
+
+            {{ error() }}
+
+        </div>
+    }
+
+
+    <!-- ====================================== -->
+    <!-- MENSAJE DE EXITO -->
+    <!-- ====================================== -->
+
+    @if (mensaje()) {
+
+        <div
+            role="status"
+            class="rounded-lg border border-green-300 bg-green-50 p-4 text-sm text-green-700"
+        >
+
+            {{ mensaje() }}
+
+        </div>
+    }
+
+
+    <!-- ====================================== -->
+    <!-- CARGANDO -->
+    <!-- ====================================== -->
+
+    @if (cargando()) {
+
+        <div class="flex justify-center py-12">
+
+            <mat-spinner [diameter]="36" />
+
+        </div>
+
+    } @else if (!empresa.empresaId) {
+
+        <div class="rounded-xl border p-8 text-center">
+
+            <p class="text-on-surface-variant">
+
+                Selecciona una empresa para consultar
+                tus preferencias.
+
+            </p>
+
+        </div>
+
+    } @else if (!tienePreferencias()) {
+
+        <div class="rounded-xl border p-8 text-center">
+
+            <mat-icon
+                svgIcon="bell-off"
+                class="mb-3"
+            />
+
+            <p class="text-on-surface-variant">
+
+                No hay eventos de notificación disponibles.
+
+            </p>
+
+        </div>
+
+    } @else {
+
+        <!-- ================================== -->
+        <!-- TABLA -->
+        <!-- ================================== -->
+
+        <div class="overflow-hidden rounded-xl border">
+
+            <div class="overflow-x-auto">
+
+                <table class="w-full min-w-180 text-sm">
+
+                    <thead class="bg-surface-container-low">
+
+                        <tr class="border-b">
+
+                            <th
+                                class="px-5 py-4 text-left font-semibold"
+                            >
+                                Evento
+                            </th>
+
+                            <th
+                                class="px-4 py-4 text-center font-semibold"
+                            >
+                                Interna
+                            </th>
+
+                            <th
+                                class="px-4 py-4 text-center font-semibold"
+                            >
+                                Correo
+                            </th>
+
+                            <th
+                                class="px-4 py-4 text-center font-semibold"
+                            >
+                                WhatsApp
+                            </th>
+
+                            <th
+                                class="px-4 py-4 text-center font-semibold"
+                            >
+                                Acciones
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        @for (
+                            item of preferencias();
+                            track item.eventoId
+                        ) {
+
+                            <tr class="border-b last:border-b-0">
+
+                                <!-- ====================== -->
+                                <!-- EVENTO -->
+                                <!-- ====================== -->
+
+                                <td class="px-5 py-4 align-top">
+
+                                    <div class="font-medium">
+
+                                        {{ item.eventoNombre }}
+
+                                    </div>
+
+                                    @if (item.eventoDescripcion) {
+
+                                        <div
+                                            class="mt-1 max-w-xs text-xs text-on-surface-variant"
+                                        >
+
+                                            {{ item.eventoDescripcion }}
+
+                                        </div>
+                                    }
+
+                                </td>
+
+
+                                <!-- ====================== -->
+                                <!-- INTERNA -->
+                                <!-- ====================== -->
+
+                                <td class="px-4 py-4 text-center align-top">
+
+                                    <mat-slide-toggle
+                                        [checked]="item.interna"
+                                        [disabled]="item.guardando"
+                                        [attr.aria-label]="'Notificación interna de ' + item.eventoNombre"
+                                        (change)="cambiarCanal(
+                                            item.eventoId,
+                                            'interna',
+                                            $event.checked
+                                        )"
+                                    />
+
+                                </td>
+
+
+                                <!-- ====================== -->
+                                <!-- CORREO -->
+                                <!-- ====================== -->
+
+                                <td class="px-4 py-4 text-center align-top">
+
+                                    <mat-slide-toggle
+                                        [checked]="item.correo"
+                                        [disabled]="
+                                            item.guardando ||
+                                            !item.correoDisponible
+                                        "
+                                        [attr.aria-label]="'Correo de ' + item.eventoNombre"
+                                        (change)="cambiarCanal(
+                                            item.eventoId,
+                                            'correo',
+                                            $event.checked
+                                        )"
+                                    />
+
+                                    @if (!item.correoDisponible) {
+
+                                        <div class="mt-1 text-xs text-orange-600">
+
+                                            Sin correo
+
+                                        </div>
+                                    }
+
+                                </td>
+
+
+                                <!-- ====================== -->
+                                <!-- WHATSAPP -->
+                                <!-- ====================== -->
+
+                                <td class="px-4 py-4 text-center align-top">
+
+                                    <mat-slide-toggle
+                                        [checked]="item.whatsapp"
+                                        [disabled]="
+                                            item.guardando ||
+                                            !item.whatsappDisponible
+                                        "
+                                        [attr.aria-label]="'WhatsApp de ' + item.eventoNombre"
+                                        (change)="cambiarCanal(
+                                            item.eventoId,
+                                            'whatsapp',
+                                            $event.checked
+                                        )"
+                                    />
+
+                                    @if (!item.whatsappDisponible) {
+
+                                        <div class="mt-1 text-xs text-orange-600">
+
+                                            Sin teléfono
+
+                                        </div>
+                                    }
+
+                                    @if (item.whatsapp) {
+
+                                        <div class="mt-3 text-left">
+
+                                            <mat-checkbox
+                                                [checked]="
+                                                    item.consentimientoWhatsapp
+                                                "
+                                                [disabled]="item.guardando"
+                                                (change)="
+                                                    cambiarConsentimiento(
+                                                        item.eventoId,
+                                                        $event.checked
+                                                    )
+                                                "
+                                            >
+
+                                                <span class="text-xs">
+
+                                                    Acepto recibir
+                                                    notificaciones de
+                                                    Nextag por WhatsApp
+                                                    al teléfono registrado,
+                                                    relacionadas con
+                                                    este evento.
+
+                                                </span>
+
+                                            </mat-checkbox>
+
+                                            @if (
+                                                item.consentimientoWhatsapp &&
+                                                item.fechaConsentimientoWhatsapp
+                                            ) {
+
+                                                <p
+                                                    class="mt-1 text-xs text-on-surface-variant"
+                                                >
+
+                                                    Aceptado:
+                                                    {{
+                                                        item.fechaConsentimientoWhatsapp
+                                                        | date:'dd/MM/yyyy HH:mm'
+                                                    }}
+
+                                                </p>
+
+                                            }
+
+                                            <p
+                                                class="mt-1 text-xs text-on-surface-variant"
+                                            >
+
+                                                Aviso:
+                                                {{ versionAvisoWhatsapp }}
+
+                                            </p>
+
+                                        </div>
+                                    }
+
+                                </td>
+
+
+                                <!-- ====================== -->
+                                <!-- GUARDAR -->
+                                <!-- ====================== -->
+
+                                <td class="px-4 py-4 text-center align-top">
+
+                                    <button
+                                        mat-flat-button
+                                        type="button"
+                                        [disabled]="
+                                            item.guardando ||
+                                            !item.modificada ||
+                                            (
+                                                item.whatsapp &&
+                                                !item.consentimientoWhatsapp
+                                            )
+                                        "
+                                        (click)="guardar(item)"
+                                    >
+
+                                        @if (item.guardando) {
+
+                                            <mat-spinner
+                                                [diameter]="18"
+                                            />
+
+                                        } @else {
+
+                                            <mat-icon svgIcon="save" />
+
+                                            Guardar
+
+                                        }
+
+                                    </button>
+
+                                    @if (item.modificada) {
+
+                                        <div
+                                            class="mt-2 text-xs text-orange-600"
+                                        >
+
+                                            Sin guardar
+
+                                        </div>
+
+                                    }
+
+                                </td>
+
+                            </tr>
+
+                        }
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+
+        <!-- ================================== -->
+        <!-- NOTA FINAL -->
+        <!-- ================================== -->
+
+        <div class="text-xs text-on-surface-variant">
+
+            Las notificaciones internas se muestran en
+            la campanita de Nextag.
+
+            Las notificaciones por correo se envían
+            a la dirección registrada en tu cuenta.
+
+            WhatsApp requiere un teléfono válido y
+            consentimiento explícito.
+
+        </div>
+
+    }
+
+</div>

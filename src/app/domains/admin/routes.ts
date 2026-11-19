@@ -68,6 +68,22 @@ const routes: Routes = [
         loadChildren: () =>
           import('./modules/tickets/routes'),
       },
+      {
+        path: 'preferencias-notificaciones',
+        canActivate: [roleGuard],
+        data: {
+          roles: [
+            AUTH_ROLES.ADMINISTRADOR,
+            AUTH_ROLES.ADMIN_EMPRESA,
+            AUTH_ROLES.OPERADOR,
+            AUTH_ROLES.CONSULTA,
+          ],
+        },
+        loadComponent: () =>
+          import(
+            './features/preferencias-notificaciones/preferencias-notificaciones'
+          ),
+      },
       { path: '**', redirectTo: 'inicio' },
     ],
   },
