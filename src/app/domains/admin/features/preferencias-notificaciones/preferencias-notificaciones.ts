@@ -43,7 +43,6 @@ import {
 } from '../../modules/shared/notificaciones/notificacion-preferencias.service';
 
 import {
-    NotificacionPreferencia,
     NotificacionPreferenciaEdicion,
     NotificacionPreferenciaGuardar,
 } from '../../modules/shared/notificaciones/notificacion-preferencias.types';
@@ -188,6 +187,10 @@ export default class PreferenciasNotificaciones {
         });
     }
 
+    protected readonly guardandoAlguna = computed(() =>
+        this.preferencias().some(x => x.guardando)
+    );
+
     // ==========================================
     // ACTUALIZAR CANAL
     // ==========================================
@@ -263,7 +266,7 @@ export default class PreferenciasNotificaciones {
                             item.consentimientoWhatsapp &&
                             !!item.fechaConsentimientoWhatsapp &&
                             item.versionAviso ===
-                                this.versionAvisoWhatsapp;
+                            this.versionAvisoWhatsapp;
 
                         actualizado.consentimientoWhatsapp =
                             consentimientoVigente;
@@ -311,7 +314,7 @@ export default class PreferenciasNotificaciones {
 
                     fechaConsentimientoWhatsapp:
                         aceptado &&
-                        item.versionAviso ===
+                            item.versionAviso ===
                             this.versionAvisoWhatsapp
                             ? item.fechaConsentimientoWhatsapp
                             : null,
@@ -376,7 +379,7 @@ export default class PreferenciasNotificaciones {
 
             versionAviso:
                 item.whatsapp &&
-                item.consentimientoWhatsapp
+                    item.consentimientoWhatsapp
                     ? this.versionAvisoWhatsapp
                     : null,
         };
@@ -460,6 +463,10 @@ export default class PreferenciasNotificaciones {
     // ==========================================
 
     protected recargar(): void {
+
+        if (this.cargando() || this.guardandoAlguna()) {
+            return;
+        }
 
         const empresaId = this.empresa.empresaId;
         const usuarioId = this.auth.user()?.id;

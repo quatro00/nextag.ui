@@ -37,7 +37,7 @@
         <button
             mat-stroked-button
             type="button"
-            [disabled]="cargando()"
+            [disabled]="cargando() || guardandoAlguna()"
             (click)="recargar()"
         >
 
