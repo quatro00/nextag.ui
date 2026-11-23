@@ -24,4 +24,12 @@ export interface TicketPublicoResultado {
   folio: string;
   mensaje: string;
   fechaApertura: string;
+
+  // ======================================
+  // AUTORIZACION DE ADJUNTOS
+  // ======================================
+
+  tokenCargaAdjuntos: string | null;
+  fechaExpiracionAdjuntos: string | null;
+  maximoAdjuntos: number;
 }

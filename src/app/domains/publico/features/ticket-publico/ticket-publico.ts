@@ -110,6 +110,41 @@ export default class TicketPublicoComponent {
 
   protected readonly guardando = signal(false);
 
+  // ==========================================
+  // ARCHIVOS ADJUNTOS
+  // ==========================================
+
+  protected readonly archivosSeleccionados =
+    signal<File[]>([]);
+
+  protected readonly subiendoArchivos =
+    signal(false);
+
+  protected readonly archivosSubidos =
+    signal(0);
+
+  protected readonly errorAdjuntos =
+    signal<string | null>(null);
+
+  protected readonly archivosFallidos =
+    signal<File[]>([]);
+
+  // ==========================================
+  // CONFIGURACION
+  // ==========================================
+
+  private readonly maximoArchivos = 5;
+
+  private readonly maximoBytes =
+    10 * 1024 * 1024;
+
+  private readonly extensionesPermitidas = [
+    '.jpg',
+    '.png',
+    '.webp',
+    '.pdf',
+  ];
+
   protected readonly error =
     signal<string | null>(null);
 
@@ -267,6 +302,283 @@ export default class TicketPublicoComponent {
 
       this.cargando.set(false);
     }
+  }
+
+  // ==========================================
+  // SELECCIONAR ARCHIVOS
+  // ==========================================
+
+  protected seleccionarArchivos(
+    event: Event
+  ): void {
+
+    const input =
+      event.target as HTMLInputElement;
+
+    const nuevos =
+      Array.from(input.files ?? []);
+
+    // Permitir seleccionar nuevamente
+    // el mismo archivo si fuera necesario.
+
+    input.value = '';
+
+    if (
+      this.guardando() ||
+      this.resultado()
+    ) {
+      return;
+    }
+
+    this.errorAdjuntos.set(null);
+
+    if (nuevos.length === 0) {
+      return;
+    }
+
+    const actuales = [
+      ...this.archivosSeleccionados()
+    ];
+
+    // ======================================
+    // VALIDAR ARCHIVOS
+    // ======================================
+
+    for (const archivo of nuevos) {
+
+      const extension =
+        archivo.name.substring(
+          archivo.name.lastIndexOf('.')
+        ).toLowerCase();
+
+      if (
+        !this.extensionesPermitidas.includes(
+          extension
+        )
+      ) {
+        this.errorAdjuntos.set(
+          `El archivo "${archivo.name}" tiene un formato no permitido.`
+        );
+
+        return;
+      }
+
+      if (
+        archivo.size === 0 ||
+        archivo.size > this.maximoBytes
+      ) {
+        this.errorAdjuntos.set(
+          `El archivo "${archivo.name}" está vacío o supera los 10 MB.`
+        );
+
+        return;
+      }
+
+      // ==================================
+      // EVITAR DUPLICADOS EN LA SELECCION
+      // ==================================
+
+      const duplicado = actuales.some(
+        x =>
+          x.name === archivo.name &&
+          x.size === archivo.size &&
+          x.lastModified === archivo.lastModified
+      );
+
+      if (!duplicado) {
+        actuales.push(archivo);
+      }
+
+      // ==================================
+      // VALIDAR LIMITE
+      // ==================================
+
+      if (
+        actuales.length > this.maximoArchivos
+      ) {
+        this.errorAdjuntos.set(
+          'Puedes adjuntar un máximo de 5 archivos.'
+        );
+
+        return;
+      }
+    }
+
+    this.archivosSeleccionados.set(actuales);
+  }
+
+  // ==========================================
+  // QUITAR ARCHIVO
+  // ==========================================
+
+  protected quitarArchivo(
+    indice: number
+  ): void {
+
+    if (
+      this.guardando() ||
+      this.resultado()
+    ) {
+      return;
+    }
+
+    this.archivosSeleccionados.update(
+      archivos =>
+        archivos.filter(
+          (_, i) => i !== indice
+        )
+    );
+
+    this.errorAdjuntos.set(null);
+  }
+
+  // ==========================================
+  // SUBIR ARCHIVOS PUBLICOS
+  // ==========================================
+
+  private async subirArchivos(
+    ticket: TicketPublicoResultado,
+    archivos: File[]
+  ): Promise<void> {
+
+    if (archivos.length === 0) {
+      return;
+    }
+
+    if (!ticket.tokenCargaAdjuntos) {
+
+      this.errorAdjuntos.set(
+        'El servidor no proporcionó autorización para subir archivos.'
+      );
+
+      this.archivosFallidos.set(archivos);
+
+      return;
+    }
+
+    // ======================================
+    // VALIDAR EXPIRACION
+    // ======================================
+
+    if (
+      ticket.fechaExpiracionAdjuntos &&
+      new Date(
+        ticket.fechaExpiracionAdjuntos
+      ).getTime() <= Date.now()
+    ) {
+
+      this.errorAdjuntos.set(
+        'El tiempo para adjuntar archivos ha expirado.'
+      );
+
+      this.archivosFallidos.set(archivos);
+
+      return;
+    }
+
+    this.subiendoArchivos.set(true);
+
+    this.errorAdjuntos.set(null);
+
+    const pendientes: File[] = [];
+
+    // ======================================
+    // SUBIR UNO POR UNO
+    // ======================================
+
+    try {
+
+      for (const archivo of archivos) {
+
+        try {
+
+          await firstValueFrom(
+            this.ticketService.subirAdjunto(
+              ticket.id,
+              ticket.tokenCargaAdjuntos,
+              archivo
+            ).pipe(
+              takeUntilDestroyed(this.destroyRef)
+            )
+          );
+
+          this.archivosSubidos.update(
+            total => total + 1
+          );
+
+        } catch {
+
+          pendientes.push(archivo);
+        }
+      }
+
+    } finally {
+
+      this.archivosFallidos.set(pendientes);
+
+      this.subiendoArchivos.set(false);
+    }
+
+    // ======================================
+    // RESULTADO
+    // ======================================
+
+    if (pendientes.length > 0) {
+
+      this.errorAdjuntos.set(
+        `La solicitud fue registrada, pero ${pendientes.length} archivo(s) no pudieron adjuntarse. Puedes reintentar la carga.`
+      );
+
+    } else {
+
+      this.errorAdjuntos.set(null);
+    }
+  }
+
+  // ==========================================
+  // REINTENTAR ARCHIVOS FALLIDOS
+  // ==========================================
+
+  protected async reintentarAdjuntos(): Promise<void> {
+
+    const ticket = this.resultado();
+
+    if (
+      !ticket ||
+      this.subiendoArchivos() ||
+      this.archivosFallidos().length === 0
+    ) {
+      return;
+    }
+
+    // ======================================
+    // VALIDAR EXPIRACION
+    // ======================================
+
+    if (
+      ticket.fechaExpiracionAdjuntos &&
+      new Date(
+        ticket.fechaExpiracionAdjuntos
+      ).getTime() <= Date.now()
+    ) {
+
+      this.errorAdjuntos.set(
+        'La autorización de carga expiró. El ticket ya quedó registrado.'
+      );
+
+      return;
+    }
+
+    const archivos = [
+      ...this.archivosFallidos()
+    ];
+
+    this.archivosFallidos.set([]);
+
+    await this.subirArchivos(
+      ticket,
+      archivos
+    );
   }
 
   // ==========================================
@@ -428,6 +740,10 @@ export default class TicketPublicoComponent {
 
     try {
 
+      // ======================================
+      // CREAR TICKET
+      // ======================================
+
       const respuesta = await firstValueFrom(
         this.ticketService.crear(
           this.token,
@@ -437,7 +753,41 @@ export default class TicketPublicoComponent {
         )
       );
 
+      // ======================================
+      // GUARDAR RESULTADO
+      // ======================================
+
+      // El ticket ya existe en SQL Server.
+      // Esto evita que se registre nuevamente
+      // si falla una fotografía.
+
       this.resultado.set(respuesta);
+
+      // ======================================
+      // OBTENER ARCHIVOS
+      // ======================================
+
+      const archivos = [
+        ...this.archivosSeleccionados()
+      ];
+
+      // ======================================
+      // SUBIR ADJUNTOS
+      // ======================================
+
+      if (archivos.length > 0) {
+
+        // Liberamos el estado de guardado
+        // para que la pantalla muestre
+        // el progreso de los adjuntos.
+
+        this.guardando.set(false);
+
+        await this.subirArchivos(
+          respuesta,
+          archivos
+        );
+      }
 
     } catch (err) {
 

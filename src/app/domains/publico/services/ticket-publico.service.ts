@@ -17,6 +17,8 @@ export class TicketPublicoService {
 
   private readonly http = inject(HttpClient);
 
+  private readonly apiUrl = inject(API_URL);
+
   private readonly endpoint =
     `${inject(API_URL)}/publico/etiquetas`;
 
@@ -49,6 +51,47 @@ export class TicketPublicoService {
     return this.http.post<TicketPublicoResultado>(
       `${this.url(tokenPublico)}/tickets`,
       dto
+    );
+  }
+
+  // ==========================================
+  // SUBIR ADJUNTO DE TICKET PUBLICO
+  // ==========================================
+
+  subirAdjunto(
+    ticketId: string,
+    tokenCargaAdjuntos: string,
+    archivo: File
+  ): Observable<unknown> {
+
+    const formData = new FormData();
+
+    // ======================================
+    // ARCHIVO
+    // ======================================
+
+    formData.append(
+      'archivo',
+      archivo,
+      archivo.name
+    );
+
+    // ======================================
+    // AUTORIZACION TEMPORAL
+    // ======================================
+
+    formData.append(
+      'token',
+      tokenCargaAdjuntos
+    );
+
+    // ======================================
+    // PETICION
+    // ======================================
+
+    return this.http.post(
+      `${this.apiUrl}/publico/tickets/${ticketId}/adjuntos`,
+      formData
     );
   }
 }
