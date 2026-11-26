@@ -21,69 +21,16 @@ const routes: Routes = [
       { path: 'marcas', canActivate: [roleGuard], data: { roles: [AUTH_ROLES.ADMINISTRADOR, AUTH_ROLES.ADMIN_EMPRESA, AUTH_ROLES.OPERADOR, AUTH_ROLES.CONSULTA,], }, loadChildren: () => import('./modules/marcas/routes'), },
       { path: 'modelos-activo', canActivate: [roleGuard], data: { roles: [AUTH_ROLES.ADMINISTRADOR, AUTH_ROLES.ADMIN_EMPRESA, AUTH_ROLES.OPERADOR, AUTH_ROLES.CONSULTA,], }, loadChildren: () => import('./modules/modelos-activo/routes'), },
       { path: 'proveedores', canActivate: [roleGuard], data: { roles: [AUTH_ROLES.ADMINISTRADOR, AUTH_ROLES.ADMIN_EMPRESA, AUTH_ROLES.OPERADOR, AUTH_ROLES.CONSULTA,], }, loadChildren: () => import('./modules/proveedores/routes'), },
+      { path: 'clientes', canActivate: [roleGuard], data: {roles: [AUTH_ROLES.ADMINISTRADOR, AUTH_ROLES.ADMIN_EMPRESA, AUTH_ROLES.OPERADOR, AUTH_ROLES.CONSULTA,],}, loadChildren: () => import('./modules/clientes/routes'),},
       { path: 'activos', canActivate: [roleGuard], data: { roles: [AUTH_ROLES.ADMINISTRADOR, AUTH_ROLES.ADMIN_EMPRESA, AUTH_ROLES.OPERADOR, AUTH_ROLES.CONSULTA] }, loadChildren: () => import('./modules/activos/routes') },
       { path: 'etiquetas', canActivate: [roleGuard], data: { roles: [AUTH_ROLES.ADMINISTRADOR, AUTH_ROLES.ADMIN_EMPRESA, AUTH_ROLES.OPERADOR, AUTH_ROLES.CONSULTA] }, loadChildren: () => import('./modules/etiquetas/routes') },
       { path: 'responsables', canActivate: [roleGuard], data: { roles: [AUTH_ROLES.ADMINISTRADOR, AUTH_ROLES.ADMIN_EMPRESA, AUTH_ROLES.OPERADOR, AUTH_ROLES.CONSULTA,], }, loadChildren: () => import('./modules/responsables/routes'), },
       { path: 'asignaciones', canActivate: [roleGuard], data: { roles: [AUTH_ROLES.ADMINISTRADOR, AUTH_ROLES.ADMIN_EMPRESA, AUTH_ROLES.OPERADOR, AUTH_ROLES.CONSULTA,], }, loadChildren: () => import('./modules/activo-asignaciones/routes'), },
       { path: 'movimientos', canActivate: [roleGuard], data: { roles: [AUTH_ROLES.ADMINISTRADOR, AUTH_ROLES.ADMIN_EMPRESA, AUTH_ROLES.OPERADOR, AUTH_ROLES.CONSULTA,], }, loadChildren: () => import('./modules/activo-movimientos/routes'), },
-      {
-        path: 'categorias-ticket',
-        canActivate: [roleGuard],
-        data: {
-          roles: [
-            AUTH_ROLES.ADMINISTRADOR,
-            AUTH_ROLES.ADMIN_EMPRESA,
-            AUTH_ROLES.OPERADOR,
-            AUTH_ROLES.CONSULTA,
-          ],
-        },
-        loadChildren: () =>
-          import('./modules/categorias-ticket/routes'),
-      },
-      {
-        path: 'equipos-soporte',
-        canActivate: [roleGuard],
-        data: {
-          roles: [
-            AUTH_ROLES.ADMINISTRADOR,
-            AUTH_ROLES.ADMIN_EMPRESA,
-            AUTH_ROLES.OPERADOR,
-            AUTH_ROLES.CONSULTA,
-          ],
-        },
-        loadChildren: () =>
-          import('./modules/equipos-soporte/routes'),
-      },
-      {
-        path: 'tickets',
-        canActivate: [roleGuard],
-        data: {
-          roles: [
-            AUTH_ROLES.ADMINISTRADOR,
-            AUTH_ROLES.ADMIN_EMPRESA,
-            AUTH_ROLES.OPERADOR,
-            AUTH_ROLES.CONSULTA,
-          ],
-        },
-        loadChildren: () =>
-          import('./modules/tickets/routes'),
-      },
-      {
-        path: 'preferencias-notificaciones',
-        canActivate: [roleGuard],
-        data: {
-          roles: [
-            AUTH_ROLES.ADMINISTRADOR,
-            AUTH_ROLES.ADMIN_EMPRESA,
-            AUTH_ROLES.OPERADOR,
-            AUTH_ROLES.CONSULTA,
-          ],
-        },
-        loadComponent: () =>
-          import(
-            './features/preferencias-notificaciones/preferencias-notificaciones'
-          ),
-      },
+      { path: 'categorias-ticket', canActivate: [roleGuard], data: { roles: [AUTH_ROLES.ADMINISTRADOR, AUTH_ROLES.ADMIN_EMPRESA, AUTH_ROLES.OPERADOR, AUTH_ROLES.CONSULTA,], }, loadChildren: () => import('./modules/categorias-ticket/routes'), },
+      { path: 'equipos-soporte', canActivate: [roleGuard], data: { roles: [AUTH_ROLES.ADMINISTRADOR, AUTH_ROLES.ADMIN_EMPRESA, AUTH_ROLES.OPERADOR, AUTH_ROLES.CONSULTA,], }, loadChildren: () => import('./modules/equipos-soporte/routes'), },
+      { path: 'tickets', canActivate: [roleGuard], data: { roles: [AUTH_ROLES.ADMINISTRADOR, AUTH_ROLES.ADMIN_EMPRESA, AUTH_ROLES.OPERADOR, AUTH_ROLES.CONSULTA,], }, loadChildren: () => import('./modules/tickets/routes'),},
+      { path: 'preferencias-notificaciones', canActivate: [roleGuard], data: { roles: [AUTH_ROLES.ADMINISTRADOR, AUTH_ROLES.ADMIN_EMPRESA, AUTH_ROLES.OPERADOR, AUTH_ROLES.CONSULTA,], }, loadComponent: () => import('./features/preferencias-notificaciones/preferencias-notificaciones'), },
       { path: '**', redirectTo: 'inicio' },
     ],
   },
