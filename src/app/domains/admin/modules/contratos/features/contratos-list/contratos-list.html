@@ -6,7 +6,8 @@
 
         <div class="flex items-center gap-4">
 
-            <div class="flex size-12 shrink-0 items-center justify-center rounded-xl bg-primary text-on-primary shadow-sm">
+            <div
+                class="flex size-12 shrink-0 items-center justify-center rounded-xl bg-primary text-on-primary shadow-sm">
 
                 <mat-icon svgIcon="clipboard-list" />
 
@@ -38,10 +39,7 @@
 
         <div class="flex flex-wrap items-center gap-3">
 
-            <button
-                mat-stroked-button
-                [disabled]="!empresaContexto.empresaId || loading()"
-                (click)="actualizar()">
+            <button mat-stroked-button [disabled]="!empresaContexto.empresaId || loading()" (click)="actualizar()">
 
                 Actualizar
 
@@ -49,19 +47,15 @@
 
             @if (puedeGestionar()) {
 
-                <button
-                    mat-flat-button
-                    disabled>
+            <button mat-flat-button [disabled]="!empresaContexto.empresaId || loading()" (click)="nuevo()">
 
-                    <mat-icon svgIcon="plus" />
+                <mat-icon svgIcon="plus" />
 
-                    <span class="ml-2">
+                <span class="ml-2">
+                    Nuevo contrato
+                </span>
 
-                        Nuevo contrato
-
-                    </span>
-
-                </button>
+            </button>
 
             }
 
@@ -75,15 +69,14 @@
 
         <!-- Total -->
 
-        <button
-            type="button"
+        <button type="button"
             class="flex items-center gap-4 rounded-2xl border bg-surface p-5 text-left shadow-sm transition hover:shadow-md disabled:opacity-60"
             [class.ring-2]="indicadorSeleccionado() === 'total'"
             [class.ring-primary]="indicadorSeleccionado() === 'total'"
-            [disabled]="!empresaContexto.empresaId || loadingIndicadores()"
-            (click)="seleccionarIndicador('total')">
+            [disabled]="!empresaContexto.empresaId || loadingIndicadores()" (click)="seleccionarIndicador('total')">
 
-            <div class="flex size-11 shrink-0 items-center justify-center rounded-xl bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+            <div
+                class="flex size-11 shrink-0 items-center justify-center rounded-xl bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
 
                 <mat-icon svgIcon="clipboard-list" />
 
@@ -109,15 +102,14 @@
 
         <!-- Vigentes -->
 
-        <button
-            type="button"
+        <button type="button"
             class="flex items-center gap-4 rounded-2xl border bg-surface p-5 text-left shadow-sm transition hover:shadow-md disabled:opacity-60"
             [class.ring-2]="indicadorSeleccionado() === 'vigentes'"
             [class.ring-primary]="indicadorSeleccionado() === 'vigentes'"
-            [disabled]="!empresaContexto.empresaId || loadingIndicadores()"
-            (click)="seleccionarIndicador('vigentes')">
+            [disabled]="!empresaContexto.empresaId || loadingIndicadores()" (click)="seleccionarIndicador('vigentes')">
 
-            <div class="flex size-11 shrink-0 items-center justify-center rounded-xl bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+            <div
+                class="flex size-11 shrink-0 items-center justify-center rounded-xl bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
 
                 <mat-icon svgIcon="circle-check" />
 
@@ -143,15 +135,15 @@
 
         <!-- Próximos a vencer -->
 
-        <button
-            type="button"
+        <button type="button"
             class="flex items-center gap-4 rounded-2xl border bg-surface p-5 text-left shadow-sm transition hover:shadow-md disabled:opacity-60"
             [class.ring-2]="indicadorSeleccionado() === 'proximosAVencer'"
             [class.ring-primary]="indicadorSeleccionado() === 'proximosAVencer'"
             [disabled]="!empresaContexto.empresaId || loadingIndicadores()"
             (click)="seleccionarIndicador('proximosAVencer')">
 
-            <div class="flex size-11 shrink-0 items-center justify-center rounded-xl bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400">
+            <div
+                class="flex size-11 shrink-0 items-center justify-center rounded-xl bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400">
 
                 <mat-icon svgIcon="clipboard-list" />
 
@@ -183,15 +175,14 @@
 
         <!-- Vencidos -->
 
-        <button
-            type="button"
+        <button type="button"
             class="flex items-center gap-4 rounded-2xl border bg-surface p-5 text-left shadow-sm transition hover:shadow-md disabled:opacity-60"
             [class.ring-2]="indicadorSeleccionado() === 'vencidos'"
             [class.ring-primary]="indicadorSeleccionado() === 'vencidos'"
-            [disabled]="!empresaContexto.empresaId || loadingIndicadores()"
-            (click)="seleccionarIndicador('vencidos')">
+            [disabled]="!empresaContexto.empresaId || loadingIndicadores()" (click)="seleccionarIndicador('vencidos')">
 
-            <div class="flex size-11 shrink-0 items-center justify-center rounded-xl bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
+            <div
+                class="flex size-11 shrink-0 items-center justify-center rounded-xl bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
 
                 <mat-icon svgIcon="circle-x" />
 
@@ -217,15 +208,15 @@
 
         <!-- Borradores -->
 
-        <button
-            type="button"
+        <button type="button"
             class="flex items-center gap-4 rounded-2xl border bg-surface p-5 text-left shadow-sm transition hover:shadow-md disabled:opacity-60"
             [class.ring-2]="indicadorSeleccionado() === 'borradores'"
             [class.ring-primary]="indicadorSeleccionado() === 'borradores'"
             [disabled]="!empresaContexto.empresaId || loadingIndicadores()"
             (click)="seleccionarIndicador('borradores')">
 
-            <div class="flex size-11 shrink-0 items-center justify-center rounded-xl bg-neutral-100 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300">
+            <div
+                class="flex size-11 shrink-0 items-center justify-center rounded-xl bg-neutral-100 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300">
 
                 <mat-icon svgIcon="pencil" />
 
@@ -251,15 +242,15 @@
 
         <!-- Renovación automática -->
 
-        <button
-            type="button"
+        <button type="button"
             class="flex items-center gap-4 rounded-2xl border bg-surface p-5 text-left shadow-sm transition hover:shadow-md disabled:opacity-60"
             [class.ring-2]="indicadorSeleccionado() === 'renovacionAutomatica'"
             [class.ring-primary]="indicadorSeleccionado() === 'renovacionAutomatica'"
             [disabled]="!empresaContexto.empresaId || loadingIndicadores()"
             (click)="seleccionarIndicador('renovacionAutomatica')">
 
-            <div class="flex size-11 shrink-0 items-center justify-center rounded-xl bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+            <div
+                class="flex size-11 shrink-0 items-center justify-center rounded-xl bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
 
                 <mat-icon svgIcon="circle-check" />
 
@@ -287,11 +278,11 @@
 
     @if (errorIndicadores()) {
 
-        <div class="mb-6 rounded-xl bg-amber-50 p-4 text-sm text-amber-800 dark:bg-amber-900/20 dark:text-amber-400">
+    <div class="mb-6 rounded-xl bg-amber-50 p-4 text-sm text-amber-800 dark:bg-amber-900/20 dark:text-amber-400">
 
-            {{ errorIndicadores() }}
+        {{ errorIndicadores() }}
 
-        </div>
+    </div>
 
     }
 
@@ -323,17 +314,13 @@
 
                 <div class="flex flex-wrap gap-3">
 
-                    <button
-                        mat-stroked-button
-                        (click)="alternarFiltrosAvanzados()">
+                    <button mat-stroked-button (click)="alternarFiltrosAvanzados()">
 
                         {{ filtrosAvanzados() ? 'Ocultar filtros avanzados' : 'Filtros avanzados' }}
 
                     </button>
 
-                    <button
-                        mat-stroked-button
-                        (click)="limpiarFiltros()">
+                    <button mat-stroked-button (click)="limpiarFiltros()">
 
                         Limpiar filtros
 
@@ -355,10 +342,7 @@
 
                         <mat-icon matPrefix svgIcon="search" />
 
-                        <input
-                            matInput
-                            formControlName="buscar"
-                            placeholder="Número o nombre de contrato" />
+                        <input matInput formControlName="buscar" placeholder="Número o nombre de contrato" />
 
                     </mat-form-field>
 
@@ -376,17 +360,17 @@
 
                             @for (tipo of tiposContrato(); track tipo.id) {
 
-                                <mat-option [value]="tipo.id">
+                            <mat-option [value]="tipo.id">
 
-                                    {{ tipo.nombre }}
+                                {{ tipo.nombre }}
 
-                                    @if (!tipo.activo) {
+                                @if (!tipo.activo) {
 
-                                        (Inactivo)
+                                (Inactivo)
 
-                                    }
+                                }
 
-                                </mat-option>
+                            </mat-option>
 
                             }
 
@@ -408,11 +392,11 @@
 
                             @for (estado of estadosContrato(); track estado.id) {
 
-                                <mat-option [value]="estado.id">
+                            <mat-option [value]="estado.id">
 
-                                    {{ estado.nombre }}
+                                {{ estado.nombre }}
 
-                                </mat-option>
+                            </mat-option>
 
                             }
 
@@ -472,229 +456,213 @@
 
                 @if (filtrosAvanzados()) {
 
-                    <div class="mt-4 border-t pt-5">
+                <div class="mt-4 border-t pt-5">
 
-                        <div class="mb-4 text-sm font-semibold">
+                    <div class="mb-4 text-sm font-semibold">
 
-                            Filtros adicionales
-
-                        </div>
-
-                        <div class="grid grid-cols-1 gap-x-4 gap-y-2 md:grid-cols-2 xl:grid-cols-4">
-
-                            <!-- Cliente -->
-
-                            <mat-form-field class="w-full">
-
-                                <mat-label>Cliente</mat-label>
-
-                                <mat-select formControlName="clienteId">
-
-                                    <mat-option value="">
-
-                                        Todos los clientes
-
-                                    </mat-option>
-
-                                    @for (cliente of clientes(); track cliente.id) {
-
-                                        <mat-option [value]="cliente.id">
-
-                                            {{ cliente.nombre }}
-
-                                            @if (!cliente.activo) {
-
-                                                (Inactivo)
-
-                                            }
-
-                                        </mat-option>
-
-                                    }
-
-                                </mat-select>
-
-                            </mat-form-field>
-
-                            <!-- Proveedor -->
-
-                            <mat-form-field class="w-full">
-
-                                <mat-label>Proveedor</mat-label>
-
-                                <mat-select formControlName="proveedorId">
-
-                                    <mat-option value="">
-
-                                        Todos los proveedores
-
-                                    </mat-option>
-
-                                    @for (proveedor of proveedores(); track proveedor.id) {
-
-                                        <mat-option [value]="proveedor.id">
-
-                                            {{ proveedor.nombre }}
-
-                                            @if (!proveedor.activo) {
-
-                                                (Inactivo)
-
-                                            }
-
-                                        </mat-option>
-
-                                    }
-
-                                </mat-select>
-
-                            </mat-form-field>
-
-                            <!-- Renovación automática -->
-
-                            <mat-form-field class="w-full">
-
-                                <mat-label>Renovación automática</mat-label>
-
-                                <mat-select formControlName="renovacionAutomatica">
-
-                                    <mat-option value="todos">
-
-                                        Todos
-
-                                    </mat-option>
-
-                                    <mat-option value="si">
-
-                                        Sí
-
-                                    </mat-option>
-
-                                    <mat-option value="no">
-
-                                        No
-
-                                    </mat-option>
-
-                                </mat-select>
-
-                            </mat-form-field>
-
-                            <!-- Moneda -->
-
-                            <mat-form-field class="w-full">
-
-                                <mat-label>Moneda</mat-label>
-
-                                <input
-                                    matInput
-                                    maxlength="3"
-                                    formControlName="moneda"
-                                    placeholder="MXN, USD..." />
-
-                            </mat-form-field>
-
-                            <!-- Fecha inicio desde -->
-
-                            <mat-form-field class="w-full">
-
-                                <mat-label>Inicio desde</mat-label>
-
-                                <input
-                                    matInput
-                                    type="date"
-                                    formControlName="fechaInicioDesde" />
-
-                            </mat-form-field>
-
-                            <!-- Fecha inicio hasta -->
-
-                            <mat-form-field class="w-full">
-
-                                <mat-label>Inicio hasta</mat-label>
-
-                                <input
-                                    matInput
-                                    type="date"
-                                    formControlName="fechaInicioHasta" />
-
-                            </mat-form-field>
-
-                            <!-- Fecha fin desde -->
-
-                            <mat-form-field class="w-full">
-
-                                <mat-label>Vencimiento desde</mat-label>
-
-                                <input
-                                    matInput
-                                    type="date"
-                                    formControlName="fechaFinDesde" />
-
-                            </mat-form-field>
-
-                            <!-- Fecha fin hasta -->
-
-                            <mat-form-field class="w-full">
-
-                                <mat-label>Vencimiento hasta</mat-label>
-
-                                <input
-                                    matInput
-                                    type="date"
-                                    formControlName="fechaFinHasta" />
-
-                            </mat-form-field>
-
-                            <!-- Días próximos a vencer -->
-
-                            <mat-form-field class="w-full">
-
-                                <mat-label>Periodo de próximos vencimientos</mat-label>
-
-                                <mat-select formControlName="diasProximosAVencer">
-
-                                    @for (opcion of opcionesVencimiento; track opcion.value) {
-
-                                        <mat-option [value]="opcion.value">
-
-                                            {{ opcion.label }}
-
-                                        </mat-option>
-
-                                    }
-
-                                </mat-select>
-
-                            </mat-form-field>
-
-                            <!-- Baja lógica -->
-
-                            <mat-form-field class="w-full">
-
-                                <mat-label>Registros</mat-label>
-
-                                <mat-select formControlName="activo">
-
-                                    <mat-option value="activos">
-
-                                        Sin baja lógica
-
-                                    </mat-option>
-
-                                    <mat-option value="eliminados">
-
-                                        Eliminados
-
-                                    </mat-option>
-
-                                </mat-select>
-
-                            </mat-form-field>
-
-                        </div>
+                        Filtros adicionales
 
                     </div>
+
+                    <div class="grid grid-cols-1 gap-x-4 gap-y-2 md:grid-cols-2 xl:grid-cols-4">
+
+                        <!-- Cliente -->
+
+                        <mat-form-field class="w-full">
+
+                            <mat-label>Cliente</mat-label>
+
+                            <mat-select formControlName="clienteId">
+
+                                <mat-option value="">
+
+                                    Todos los clientes
+
+                                </mat-option>
+
+                                @for (cliente of clientes(); track cliente.id) {
+
+                                <mat-option [value]="cliente.id">
+
+                                    {{ cliente.nombre }}
+
+                                    @if (!cliente.activo) {
+
+                                    (Inactivo)
+
+                                    }
+
+                                </mat-option>
+
+                                }
+
+                            </mat-select>
+
+                        </mat-form-field>
+
+                        <!-- Proveedor -->
+
+                        <mat-form-field class="w-full">
+
+                            <mat-label>Proveedor</mat-label>
+
+                            <mat-select formControlName="proveedorId">
+
+                                <mat-option value="">
+
+                                    Todos los proveedores
+
+                                </mat-option>
+
+                                @for (proveedor of proveedores(); track proveedor.id) {
+
+                                <mat-option [value]="proveedor.id">
+
+                                    {{ proveedor.nombre }}
+
+                                    @if (!proveedor.activo) {
+
+                                    (Inactivo)
+
+                                    }
+
+                                </mat-option>
+
+                                }
+
+                            </mat-select>
+
+                        </mat-form-field>
+
+                        <!-- Renovación automática -->
+
+                        <mat-form-field class="w-full">
+
+                            <mat-label>Renovación automática</mat-label>
+
+                            <mat-select formControlName="renovacionAutomatica">
+
+                                <mat-option value="todos">
+
+                                    Todos
+
+                                </mat-option>
+
+                                <mat-option value="si">
+
+                                    Sí
+
+                                </mat-option>
+
+                                <mat-option value="no">
+
+                                    No
+
+                                </mat-option>
+
+                            </mat-select>
+
+                        </mat-form-field>
+
+                        <!-- Moneda -->
+
+                        <mat-form-field class="w-full">
+
+                            <mat-label>Moneda</mat-label>
+
+                            <input matInput maxlength="3" formControlName="moneda" placeholder="MXN, USD..." />
+
+                        </mat-form-field>
+
+                        <!-- Fecha inicio desde -->
+
+                        <mat-form-field class="w-full">
+
+                            <mat-label>Inicio desde</mat-label>
+
+                            <input matInput type="date" formControlName="fechaInicioDesde" />
+
+                        </mat-form-field>
+
+                        <!-- Fecha inicio hasta -->
+
+                        <mat-form-field class="w-full">
+
+                            <mat-label>Inicio hasta</mat-label>
+
+                            <input matInput type="date" formControlName="fechaInicioHasta" />
+
+                        </mat-form-field>
+
+                        <!-- Fecha fin desde -->
+
+                        <mat-form-field class="w-full">
+
+                            <mat-label>Vencimiento desde</mat-label>
+
+                            <input matInput type="date" formControlName="fechaFinDesde" />
+
+                        </mat-form-field>
+
+                        <!-- Fecha fin hasta -->
+
+                        <mat-form-field class="w-full">
+
+                            <mat-label>Vencimiento hasta</mat-label>
+
+                            <input matInput type="date" formControlName="fechaFinHasta" />
+
+                        </mat-form-field>
+
+                        <!-- Días próximos a vencer -->
+
+                        <mat-form-field class="w-full">
+
+                            <mat-label>Periodo de próximos vencimientos</mat-label>
+
+                            <mat-select formControlName="diasProximosAVencer">
+
+                                @for (opcion of opcionesVencimiento; track opcion.value) {
+
+                                <mat-option [value]="opcion.value">
+
+                                    {{ opcion.label }}
+
+                                </mat-option>
+
+                                }
+
+                            </mat-select>
+
+                        </mat-form-field>
+
+                        <!-- Baja lógica -->
+
+                        <mat-form-field class="w-full">
+
+                            <mat-label>Registros</mat-label>
+
+                            <mat-select formControlName="activo">
+
+                                <mat-option value="activos">
+
+                                    Sin baja lógica
+
+                                </mat-option>
+
+                                <mat-option value="eliminados">
+
+                                    Eliminados
+
+                                </mat-option>
+
+                            </mat-select>
+
+                        </mat-form-field>
+
+                    </div>
+
+                </div>
 
                 }
 
@@ -702,23 +670,23 @@
 
             @if (loadingCatalogos()) {
 
-                <div class="flex items-center gap-2 text-sm text-on-surface-variant">
+            <div class="flex items-center gap-2 text-sm text-on-surface-variant">
 
-                    <mat-spinner diameter="16" />
+                <mat-spinner diameter="16" />
 
-                    Cargando catálogos...
+                Cargando catálogos...
 
-                </div>
+            </div>
 
             }
 
             @if (!loading() && empresaContexto.empresaId && !errorMessage() && !errorFiltros()) {
 
-                <div class="mt-3 text-sm text-on-surface-variant">
+            <div class="mt-3 text-sm text-on-surface-variant">
 
-                    {{ totalRegistros() }} contratos encontrados.
+                {{ totalRegistros() }} contratos encontrados.
 
-                </div>
+            </div>
 
             }
 
@@ -728,31 +696,31 @@
 
         @if (errorCatalogos()) {
 
-            <div class="m-5 rounded-xl bg-amber-50 p-4 text-sm text-amber-800 dark:bg-amber-900/20 dark:text-amber-400">
+        <div class="m-5 rounded-xl bg-amber-50 p-4 text-sm text-amber-800 dark:bg-amber-900/20 dark:text-amber-400">
 
-                {{ errorCatalogos() }}
+            {{ errorCatalogos() }}
 
-            </div>
+        </div>
 
         }
 
         @if (errorFiltros()) {
 
-            <div class="m-5 rounded-xl bg-amber-50 p-4 text-sm text-amber-800 dark:bg-amber-900/20 dark:text-amber-400">
+        <div class="m-5 rounded-xl bg-amber-50 p-4 text-sm text-amber-800 dark:bg-amber-900/20 dark:text-amber-400">
 
-                {{ errorFiltros() }}
+            {{ errorFiltros() }}
 
-            </div>
+        </div>
 
         }
 
         @if (errorMessage()) {
 
-            <div class="m-5 rounded-xl bg-red-50 p-4 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-400">
+        <div class="m-5 rounded-xl bg-red-50 p-4 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-400">
 
-                {{ errorMessage() }}
+            {{ errorMessage() }}
 
-            </div>
+        </div>
 
         }
 
@@ -760,357 +728,351 @@
 
         @if (loading() || empresaContexto.cargando()) {
 
-            <div class="flex flex-col items-center gap-3 p-12">
+        <div class="flex flex-col items-center gap-3 p-12">
 
-                <mat-spinner diameter="36" />
+            <mat-spinner diameter="36" />
 
-                <span>
+            <span>
 
-                    Cargando contratos...
+                Cargando contratos...
 
-                </span>
+            </span>
 
-            </div>
+        </div>
 
         } @else if (!empresaContexto.empresaId) {
 
-            <div class="p-12 text-center text-on-surface-variant">
+        <div class="p-12 text-center text-on-surface-variant">
 
-                <mat-icon svgIcon="building-2" />
+            <mat-icon svgIcon="building-2" />
 
-                <div class="mt-3 font-semibold">
+            <div class="mt-3 font-semibold">
 
-                    Selecciona una empresa
-
-                </div>
+                Selecciona una empresa
 
             </div>
+
+        </div>
 
         } @else if (!errorFiltros() && !errorMessage()) {
 
-            <!-- Tabla de contratos -->
+        <!-- Tabla de contratos -->
 
-            <div class="overflow-x-auto">
+        <div class="overflow-x-auto">
 
-                <table class="w-full min-w-[1450px] text-left">
+            <table class="w-full min-w-[1450px] text-left">
 
-                    <thead class="border-b bg-neutral-50/80 dark:bg-neutral-900/50">
+                <thead class="border-b bg-neutral-50/80 dark:bg-neutral-900/50">
 
-                        <tr class="text-sm">
+                    <tr class="text-sm">
 
-                            <th class="px-5 py-4 font-semibold">
+                        <th class="px-5 py-4 font-semibold">
 
-                                Contrato
+                            Contrato
 
-                            </th>
+                        </th>
 
-                            <th class="px-5 py-4 font-semibold">
+                        <th class="px-5 py-4 font-semibold">
 
-                                Tipo
+                            Tipo
 
-                            </th>
+                        </th>
 
-                            <th class="px-5 py-4 font-semibold">
+                        <th class="px-5 py-4 font-semibold">
 
-                                Cliente / proveedor
+                            Cliente / proveedor
 
-                            </th>
+                        </th>
 
-                            <th class="px-5 py-4 font-semibold">
+                        <th class="px-5 py-4 font-semibold">
 
-                                Vigencia
+                            Vigencia
 
-                            </th>
+                        </th>
 
-                            <th class="px-5 py-4 font-semibold">
+                        <th class="px-5 py-4 font-semibold">
 
-                                Vencimiento
+                            Vencimiento
 
-                            </th>
+                        </th>
 
-                            <th class="px-5 py-4 text-right font-semibold">
+                        <th class="px-5 py-4 text-right font-semibold">
 
-                                Monto
+                            Monto
 
-                            </th>
+                        </th>
 
-                            <th class="px-5 py-4 text-center font-semibold">
+                        <th class="px-5 py-4 text-center font-semibold">
 
-                                Activos
+                            Activos
 
-                            </th>
+                        </th>
 
-                            <th class="px-5 py-4 text-center font-semibold">
+                        <th class="px-5 py-4 text-center font-semibold">
 
-                                Renovación
+                            Renovación
 
-                            </th>
+                        </th>
 
-                            <th class="px-5 py-4 font-semibold">
+                        <th class="px-5 py-4 font-semibold">
 
-                                Estado
+                            Estado
 
-                            </th>
+                        </th>
 
-                            <th class="px-5 py-4 text-right font-semibold">
+                        <th class="px-5 py-4 text-right font-semibold">
 
-                                Acciones
+                            Acciones
 
-                            </th>
+                        </th>
 
-                        </tr>
+                    </tr>
 
-                    </thead>
+                </thead>
 
-                    <tbody>
+                <tbody>
 
-                        @for (contrato of contratos(); track contrato.id) {
+                    @for (contrato of contratos(); track contrato.id) {
 
-                            <tr class="border-b transition hover:bg-neutral-50/70 last:border-b-0 dark:hover:bg-neutral-900/40">
+                    <tr class="border-b transition hover:bg-neutral-50/70 last:border-b-0 dark:hover:bg-neutral-900/40">
 
-                                <!-- Contrato -->
+                        <!-- Contrato -->
 
-                                <td class="px-5 py-4">
+                        <td class="px-5 py-4">
 
-                                    <div class="font-semibold">
+                            <div class="font-semibold">
 
-                                        {{ contrato.nombre }}
+                                {{ contrato.nombre }}
 
-                                    </div>
+                            </div>
 
-                                    <div class="mt-1 text-sm text-primary">
+                            <div class="mt-1 text-sm text-primary">
 
-                                        {{ contrato.numeroContrato }}
+                                {{ contrato.numeroContrato }}
 
-                                    </div>
+                            </div>
 
-                                </td>
+                        </td>
 
-                                <!-- Tipo -->
+                        <!-- Tipo -->
 
-                                <td class="px-5 py-4 text-sm">
+                        <td class="px-5 py-4 text-sm">
 
-                                    {{ contrato.tipoContratoNombre }}
+                            {{ contrato.tipoContratoNombre }}
 
-                                </td>
+                        </td>
 
-                                <!-- Cliente y proveedor -->
+                        <!-- Cliente y proveedor -->
 
-                                <td class="px-5 py-4 text-sm">
+                        <td class="px-5 py-4 text-sm">
 
-                                    @if (contrato.clienteNombre) {
+                            @if (contrato.clienteNombre) {
 
-                                        <div>
+                            <div>
 
-                                            <div class="text-xs text-on-surface-variant">
+                                <div class="text-xs text-on-surface-variant">
 
-                                                Cliente
+                                    Cliente
 
-                                            </div>
+                                </div>
 
-                                            <div class="font-medium">
+                                <div class="font-medium">
 
-                                                {{ contrato.clienteNombre }}
+                                    {{ contrato.clienteNombre }}
 
-                                            </div>
+                                </div>
 
-                                        </div>
+                            </div>
 
-                                    }
+                            }
 
-                                    @if (contrato.proveedorNombre) {
+                            @if (contrato.proveedorNombre) {
 
-                                        <div [class.mt-2]="contrato.clienteNombre">
+                            <div [class.mt-2]="contrato.clienteNombre">
 
-                                            <div class="text-xs text-on-surface-variant">
+                                <div class="text-xs text-on-surface-variant">
 
-                                                Proveedor
+                                    Proveedor
 
-                                            </div>
+                                </div>
 
-                                            <div class="font-medium">
+                                <div class="font-medium">
 
-                                                {{ contrato.proveedorNombre }}
+                                    {{ contrato.proveedorNombre }}
 
-                                            </div>
+                                </div>
 
-                                        </div>
+                            </div>
 
-                                    }
+                            }
 
-                                    @if (!contrato.clienteNombre && !contrato.proveedorNombre) {
+                            @if (!contrato.clienteNombre && !contrato.proveedorNombre) {
 
-                                        <span class="text-on-surface-variant">
+                            <span class="text-on-surface-variant">
 
-                                            Sin definir
+                                Sin definir
 
-                                        </span>
+                            </span>
 
-                                    }
+                            }
 
-                                </td>
+                        </td>
 
-                                <!-- Vigencia -->
+                        <!-- Vigencia -->
 
-                                <td class="px-5 py-4 text-sm whitespace-nowrap">
+                        <td class="px-5 py-4 text-sm whitespace-nowrap">
 
-                                    <div>
+                            <div>
 
-                                        Inicio: {{ formatoFecha(contrato.fechaInicio) }}
+                                Inicio: {{ formatoFecha(contrato.fechaInicio) }}
 
-                                    </div>
+                            </div>
 
-                                    <div class="mt-1 text-on-surface-variant">
+                            <div class="mt-1 text-on-surface-variant">
 
-                                        Fin:
+                                Fin:
 
-                                        {{ contrato.fechaFin ? formatoFecha(contrato.fechaFin) : 'Indefinido' }}
+                                {{ contrato.fechaFin ? formatoFecha(contrato.fechaFin) : 'Indefinido' }}
 
-                                    </div>
+                            </div>
 
-                                </td>
+                        </td>
 
-                                <!-- Vencimiento -->
+                        <!-- Vencimiento -->
 
-                                <td class="px-5 py-4 text-sm whitespace-nowrap">
+                        <td class="px-5 py-4 text-sm whitespace-nowrap">
 
-                                    <span [class]="claseVigencia(contrato)">
+                            <span [class]="claseVigencia(contrato)">
 
-                                        {{ textoVigencia(contrato) }}
+                                {{ textoVigencia(contrato) }}
 
-                                    </span>
+                            </span>
 
-                                </td>
+                        </td>
 
-                                <!-- Monto -->
+                        <!-- Monto -->
 
-                                <td class="px-5 py-4 text-right text-sm whitespace-nowrap">
+                        <td class="px-5 py-4 text-right text-sm whitespace-nowrap">
 
-                                    <span class="font-semibold">
+                            <span class="font-semibold">
 
-                                        {{ formatoMonto(contrato.monto, contrato.moneda) }}
+                                {{ formatoMonto(contrato.monto, contrato.moneda) }}
 
-                                    </span>
+                            </span>
 
-                                </td>
+                        </td>
 
-                                <!-- Activos -->
+                        <!-- Activos -->
 
-                                <td class="px-5 py-4 text-center">
+                        <td class="px-5 py-4 text-center">
 
-                                    <span class="inline-flex min-w-8 items-center justify-center rounded-lg bg-neutral-100 px-3 py-1 text-sm font-semibold dark:bg-neutral-800">
+                            <span
+                                class="inline-flex min-w-8 items-center justify-center rounded-lg bg-neutral-100 px-3 py-1 text-sm font-semibold dark:bg-neutral-800">
 
-                                        {{ contrato.totalActivosAsociados }}
+                                {{ contrato.totalActivosAsociados }}
 
-                                    </span>
+                            </span>
 
-                                </td>
+                        </td>
 
-                                <!-- Renovación -->
+                        <!-- Renovación -->
 
-                                <td class="px-5 py-4 text-center">
+                        <td class="px-5 py-4 text-center">
 
-                                    @if (contrato.renovacionAutomatica) {
+                            @if (contrato.renovacionAutomatica) {
 
-                                        <span class="inline-flex rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+                            <span
+                                class="inline-flex rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
 
-                                            Automática
+                                Automática
 
-                                        </span>
+                            </span>
 
-                                    } @else {
+                            } @else {
 
-                                        <span class="text-sm text-on-surface-variant">
+                            <span class="text-sm text-on-surface-variant">
 
-                                            Manual
+                                Manual
 
-                                        </span>
+                            </span>
 
-                                    }
+                            }
 
-                                </td>
+                        </td>
 
-                                <!-- Estado -->
+                        <!-- Estado -->
 
-                                <td class="px-5 py-4 whitespace-nowrap">
+                        <td class="px-5 py-4 whitespace-nowrap">
 
-                                    <span
-                                        class="inline-flex rounded-full px-3 py-1 text-xs font-semibold"
-                                        [class]="claseEstado(contrato)">
+                            <span class="inline-flex rounded-full px-3 py-1 text-xs font-semibold"
+                                [class]="claseEstado(contrato)">
 
-                                        {{ nombreEstado(contrato) }}
+                                {{ nombreEstado(contrato) }}
 
-                                    </span>
+                            </span>
 
-                                </td>
+                        </td>
 
-                                <!-- Acciones -->
+                        <!-- Acciones -->
 
-                                <td class="px-5 py-4 text-right whitespace-nowrap">
+                        <td class="px-5 py-4 text-right whitespace-nowrap">
 
-                                    <button
-                                        matIconButton
-                                        disabled
-                                        aria-label="Consultar contrato">
+                            <button matIconButton
+                                [matTooltip]="puedeEditarContrato(contrato) ? 'Editar contrato' : 'Consultar contrato'"
+                                [attr.aria-label]="puedeEditarContrato(contrato) ? 'Editar contrato' : 'Consultar contrato'"
+                                (click)="abrirContrato(contrato)">
 
-                                        <mat-icon svgIcon="eye" />
+                                <mat-icon [svgIcon]="puedeEditarContrato(contrato) ? 'pencil' : 'eye'" />
 
-                                    </button>
+                            </button>
 
-                                </td>
+                        </td>
 
-                            </tr>
+                    </tr>
 
-                        } @empty {
+                    } @empty {
 
-                            <tr>
+                    <tr>
 
-                                <td
-                                    colspan="10"
-                                    class="p-12 text-center text-on-surface-variant">
+                        <td colspan="10" class="p-12 text-center text-on-surface-variant">
 
-                                    <mat-icon svgIcon="search-x" />
+                            <mat-icon svgIcon="search-x" />
 
-                                    <div class="mt-3 font-semibold">
+                            <div class="mt-3 font-semibold">
 
-                                        No se encontraron contratos
+                                No se encontraron contratos
 
-                                    </div>
+                            </div>
 
-                                    <div class="mt-1 text-sm">
+                            <div class="mt-1 text-sm">
 
-                                        Modifica los filtros para realizar una nueva búsqueda.
+                                Modifica los filtros para realizar una nueva búsqueda.
 
-                                    </div>
+                            </div>
 
-                                </td>
+                        </td>
 
-                            </tr>
+                    </tr>
 
-                        }
+                    }
 
-                    </tbody>
+                </tbody>
 
-                </table>
+            </table>
 
-            </div>
+        </div>
 
-            <!-- Paginación -->
+        <!-- Paginación -->
 
-            <div class="border-t">
+        <div class="border-t">
 
-                <mat-paginator
-                    [length]="totalRegistros()"
-                    [pageIndex]="pagina() - 1"
-                    [pageSize]="registrosPorPagina()"
-                    [pageSizeOptions]="opcionesPaginacion"
-                    [showFirstLastButtons]="true"
-                    (page)="cambiarPagina($event)"
-                    aria-label="Paginación de contratos">
+            <mat-paginator [length]="totalRegistros()" [pageIndex]="pagina() - 1" [pageSize]="registrosPorPagina()"
+                [pageSizeOptions]="opcionesPaginacion" [showFirstLastButtons]="true" (page)="cambiarPagina($event)"
+                aria-label="Paginación de contratos">
 
-                </mat-paginator>
+            </mat-paginator>
 
-            </div>
+        </div>
 
         }
 
