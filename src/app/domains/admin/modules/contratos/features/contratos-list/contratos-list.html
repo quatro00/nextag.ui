@@ -1017,14 +1017,23 @@
 
                         <td class="px-5 py-4 text-right whitespace-nowrap">
 
-                            <button matIconButton
-                                [matTooltip]="puedeEditarContrato(contrato) ? 'Editar contrato' : 'Consultar contrato'"
-                                [attr.aria-label]="puedeEditarContrato(contrato) ? 'Editar contrato' : 'Consultar contrato'"
-                                (click)="abrirContrato(contrato)">
+                            <button matIconButton matTooltip="Consultar detalle"
+                                aria-label="Consultar detalle del contrato" (click)="abrirContrato(contrato)">
 
-                                <mat-icon [svgIcon]="puedeEditarContrato(contrato) ? 'pencil' : 'eye'" />
+                                <mat-icon svgIcon="eye" />
 
                             </button>
+
+                            @if (puedeEditarContrato(contrato)) {
+
+                            <button matIconButton matTooltip="Editar contrato" aria-label="Editar contrato"
+                                (click)="editarContrato(contrato)">
+
+                                <mat-icon svgIcon="pencil" />
+
+                            </button>
+
+                            }
 
                         </td>
 

@@ -94,1278 +94,1349 @@ export default class ContratoForm {
     // Agregar aquí las siguientes secciones.
     private readonly fb = inject(FormBuilder);
 
-private readonly route = inject(ActivatedRoute);
+    private readonly route = inject(ActivatedRoute);
 
-private readonly router = inject(Router);
+    private readonly router = inject(Router);
 
-private readonly auth = inject(AuthService);
+    private readonly auth = inject(AuthService);
 
-private readonly destroyRef = inject(DestroyRef);
+    private readonly destroyRef = inject(DestroyRef);
 
-private readonly contratosService =
-    inject(ContratosService);
+    private readonly contratosService =
+        inject(ContratosService);
 
-private readonly tiposService =
-    inject(TiposContratoService);
+    private readonly tiposService =
+        inject(TiposContratoService);
 
-private readonly clientesService =
-    inject(ClientesService);
+    private readonly clientesService =
+        inject(ClientesService);
 
-private readonly proveedoresService =
-    inject(ProveedoresService);
+    private readonly proveedoresService =
+        inject(ProveedoresService);
 
-protected readonly empresaContexto =
-    inject(EmpresaContextoService);
+    protected readonly empresaContexto =
+        inject(EmpresaContextoService);
 
     protected readonly id =
-    this.route.snapshot.paramMap.get('id');
+        this.route.snapshot.paramMap.get('id');
 
-protected readonly esEdicion =
-    !!this.id;
+    protected readonly esEdicion =
+        !!this.id;
 
-protected readonly contrato =
-    signal<ContratoDetalle | null>(null);
+    protected readonly contrato =
+        signal<ContratoDetalle | null>(null);
 
-protected readonly tiposContrato =
-    signal<TipoContratoList[]>([]);
+    protected readonly tiposContrato =
+        signal<TipoContratoList[]>([]);
 
-protected readonly clientes =
-    signal<ClienteList[]>([]);
+    protected readonly clientes =
+        signal<ClienteList[]>([]);
 
-protected readonly proveedores =
-    signal<ProveedorList[]>([]);
+    protected readonly proveedores =
+        signal<ProveedorList[]>([]);
 
-protected readonly loading =
-    signal(false);
+    protected readonly loading =
+        signal(false);
 
-protected readonly guardando =
-    signal(false);
+    protected readonly guardando =
+        signal(false);
 
-protected readonly detalleCargado =
-    signal(false);
+    protected readonly detalleCargado =
+        signal(false);
 
-protected readonly errorMessage =
-    signal<string | null>(null);
+    protected readonly errorMessage =
+        signal<string | null>(null);
 
-protected readonly successMessage =
-    signal<string | null>(null);
+    protected readonly successMessage =
+        signal<string | null>(null);
 
-private readonly empresaFormulario =
-    signal<string | null>(null);
+    private readonly empresaFormulario =
+        signal<string | null>(null);
 
-private secuenciaCarga = 0;
+    private secuenciaCarga = 0;
 
-private destruido = false;
+    private destruido = false;
 
-protected readonly periodicidades =
-    PERIODICIDADES_PAGO;
+    protected readonly periodicidades =
+        PERIODICIDADES_PAGO;
 
-protected readonly monedasSugeridas =
-    CONTRATOS_MONEDAS_SUGERIDAS;
+    protected readonly monedasSugeridas =
+        CONTRATOS_MONEDAS_SUGERIDAS;
 
-protected readonly config =
-    CONTRATOS_CONFIG;
+    protected readonly config =
+        CONTRATOS_CONFIG;
 
-protected readonly claseEstado =
-    obtenerClaseEstadoContrato;
+    protected readonly claseEstado =
+        obtenerClaseEstadoContrato;
 
-protected readonly nombreEstado =
-    obtenerNombreEstadoContrato;
+    protected readonly nombreEstado =
+        obtenerNombreEstadoContrato;
 
     protected readonly puedeGestionar = computed(() =>
-    this.auth.hasAnyRole([
-        AUTH_ROLES.ADMINISTRADOR,
-        AUTH_ROLES.ADMIN_EMPRESA,
-    ])
-);
-
-protected readonly acciones = computed(() => {
-
-    const contrato = this.contrato();
-
-    if (!contrato) {
-        return null;
-    }
-
-    return obtenerAccionesPermitidasContratoDetalle(
-        contrato,
-        this.puedeGestionar()
+        this.auth.hasAnyRole([
+            AUTH_ROLES.ADMINISTRADOR,
+            AUTH_ROLES.ADMIN_EMPRESA,
+        ])
     );
-});
 
-protected readonly puedeEditar = computed(() => {
+    protected readonly acciones = computed(() => {
 
-    if (!this.puedeGestionar()) {
-        return false;
-    }
+        const contrato = this.contrato();
 
-    if (!this.esEdicion) {
-        return true;
-    }
+        if (!contrato) {
+            return null;
+        }
 
-    return this.acciones()?.editar === true;
-});
-
-protected readonly puedeEditarVigencia = computed(() => {
-
-    if (!this.puedeEditar()) {
-        return false;
-    }
-
-    if (!this.esEdicion) {
-        return true;
-    }
-
-    return this.acciones()?.editarVigencia === true;
-});
-
-protected readonly titulo = computed(() => {
-
-    if (!this.esEdicion) {
-        return 'Nuevo contrato';
-    }
-
-    return this.puedeEditar()
-        ? 'Editar contrato'
-        : 'Consultar contrato';
-});
-
-protected readonly form =
-    this.fb.group({
-
-        // Información general
-
-        numeroContrato:
-            this.fb.nonNullable.control('', [
-                Validators.required,
-                Validators.maxLength(50),
-            ]),
-
-        nombre:
-            this.fb.nonNullable.control('', [
-                Validators.required,
-                Validators.maxLength(200),
-            ]),
-
-        descripcion:
-            this.fb.nonNullable.control(''),
-
-        tipoContratoId:
-            this.fb.nonNullable.control('', [
-                Validators.required,
-            ]),
-
-        // Relaciones comerciales
-
-        clienteId:
-            this.fb.nonNullable.control(''),
-
-        proveedorId:
-            this.fb.nonNullable.control(''),
-
-        // Vigencia
-
-        fechaInicio:
-            this.fb.nonNullable.control('', [
-                Validators.required,
-            ]),
-
-        fechaFin:
-            this.fb.nonNullable.control(''),
-
-        fechaFirma:
-            this.fb.nonNullable.control(''),
-
-        // Renovación
-
-        renovacionAutomatica:
-            this.fb.nonNullable.control(false),
-
-        diasAvisoNoRenovacion:
-            this.fb.control<number | null>(
-                null,
-                [
-                    Validators.min(0),
-                    Validators.max(
-                        CONTRATOS_CONFIG.MAX_ENTERO
-                    ),
-                    this.validarEntero,
-                ]
-            ),
-
-        // Condiciones económicas
-
-        monto:
-            this.fb.control<number | null>(
-                null,
-                [
-                    Validators.min(0),
-                    this.validarDecimal,
-                ]
-            ),
-
-        moneda:
-            this.fb.nonNullable.control(
-                CONTRATOS_CONFIG.MONEDA_PREDETERMINADA as string,
-                [
-                    Validators.required,
-                    Validators.pattern(/^[A-Za-z]{3}$/),
-                ]
-            ),
-
-        periodicidadPago:
-            this.fb.nonNullable.control(''),
-
-        diaPago:
-            this.fb.control<number | null>(
-                null,
-                [
-                    Validators.min(1),
-                    Validators.max(31),
-                    this.validarEntero,
-                ]
-            ),
-
-        incluyeImpuestos:
-            this.fb.nonNullable.control(false),
-
-        // Cobertura
-
-        incluyePreventivo:
-            this.fb.control<boolean | null>(null),
-
-        incluyeCorrectivo:
-            this.fb.control<boolean | null>(null),
-
-        incluyeRefacciones:
-            this.fb.control<boolean | null>(null),
-
-        incluyeManoObra:
-            this.fb.control<boolean | null>(null),
-
-        // SLA
-
-        tiempoRespuestaHoras:
-            this.fb.control<number | null>(
-                null,
-                [
-                    Validators.min(0),
-                    Validators.max(
-                        CONTRATOS_CONFIG.MAX_TIEMPO_RESPUESTA_HORAS
-                    ),
-                    this.validarDecimal,
-                ]
-            ),
-
-        horarioAtencion:
-            this.fb.nonNullable.control('', [
-                Validators.maxLength(200),
-            ]),
-
-        serviciosIncluidos:
-            this.fb.control<number | null>(
-                null,
-                [
-                    Validators.min(0),
-                    Validators.max(
-                        CONTRATOS_CONFIG.MAX_ENTERO
-                    ),
-                    this.validarEntero,
-                ]
-            ),
-
-        // Condiciones adicionales
-
-        condicionesServicio:
-            this.fb.nonNullable.control(''),
-
-        observaciones:
-            this.fb.nonNullable.control(''),
-
+        return obtenerAccionesPermitidasContratoDetalle(
+            contrato,
+            this.puedeGestionar()
+        );
     });
 
+    protected readonly puedeEditar = computed(() => {
+
+        if (!this.puedeGestionar()) {
+            return false;
+        }
+
+        if (!this.esEdicion) {
+            return true;
+        }
+
+        return this.acciones()?.editar === true;
+    });
+
+    protected readonly puedeEditarVigencia = computed(() => {
+
+        if (!this.puedeEditar()) {
+            return false;
+        }
+
+        if (!this.esEdicion) {
+            return true;
+        }
+
+        return this.acciones()?.editarVigencia === true;
+    });
+
+    protected readonly titulo = computed(() => {
+
+        if (!this.esEdicion) {
+            return 'Nuevo contrato';
+        }
+
+        return this.puedeEditar()
+            ? 'Editar contrato'
+            : 'Consultar contrato';
+    });
+
+    protected readonly form =
+        this.fb.group({
+
+            // Información general
+
+            numeroContrato:
+                this.fb.nonNullable.control('', [
+                    Validators.required,
+                    Validators.maxLength(50),
+                ]),
+
+            nombre:
+                this.fb.nonNullable.control('', [
+                    Validators.required,
+                    Validators.maxLength(200),
+                ]),
+
+            descripcion:
+                this.fb.nonNullable.control(''),
+
+            tipoContratoId:
+                this.fb.nonNullable.control('', [
+                    Validators.required,
+                ]),
+
+            // Relaciones comerciales
+
+            clienteId:
+                this.fb.nonNullable.control(''),
+
+            proveedorId:
+                this.fb.nonNullable.control(''),
+
+            // Vigencia
+
+            fechaInicio:
+                this.fb.nonNullable.control('', [
+                    Validators.required,
+                ]),
+
+            fechaFin:
+                this.fb.nonNullable.control(''),
+
+            fechaFirma:
+                this.fb.nonNullable.control(''),
+
+            // Renovación
+
+            renovacionAutomatica:
+                this.fb.nonNullable.control(false),
+
+            diasAvisoNoRenovacion:
+                this.fb.control<number | null>(
+                    null,
+                    [
+                        Validators.min(0),
+                        Validators.max(
+                            CONTRATOS_CONFIG.MAX_ENTERO
+                        ),
+                        this.validarEntero,
+                    ]
+                ),
+
+            // Condiciones económicas
+
+            monto:
+                this.fb.control<number | null>(
+                    null,
+                    [
+                        Validators.min(0),
+                        this.validarDecimal,
+                    ]
+                ),
+
+            moneda:
+                this.fb.nonNullable.control(
+                    CONTRATOS_CONFIG.MONEDA_PREDETERMINADA as string,
+                    [
+                        Validators.required,
+                        Validators.pattern(/^[A-Za-z]{3}$/),
+                    ]
+                ),
+
+            periodicidadPago:
+                this.fb.nonNullable.control(''),
+
+            diaPago:
+                this.fb.control<number | null>(
+                    null,
+                    [
+                        Validators.min(1),
+                        Validators.max(31),
+                        this.validarEntero,
+                    ]
+                ),
+
+            incluyeImpuestos:
+                this.fb.nonNullable.control(false),
+
+            // Cobertura
+
+            incluyePreventivo:
+                this.fb.control<boolean | null>(null),
+
+            incluyeCorrectivo:
+                this.fb.control<boolean | null>(null),
+
+            incluyeRefacciones:
+                this.fb.control<boolean | null>(null),
+
+            incluyeManoObra:
+                this.fb.control<boolean | null>(null),
+
+            // SLA
+
+            tiempoRespuestaHoras:
+                this.fb.control<number | null>(
+                    null,
+                    [
+                        Validators.min(0),
+                        Validators.max(
+                            CONTRATOS_CONFIG.MAX_TIEMPO_RESPUESTA_HORAS
+                        ),
+                        this.validarDecimal,
+                    ]
+                ),
+
+            horarioAtencion:
+                this.fb.nonNullable.control('', [
+                    Validators.maxLength(200),
+                ]),
+
+            serviciosIncluidos:
+                this.fb.control<number | null>(
+                    null,
+                    [
+                        Validators.min(0),
+                        Validators.max(
+                            CONTRATOS_CONFIG.MAX_ENTERO
+                        ),
+                        this.validarEntero,
+                    ]
+                ),
+
+            // Condiciones adicionales
+
+            condicionesServicio:
+                this.fb.nonNullable.control(''),
+
+            observaciones:
+                this.fb.nonNullable.control(''),
+
+        });
+
     private validarEntero(
-    control: AbstractControl
-): ValidationErrors | null {
+        control: AbstractControl
+    ): ValidationErrors | null {
 
-    const valor = control.value;
+        const valor = control.value;
 
-    if (
-        valor === null ||
-        valor === undefined ||
-        valor === ''
-    ) {
-        return null;
+        if (
+            valor === null ||
+            valor === undefined ||
+            valor === ''
+        ) {
+            return null;
+        }
+
+        return Number.isInteger(valor)
+            ? null
+            : { entero: true };
     }
 
-    return Number.isInteger(valor)
-        ? null
-        : { entero: true };
-}
+    private validarDecimal(
+        control: AbstractControl
+    ): ValidationErrors | null {
 
-private validarDecimal(
-    control: AbstractControl
-): ValidationErrors | null {
+        const valor = control.value;
 
-    const valor = control.value;
+        if (
+            valor === null ||
+            valor === undefined ||
+            valor === ''
+        ) {
+            return null;
+        }
 
-    if (
-        valor === null ||
-        valor === undefined ||
-        valor === ''
-    ) {
-        return null;
-    }
+        if (
+            typeof valor !== 'number' ||
+            !Number.isFinite(valor)
+        ) {
+            return { decimal: true };
+        }
 
-    if (
-        typeof valor !== 'number' ||
-        !Number.isFinite(valor)
-    ) {
-        return { decimal: true };
-    }
+        // JavaScript representa los números
+        // mediante punto flotante.
+        // Limitamos los valores a un rango que
+        // permita manejar centavos de forma razonable.
 
-    // JavaScript representa los números
-    // mediante punto flotante.
-    // Limitamos los valores a un rango que
-    // permita manejar centavos de forma razonable.
+        if (
+            Math.abs(valor) >
+            Number.MAX_SAFE_INTEGER / 100
+        ) {
+            return { precisionDecimal: true };
+        }
 
-    if (
-        Math.abs(valor) >
-        Number.MAX_SAFE_INTEGER / 100
-    ) {
-        return { precisionDecimal: true };
-    }
+        const centavos = valor * 100;
 
-    const centavos = valor * 100;
+        const diferencia = Math.abs(
+            centavos - Math.round(centavos)
+        );
 
-    const diferencia = Math.abs(
-        centavos - Math.round(centavos)
-    );
-
-    const tolerancia = Math.min(
-        0.001,
-        Math.max(
-            0.00000001,
-            Math.abs(centavos) *
+        const tolerancia = Math.min(
+            0.001,
+            Math.max(
+                0.00000001,
+                Math.abs(centavos) *
                 Number.EPSILON * 4
-        )
-    );
-
-    return diferencia <= tolerancia
-        ? null
-        : { decimal: true };
-}
-
-protected readonly tiposDisponibles = computed(() => {
-
-    const actual =
-        this.contrato()?.tipoContratoId;
-
-    return this.tiposContrato().filter(x =>
-        x.activo ||
-        x.id === actual
-    );
-});
-
-protected readonly clientesDisponibles = computed(() => {
-
-    const actual =
-        this.contrato()?.clienteId;
-
-    return this.clientes().filter(x =>
-        x.activo ||
-        x.id === actual
-    );
-});
-
-protected readonly proveedoresDisponibles = computed(() => {
-
-    const actual =
-        this.contrato()?.proveedorId;
-
-    return this.proveedores().filter(x =>
-        x.activo ||
-        x.id === actual
-    );
-});
-
-protected readonly relacionesInactivas = computed(() => {
-
-    const contrato = this.contrato();
-
-    if (!contrato) {
-        return [];
-    }
-
-    const advertencias: string[] = [];
-
-    const tipo = this.tiposContrato().find(
-        x => x.id === contrato.tipoContratoId
-    );
-
-    if (tipo && !tipo.activo) {
-
-        advertencias.push(
-            `El tipo de contrato "${tipo.nombre}" está inactivo.`
+            )
         );
+
+        return diferencia <= tolerancia
+            ? null
+            : { decimal: true };
     }
 
-    const cliente = this.clientes().find(
-        x => x.id === contrato.clienteId
-    );
+    protected readonly tiposDisponibles = computed(() => {
 
-    if (cliente && !cliente.activo) {
+        const actual =
+            this.contrato()?.tipoContratoId;
 
-        advertencias.push(
-            `El cliente "${cliente.nombre}" está inactivo.`
+        return this.tiposContrato().filter(x =>
+            x.activo ||
+            x.id === actual
         );
-    }
+    });
 
-    const proveedor = this.proveedores().find(
-        x => x.id === contrato.proveedorId
-    );
+    protected readonly clientesDisponibles = computed(() => {
 
-    if (proveedor && !proveedor.activo) {
+        const actual =
+            this.contrato()?.clienteId;
 
-        advertencias.push(
-            `El proveedor "${proveedor.nombre}" está inactivo.`
+        return this.clientes().filter(x =>
+            x.activo ||
+            x.id === actual
         );
-    }
+    });
 
-    return advertencias;
-});
+    protected readonly proveedoresDisponibles = computed(() => {
 
-constructor() {
+        const actual =
+            this.contrato()?.proveedorId;
 
-    effect(onCleanup => {
+        return this.proveedores().filter(x =>
+            x.activo ||
+            x.id === actual
+        );
+    });
 
-        const empresaId =
-            this.empresaContexto.seleccionada()?.id ??
-            null;
+    protected readonly relacionesInactivas = computed(() => {
 
-        const puedeGestionar =
-            this.puedeGestionar();
+        const contrato = this.contrato();
 
-        const sub = untracked(() => {
+        if (!contrato) {
+            return [];
+        }
 
-            const secuencia =
-                ++this.secuenciaCarga;
+        const advertencias: string[] = [];
 
-            this.reiniciarFormulario();
+        const tipo = this.tiposContrato().find(
+            x => x.id === contrato.tipoContratoId
+        );
 
-            this.empresaFormulario.set(null);
+        if (tipo && !tipo.activo) {
 
-            this.contrato.set(null);
+            advertencias.push(
+                `El tipo de contrato "${tipo.nombre}" está inactivo.`
+            );
+        }
 
-            this.tiposContrato.set([]);
-            this.clientes.set([]);
-            this.proveedores.set([]);
+        const cliente = this.clientes().find(
+            x => x.id === contrato.clienteId
+        );
 
-            this.errorMessage.set(null);
-            this.successMessage.set(null);
+        if (cliente && !cliente.activo) {
 
-            this.detalleCargado.set(false);
+            advertencias.push(
+                `El cliente "${cliente.nombre}" está inactivo.`
+            );
+        }
 
-            this.loading.set(!!empresaId);
+        const proveedor = this.proveedores().find(
+            x => x.id === contrato.proveedorId
+        );
 
-            if (!empresaId) {
-                return undefined;
-            }
+        if (proveedor && !proveedor.activo) {
 
-            const detalle$: Observable<ContratoDetalle | null> =
-                this.id
-                    ? this.contratosService.getById(this.id)
-                    : of(null);
+            advertencias.push(
+                `El proveedor "${proveedor.nombre}" está inactivo.`
+            );
+        }
 
-            return forkJoin({
+        return advertencias;
+    });
 
-                tipos:
-                    this.tiposService.getAll(),
+    constructor() {
 
-                clientes:
-                    this.clientesService.getAll(),
+        effect(onCleanup => {
 
-                proveedores:
-                    this.proveedoresService.getAll(),
+            const empresaId =
+                this.empresaContexto.seleccionada()?.id ??
+                null;
 
-                detalle:
-                    detalle$,
+            const puedeGestionar =
+                this.puedeGestionar();
 
-            }).subscribe({
+            const sub = untracked(() => {
 
-                next: datos => {
+                const secuencia =
+                    ++this.secuenciaCarga;
 
-                    if (
-                        this.destruido ||
-                        this.empresaContexto.empresaId !== empresaId ||
-                        secuencia !== this.secuenciaCarga
-                    ) {
-                        return;
-                    }
+                this.reiniciarFormulario();
 
-                    if (
-                        datos.detalle &&
-                        datos.detalle.empresaId !== empresaId
-                    ) {
+                this.empresaFormulario.set(null);
 
-                        this.errorMessage.set(
-                            'El contrato no pertenece a la empresa seleccionada.'
+                this.contrato.set(null);
+
+                this.tiposContrato.set([]);
+                this.clientes.set([]);
+                this.proveedores.set([]);
+
+                this.errorMessage.set(null);
+                this.successMessage.set(null);
+
+                this.detalleCargado.set(false);
+
+                this.loading.set(!!empresaId);
+
+                if (!empresaId) {
+                    return undefined;
+                }
+
+                const detalle$: Observable<ContratoDetalle | null> =
+                    this.id
+                        ? this.contratosService.getById(this.id)
+                        : of(null);
+
+                return forkJoin({
+
+                    tipos:
+                        this.tiposService.getAll(),
+
+                    clientes:
+                        this.clientesService.getAll(),
+
+                    proveedores:
+                        this.proveedoresService.getAll(),
+
+                    detalle:
+                        detalle$,
+
+                }).subscribe({
+
+                    next: datos => {
+
+                        if (
+                            this.destruido ||
+                            this.empresaContexto.empresaId !== empresaId ||
+                            secuencia !== this.secuenciaCarga
+                        ) {
+                            return;
+                        }
+
+                        if (
+                            datos.detalle &&
+                            datos.detalle.empresaId !== empresaId
+                        ) {
+
+                            this.errorMessage.set(
+                                'El contrato no pertenece a la empresa seleccionada.'
+                            );
+
+                            this.loading.set(false);
+
+                            return;
+                        }
+
+                        this.tiposContrato.set(
+                            datos.tipos
                         );
+
+                        this.clientes.set(
+                            datos.clientes
+                        );
+
+                        this.proveedores.set(
+                            datos.proveedores
+                        );
+
+                        if (datos.detalle) {
+
+                            this.contrato.set(
+                                datos.detalle
+                            );
+
+                            this.cargarFormulario(
+                                datos.detalle
+                            );
+                        }
+
+                        this.empresaFormulario.set(
+                            empresaId
+                        );
+
+                        this.detalleCargado.set(true);
 
                         this.loading.set(false);
 
-                        return;
-                    }
-
-                    this.tiposContrato.set(
-                        datos.tipos
-                    );
-
-                    this.clientes.set(
-                        datos.clientes
-                    );
-
-                    this.proveedores.set(
-                        datos.proveedores
-                    );
-
-                    if (datos.detalle) {
-
-                        this.contrato.set(
-                            datos.detalle
+                        this.aplicarPermisosFormulario(
+                            puedeGestionar
                         );
 
-                        this.cargarFormulario(
-                            datos.detalle
+                        this.form.markAsPristine();
+
+                        this.form.markAsUntouched();
+                    },
+
+                    error: (error: unknown) => {
+
+                        if (
+                            this.destruido ||
+                            this.empresaContexto.empresaId !== empresaId ||
+                            secuencia !== this.secuenciaCarga
+                        ) {
+                            return;
+                        }
+
+                        this.errorMessage.set(
+                            this.mensajeError(
+                                error,
+                                'No fue posible cargar la información del contrato.'
+                            )
                         );
-                    }
 
-                    this.empresaFormulario.set(
-                        empresaId
-                    );
+                        this.loading.set(false);
+                    },
 
-                    this.detalleCargado.set(true);
+                });
+            });
 
-                    this.loading.set(false);
+            onCleanup(() => {
 
-                    this.aplicarPermisosFormulario(
-                        puedeGestionar
-                    );
-
-                    this.form.markAsPristine();
-
-                    this.form.markAsUntouched();
-                },
-
-                error: (error: unknown) => {
-
-                    if (
-                        this.destruido ||
-                        this.empresaContexto.empresaId !== empresaId ||
-                        secuencia !== this.secuenciaCarga
-                    ) {
-                        return;
-                    }
-
-                    this.errorMessage.set(
-                        this.mensajeError(
-                            error,
-                            'No fue posible cargar la información del contrato.'
-                        )
-                    );
-
-                    this.loading.set(false);
-                },
-
+                sub?.unsubscribe();
             });
         });
 
-        onCleanup(() => {
+        this.destroyRef.onDestroy(() => {
 
-            sub?.unsubscribe();
+            this.destruido = true;
+
+            this.secuenciaCarga++;
         });
-    });
-
-    this.destroyRef.onDestroy(() => {
-
-        this.destruido = true;
-
-        this.secuenciaCarga++;
-    });
-}
-
-private reiniciarFormulario(): void {
-
-    this.form.reset({
-
-        numeroContrato: '',
-        nombre: '',
-        descripcion: '',
-        tipoContratoId: '',
-
-        clienteId: '',
-        proveedorId: '',
-
-        fechaInicio: '',
-        fechaFin: '',
-        fechaFirma: '',
-
-        renovacionAutomatica: false,
-        diasAvisoNoRenovacion: null,
-
-        monto: null,
-        moneda: CONTRATOS_CONFIG.MONEDA_PREDETERMINADA,
-        periodicidadPago: '',
-        diaPago: null,
-        incluyeImpuestos: false,
-
-        incluyePreventivo: null,
-        incluyeCorrectivo: null,
-        incluyeRefacciones: null,
-        incluyeManoObra: null,
-
-        tiempoRespuestaHoras: null,
-        horarioAtencion: '',
-        serviciosIncluidos: null,
-
-        condicionesServicio: '',
-        observaciones: '',
-
-    }, {
-        emitEvent: false,
-    });
-
-    this.form.disable({
-        emitEvent: false,
-    });
-}
-
-private cargarFormulario(
-    contrato: ContratoDetalle
-): void {
-
-    this.form.patchValue({
-
-        numeroContrato:
-            contrato.numeroContrato,
-
-        nombre:
-            contrato.nombre,
-
-        descripcion:
-            contrato.descripcion ?? '',
-
-        tipoContratoId:
-            contrato.tipoContratoId,
-
-        clienteId:
-            contrato.clienteId ?? '',
-
-        proveedorId:
-            contrato.proveedorId ?? '',
-
-        fechaInicio:
-            obtenerFechaFormulario(
-                contrato.fechaInicio
-            ),
-
-        fechaFin:
-            obtenerFechaFormulario(
-                contrato.fechaFin
-            ),
-
-        fechaFirma:
-            obtenerFechaFormulario(
-                contrato.fechaFirma
-            ),
-
-        renovacionAutomatica:
-            contrato.renovacionAutomatica,
-
-        diasAvisoNoRenovacion:
-            contrato.diasAvisoNoRenovacion,
-
-        monto:
-            contrato.monto,
-
-        moneda:
-            contrato.moneda,
-
-        periodicidadPago:
-            contrato.periodicidadPago ?? '',
-
-        diaPago:
-            contrato.diaPago,
-
-        incluyeImpuestos:
-            contrato.incluyeImpuestos,
-
-        incluyePreventivo:
-            contrato.incluyePreventivo,
-
-        incluyeCorrectivo:
-            contrato.incluyeCorrectivo,
-
-        incluyeRefacciones:
-            contrato.incluyeRefacciones,
-
-        incluyeManoObra:
-            contrato.incluyeManoObra,
-
-        tiempoRespuestaHoras:
-            contrato.tiempoRespuestaHoras,
-
-        horarioAtencion:
-            contrato.horarioAtencion ?? '',
-
-        serviciosIncluidos:
-            contrato.serviciosIncluidos,
-
-        condicionesServicio:
-            contrato.condicionesServicio ?? '',
-
-        observaciones:
-            contrato.observaciones ?? '',
-
-    }, {
-        emitEvent: false,
-    });
-}
-
-private aplicarPermisosFormulario(
-    puedeGestionar = this.puedeGestionar()
-): void {
-
-    this.form.disable({
-        emitEvent: false,
-    });
-
-    if (
-        !puedeGestionar ||
-        !this.detalleCargado() ||
-        !this.puedeEditar() ||
-        this.guardando()
-    ) {
-        return;
     }
 
-    this.form.enable({
-        emitEvent: false,
-    });
+    private reiniciarFormulario(): void {
 
-    if (!this.puedeEditarVigencia()) {
+        this.form.reset({
 
-        this.form.controls.fechaInicio.disable({
+            numeroContrato: '',
+            nombre: '',
+            descripcion: '',
+            tipoContratoId: '',
+
+            clienteId: '',
+            proveedorId: '',
+
+            fechaInicio: '',
+            fechaFin: '',
+            fechaFirma: '',
+
+            renovacionAutomatica: false,
+            diasAvisoNoRenovacion: null,
+
+            monto: null,
+            moneda: CONTRATOS_CONFIG.MONEDA_PREDETERMINADA,
+            periodicidadPago: '',
+            diaPago: null,
+            incluyeImpuestos: false,
+
+            incluyePreventivo: null,
+            incluyeCorrectivo: null,
+            incluyeRefacciones: null,
+            incluyeManoObra: null,
+
+            tiempoRespuestaHoras: null,
+            horarioAtencion: '',
+            serviciosIncluidos: null,
+
+            condicionesServicio: '',
+            observaciones: '',
+
+        }, {
             emitEvent: false,
         });
 
-        this.form.controls.fechaFin.disable({
+        this.form.disable({
             emitEvent: false,
         });
     }
-}
 
-private validarRelaciones(
-    dto: ContratoGuardar
-): string | null {
+    private cargarFormulario(
+        contrato: ContratoDetalle
+    ): void {
 
-    const contrato =
-        this.contrato();
+        this.form.patchValue({
 
-    const tipo = this.tiposContrato().find(
-        x => x.id === dto.tipoContratoId
-    );
+            numeroContrato:
+                contrato.numeroContrato,
 
-    if (!tipo) {
+            nombre:
+                contrato.nombre,
 
-        return 'Selecciona un tipo de contrato válido.';
+            descripcion:
+                contrato.descripcion ?? '',
+
+            tipoContratoId:
+                contrato.tipoContratoId,
+
+            clienteId:
+                contrato.clienteId ?? '',
+
+            proveedorId:
+                contrato.proveedorId ?? '',
+
+            fechaInicio:
+                obtenerFechaFormulario(
+                    contrato.fechaInicio
+                ),
+
+            fechaFin:
+                obtenerFechaFormulario(
+                    contrato.fechaFin
+                ),
+
+            fechaFirma:
+                obtenerFechaFormulario(
+                    contrato.fechaFirma
+                ),
+
+            renovacionAutomatica:
+                contrato.renovacionAutomatica,
+
+            diasAvisoNoRenovacion:
+                contrato.diasAvisoNoRenovacion,
+
+            monto:
+                contrato.monto,
+
+            moneda:
+                contrato.moneda,
+
+            periodicidadPago:
+                contrato.periodicidadPago ?? '',
+
+            diaPago:
+                contrato.diaPago,
+
+            incluyeImpuestos:
+                contrato.incluyeImpuestos,
+
+            incluyePreventivo:
+                contrato.incluyePreventivo,
+
+            incluyeCorrectivo:
+                contrato.incluyeCorrectivo,
+
+            incluyeRefacciones:
+                contrato.incluyeRefacciones,
+
+            incluyeManoObra:
+                contrato.incluyeManoObra,
+
+            tiempoRespuestaHoras:
+                contrato.tiempoRespuestaHoras,
+
+            horarioAtencion:
+                contrato.horarioAtencion ?? '',
+
+            serviciosIncluidos:
+                contrato.serviciosIncluidos,
+
+            condicionesServicio:
+                contrato.condicionesServicio ?? '',
+
+            observaciones:
+                contrato.observaciones ?? '',
+
+        }, {
+            emitEvent: false,
+        });
     }
 
-    if (
-        !tipo.activo &&
-        contrato?.tipoContratoId !== tipo.id
-    ) {
+    private aplicarPermisosFormulario(
+        puedeGestionar = this.puedeGestionar()
+    ): void {
 
-        return 'El tipo de contrato seleccionado está inactivo.';
-    }
-
-    if (dto.clienteId) {
-
-        const cliente = this.clientes().find(
-            x => x.id === dto.clienteId
-        );
-
-        if (!cliente) {
-
-            return 'El cliente seleccionado no es válido.';
-        }
+        this.form.disable({
+            emitEvent: false,
+        });
 
         if (
-            !cliente.activo &&
-            contrato?.clienteId !== cliente.id
-        ) {
-
-            return 'El cliente seleccionado está inactivo.';
-        }
-    }
-
-    if (dto.proveedorId) {
-
-        const proveedor = this.proveedores().find(
-            x => x.id === dto.proveedorId
-        );
-
-        if (!proveedor) {
-
-            return 'El proveedor seleccionado no es válido.';
-        }
-
-        if (
-            !proveedor.activo &&
-            contrato?.proveedorId !== proveedor.id
-        ) {
-
-            return 'El proveedor seleccionado está inactivo.';
-        }
-    }
-
-    return null;
-}
-
-private validarDatos(
-    dto: ContratoGuardar
-): string | null {
-
-    if (!dto.numeroContrato) {
-
-        return 'El número de contrato es obligatorio.';
-    }
-
-    if (!dto.nombre) {
-
-        return 'El nombre del contrato es obligatorio.';
-    }
-
-    if (!dto.tipoContratoId) {
-
-        return 'Selecciona un tipo de contrato.';
-    }
-
-    if (
-        !dto.fechaInicio ||
-        dto.fechaInicio === '0001-01-01'
-    ) {
-
-        return 'La fecha de inicio es obligatoria.';
-    }
-
-    if (
-        dto.fechaFin &&
-        dto.fechaFin < dto.fechaInicio
-    ) {
-
-        return 'La fecha de fin no puede ser anterior a la fecha de inicio.';
-    }
-
-    if (
-        dto.renovacionAutomatica &&
-        !dto.fechaFin
-    ) {
-
-        return 'Un contrato con renovación automática debe tener fecha de fin.';
-    }
-
-    if (
-        dto.diasAvisoNoRenovacion !== null &&
-        !dto.fechaFin
-    ) {
-
-        return 'Se requiere una fecha de fin para configurar el aviso de no renovación.';
-    }
-
-    if (
-        !/^[A-Z]{3}$/.test(dto.moneda)
-    ) {
-
-        return 'La moneda debe contener tres letras.';
-    }
-
-    if (
-        dto.periodicidadPago &&
-        !PERIODICIDADES_PAGO.some(
-            x => x.value === dto.periodicidadPago
-        )
-    ) {
-
-        return 'La periodicidad de pago no es válida.';
-    }
-
-    const contrato =
-        this.contrato();
-
-    if (
-        contrato &&
-        !this.puedeEditarVigencia()
-    ) {
-
-        const fechaInicioOriginal =
-            obtenerFechaFormulario(
-                contrato.fechaInicio
-            );
-
-        const fechaFinOriginal =
-            obtenerFechaFormulario(
-                contrato.fechaFin
-            ) || null;
-
-        if (
-            dto.fechaInicio !== fechaInicioOriginal ||
-            dto.fechaFin !== fechaFinOriginal
-        ) {
-
-            return 'La vigencia de un contrato formalizado solamente puede modificarse mediante una renovación.';
-        }
-    }
-
-    return this.validarRelaciones(dto);
-}
-
-private construirDto(): ContratoGuardar {
-
-    const f =
-        this.form.getRawValue();
-
-    const dto: ContratoGuardar = {
-
-        numeroContrato:
-            f.numeroContrato.trim().toUpperCase(),
-
-        nombre:
-            f.nombre.trim(),
-
-        descripcion:
-            this.nullIfEmpty(f.descripcion),
-
-        tipoContratoId:
-            f.tipoContratoId,
-
-        clienteId:
-            f.clienteId || null,
-
-        proveedorId:
-            f.proveedorId || null,
-
-        fechaInicio:
-            f.fechaInicio,
-
-        fechaFin:
-            f.fechaFin || null,
-
-        fechaFirma:
-            f.fechaFirma || null,
-
-        renovacionAutomatica:
-            f.renovacionAutomatica,
-
-        diasAvisoNoRenovacion:
-            f.diasAvisoNoRenovacion,
-
-        monto:
-            f.monto,
-
-        moneda:
-            f.moneda.trim().toUpperCase(),
-
-        periodicidadPago:
-            this.nullIfEmpty(
-                f.periodicidadPago
-            )?.toUpperCase() ?? null,
-
-        diaPago:
-            f.diaPago,
-
-        incluyeImpuestos:
-            f.incluyeImpuestos,
-
-        incluyePreventivo:
-            f.incluyePreventivo,
-
-        incluyeCorrectivo:
-            f.incluyeCorrectivo,
-
-        incluyeRefacciones:
-            f.incluyeRefacciones,
-
-        incluyeManoObra:
-            f.incluyeManoObra,
-
-        tiempoRespuestaHoras:
-            f.tiempoRespuestaHoras,
-
-        horarioAtencion:
-            this.nullIfEmpty(
-                f.horarioAtencion
-            ),
-
-        serviciosIncluidos:
-            f.serviciosIncluidos,
-
-        condicionesServicio:
-            this.nullIfEmpty(
-                f.condicionesServicio
-            ),
-
-        observaciones:
-            this.nullIfEmpty(
-                f.observaciones
-            ),
-
-    };
-
-    return dto;
-}
-
-private nullIfEmpty(
-    valor: string
-): string | null {
-
-    return valor.trim() || null;
-}
-
-protected async guardar(): Promise<void> {
-
-    if (
-        this.guardando() ||
-        !this.detalleCargado() ||
-        !this.puedeEditar() ||
-        this.destruido
-    ) {
-        return;
-    }
-
-    this.errorMessage.set(null);
-
-    this.successMessage.set(null);
-
-    const empresaId =
-        this.empresaContexto.empresaId;
-
-    const secuencia =
-        this.secuenciaCarga;
-
-    if (
-        !empresaId ||
-        this.empresaFormulario() !== empresaId
-    ) {
-
-        this.errorMessage.set(
-            'La empresa seleccionada cambió. Vuelve a cargar el formulario.'
-        );
-
-        return;
-    }
-
-    if (this.form.invalid) {
-
-        this.form.markAllAsTouched();
-
-        this.errorMessage.set(
-            'Revisa los campos obligatorios y los valores del formulario.'
-        );
-
-        return;
-    }
-
-    const dto =
-        this.construirDto();
-
-    const error =
-        this.validarDatos(dto);
-
-    if (error) {
-
-        this.errorMessage.set(error);
-
-        return;
-    }
-
-    this.guardando.set(true);
-
-    this.form.disable({
-        emitEvent: false,
-    });
-
-    try {
-
-        const resultado =
-            await firstValueFrom(
-
-                this.id
-
-                    ? this.contratosService.update(
-                        this.id,
-                        dto
-                    )
-
-                    : this.contratosService.create(
-                        dto
-                    )
-            );
-
-        if (
-            this.destruido ||
-            this.empresaContexto.empresaId !== empresaId ||
-            this.secuenciaCarga !== secuencia
+            !puedeGestionar ||
+            !this.detalleCargado() ||
+            !this.puedeEditar() ||
+            this.guardando()
         ) {
             return;
         }
 
-        this.contrato.set(resultado);
+        this.form.enable({
+            emitEvent: false,
+        });
 
-        this.cargarFormulario(resultado);
+        if (!this.puedeEditarVigencia()) {
 
-        this.form.markAsPristine();
-
-        if (this.id) {
-
-            this.successMessage.set(
-                'Contrato actualizado correctamente.'
-            );
-
-        } else {
-
-            const navego = await this.router.navigate([
-                '/admin/contratos',
-                resultado.id,
-                'editar',
-            ], {
-                state: {
-                    contratoCreado: true,
-                },
+            this.form.controls.fechaInicio.disable({
+                emitEvent: false,
             });
 
+            this.form.controls.fechaFin.disable({
+                emitEvent: false,
+            });
+        }
+    }
+
+    private validarRelaciones(
+        dto: ContratoGuardar
+    ): string | null {
+
+        const contrato =
+            this.contrato();
+
+        const tipo = this.tiposContrato().find(
+            x => x.id === dto.tipoContratoId
+        );
+
+        if (!tipo) {
+
+            return 'Selecciona un tipo de contrato válido.';
+        }
+
+        if (
+            !tipo.activo &&
+            contrato?.tipoContratoId !== tipo.id
+        ) {
+
+            return 'El tipo de contrato seleccionado está inactivo.';
+        }
+
+        if (dto.clienteId) {
+
+            const cliente = this.clientes().find(
+                x => x.id === dto.clienteId
+            );
+
+            if (!cliente) {
+
+                return 'El cliente seleccionado no es válido.';
+            }
+
             if (
-                !navego &&
-                !this.destruido &&
-                this.empresaContexto.empresaId === empresaId
+                !cliente.activo &&
+                contrato?.clienteId !== cliente.id
             ) {
 
-                // El contrato ya fue creado.
-                // No permitir que se registre nuevamente.
+                return 'El cliente seleccionado está inactivo.';
+            }
+        }
+
+        if (dto.proveedorId) {
+
+            const proveedor = this.proveedores().find(
+                x => x.id === dto.proveedorId
+            );
+
+            if (!proveedor) {
+
+                return 'El proveedor seleccionado no es válido.';
+            }
+
+            if (
+                !proveedor.activo &&
+                contrato?.proveedorId !== proveedor.id
+            ) {
+
+                return 'El proveedor seleccionado está inactivo.';
+            }
+        }
+
+        return null;
+    }
+
+    private validarDatos(
+        dto: ContratoGuardar
+    ): string | null {
+
+        if (!dto.numeroContrato) {
+
+            return 'El número de contrato es obligatorio.';
+        }
+
+        if (!dto.nombre) {
+
+            return 'El nombre del contrato es obligatorio.';
+        }
+
+        if (!dto.tipoContratoId) {
+
+            return 'Selecciona un tipo de contrato.';
+        }
+
+        if (
+            !dto.fechaInicio ||
+            dto.fechaInicio === '0001-01-01'
+        ) {
+
+            return 'La fecha de inicio es obligatoria.';
+        }
+
+        if (
+            dto.fechaFin &&
+            dto.fechaFin < dto.fechaInicio
+        ) {
+
+            return 'La fecha de fin no puede ser anterior a la fecha de inicio.';
+        }
+
+        if (
+            dto.renovacionAutomatica &&
+            !dto.fechaFin
+        ) {
+
+            return 'Un contrato con renovación automática debe tener fecha de fin.';
+        }
+
+        if (
+            dto.diasAvisoNoRenovacion !== null &&
+            !dto.fechaFin
+        ) {
+
+            return 'Se requiere una fecha de fin para configurar el aviso de no renovación.';
+        }
+
+        if (
+            !/^[A-Z]{3}$/.test(dto.moneda)
+        ) {
+
+            return 'La moneda debe contener tres letras.';
+        }
+
+        if (
+            dto.periodicidadPago &&
+            !PERIODICIDADES_PAGO.some(
+                x => x.value === dto.periodicidadPago
+            )
+        ) {
+
+            return 'La periodicidad de pago no es válida.';
+        }
+
+        const contrato =
+            this.contrato();
+
+        if (
+            contrato &&
+            !this.puedeEditarVigencia()
+        ) {
+
+            const fechaInicioOriginal =
+                obtenerFechaFormulario(
+                    contrato.fechaInicio
+                );
+
+            const fechaFinOriginal =
+                obtenerFechaFormulario(
+                    contrato.fechaFin
+                ) || null;
+
+            if (
+                dto.fechaInicio !== fechaInicioOriginal ||
+                dto.fechaFin !== fechaFinOriginal
+            ) {
+
+                return 'La vigencia de un contrato formalizado solamente puede modificarse mediante una renovación.';
+            }
+        }
+
+        return this.validarRelaciones(dto);
+    }
+
+    private construirDto(): ContratoGuardar {
+
+        const f =
+            this.form.getRawValue();
+
+        const dto: ContratoGuardar = {
+
+            numeroContrato:
+                f.numeroContrato.trim().toUpperCase(),
+
+            nombre:
+                f.nombre.trim(),
+
+            descripcion:
+                this.nullIfEmpty(f.descripcion),
+
+            tipoContratoId:
+                f.tipoContratoId,
+
+            clienteId:
+                f.clienteId || null,
+
+            proveedorId:
+                f.proveedorId || null,
+
+            fechaInicio:
+                f.fechaInicio,
+
+            fechaFin:
+                f.fechaFin || null,
+
+            fechaFirma:
+                f.fechaFirma || null,
+
+            renovacionAutomatica:
+                f.renovacionAutomatica,
+
+            diasAvisoNoRenovacion:
+                f.diasAvisoNoRenovacion,
+
+            monto:
+                f.monto,
+
+            moneda:
+                f.moneda.trim().toUpperCase(),
+
+            periodicidadPago:
+                this.nullIfEmpty(
+                    f.periodicidadPago
+                )?.toUpperCase() ?? null,
+
+            diaPago:
+                f.diaPago,
+
+            incluyeImpuestos:
+                f.incluyeImpuestos,
+
+            incluyePreventivo:
+                f.incluyePreventivo,
+
+            incluyeCorrectivo:
+                f.incluyeCorrectivo,
+
+            incluyeRefacciones:
+                f.incluyeRefacciones,
+
+            incluyeManoObra:
+                f.incluyeManoObra,
+
+            tiempoRespuestaHoras:
+                f.tiempoRespuestaHoras,
+
+            horarioAtencion:
+                this.nullIfEmpty(
+                    f.horarioAtencion
+                ),
+
+            serviciosIncluidos:
+                f.serviciosIncluidos,
+
+            condicionesServicio:
+                this.nullIfEmpty(
+                    f.condicionesServicio
+                ),
+
+            observaciones:
+                this.nullIfEmpty(
+                    f.observaciones
+                ),
+
+        };
+
+        return dto;
+    }
+
+    private nullIfEmpty(
+        valor: string
+    ): string | null {
+
+        return valor.trim() || null;
+    }
+
+    protected async guardar(): Promise<void> {
+
+        if (
+            this.guardando() ||
+            !this.detalleCargado() ||
+            !this.puedeEditar() ||
+            this.destruido ||
+            (!this.esEdicion && this.contrato() !== null)
+        ) {
+            return;
+        }
+
+        this.errorMessage.set(null);
+
+        this.successMessage.set(null);
+
+        const empresaId =
+            this.empresaContexto.empresaId;
+
+        const secuencia =
+            this.secuenciaCarga;
+
+        if (
+            !empresaId ||
+            this.empresaFormulario() !== empresaId
+        ) {
+
+            this.errorMessage.set(
+                'La empresa seleccionada cambió. Vuelve a cargar el formulario.'
+            );
+
+            return;
+        }
+
+        if (this.form.invalid) {
+
+            this.form.markAllAsTouched();
+
+            this.errorMessage.set(
+                'Revisa los campos obligatorios y los valores del formulario.'
+            );
+
+            return;
+        }
+
+        const dto =
+            this.construirDto();
+
+        const error =
+            this.validarDatos(dto);
+
+        if (error) {
+
+            this.errorMessage.set(error);
+
+            return;
+        }
+
+        this.guardando.set(true);
+
+        this.form.disable({
+            emitEvent: false,
+        });
+
+        try {
+
+            const resultado =
+                await firstValueFrom(
+
+                    this.id
+
+                        ? this.contratosService.update(
+                            this.id,
+                            dto
+                        )
+
+                        : this.contratosService.create(
+                            dto
+                        )
+                );
+
+            if (
+                this.destruido ||
+                this.empresaContexto.empresaId !== empresaId ||
+                this.secuenciaCarga !== secuencia
+            ) {
+                return;
+            }
+
+            this.contrato.set(resultado);
+
+            this.cargarFormulario(resultado);
+
+            this.form.markAsPristine();
+
+            if (this.id) {
+
+                this.successMessage.set(
+                    'Contrato actualizado correctamente.'
+                );
+
+            } else {
 
                 this.detalleCargado.set(false);
 
                 this.successMessage.set(
-                    'El contrato fue registrado correctamente. Regresa al listado para consultarlo.'
+
+                    'Contrato registrado correctamente.'
+
                 );
+
+                let navego = false;
+
+                try {
+
+                    navego = await this.router.navigate([
+
+                        '/admin/contratos',
+
+                        resultado.id,
+
+                    ], {
+
+                        state: {
+
+                            contratoCreado: true,
+
+                            empresaId: empresaId,
+
+                            contratoId: resultado.id,
+
+                        },
+
+                    });
+
+                } catch {
+
+                    // El contrato ya fue creado.
+                    // Un error de navegación no debe
+                    // interpretarse como un error de guardado.
+
+                    navego = false;
+                }
+
+                if (
+
+                    !navego &&
+
+                    !this.destruido &&
+
+                    this.empresaContexto.empresaId === empresaId &&
+
+                    this.secuenciaCarga === secuencia
+
+                ) {
+
+                    this.successMessage.set(
+
+                        'El contrato fue registrado correctamente. Regresa al listado para consultarlo.'
+
+                    );
+                }
             }
-        }
 
-    } catch (error) {
-
-        if (
-            !this.destruido &&
-            this.empresaContexto.empresaId === empresaId &&
-            this.secuenciaCarga === secuencia
-        ) {
-
-            this.errorMessage.set(
-                this.mensajeError(
-                    error,
-                    'No fue posible guardar el contrato.'
-                )
-            );
-        }
-
-    } finally {
-
-        if (!this.destruido) {
-
-            this.guardando.set(false);
+        } catch (error) {
 
             if (
-                !this.esEdicion &&
-                this.contrato()
+                !this.destruido &&
+                this.empresaContexto.empresaId === empresaId &&
+                this.secuenciaCarga === secuencia
             ) {
 
-                this.form.disable({
-                    emitEvent: false,
-                });
+                this.errorMessage.set(
+                    this.mensajeError(
+                        error,
+                        'No fue posible guardar el contrato.'
+                    )
+                );
+            }
 
-            } else if (
-                this.empresaFormulario() ===
-                this.empresaContexto.empresaId
-            ) {
+        } finally {
 
-                this.aplicarPermisosFormulario();
+            if (!this.destruido) {
+
+                this.guardando.set(false);
+
+                if (
+                    !this.esEdicion &&
+                    this.contrato()
+                ) {
+
+                    this.form.disable({
+                        emitEvent: false,
+                    });
+
+                } else if (
+                    this.empresaFormulario() ===
+                    this.empresaContexto.empresaId
+                ) {
+
+                    this.aplicarPermisosFormulario();
+                }
             }
         }
     }
-}
 
-protected volver(): void {
+    protected volver(): void {
 
-    if (this.guardando()) {
-        return;
-    }
-
-    if (
-        this.form.dirty &&
-        this.puedeEditar()
-    ) {
-
-        const confirmar = confirm(
-            'Existen cambios sin guardar. ¿Deseas regresar al listado?'
-        );
-
-        if (!confirmar) {
+        if (this.guardando()) {
             return;
         }
-    }
-
-    void this.router.navigate([
-        '/admin/contratos',
-    ]);
-}
-
-private mensajeError(
-    error: unknown,
-    fallback: string
-): string {
-
-    if (error instanceof HttpErrorResponse) {
 
         if (
-            typeof error.error?.message === 'string'
-        ) {
-            return error.error.message;
-        }
 
-        const errores =
-            error.error?.errors;
+            this.form.dirty &&
 
-        if (
-            errores &&
-            typeof errores === 'object'
+            this.puedeEditar()
+
         ) {
 
-            const mensajes = Object
-                .values(errores)
-                .flat()
-                .filter(
-                    (x): x is string =>
-                        typeof x === 'string'
-                );
+            const confirmar = confirm(
 
-            if (mensajes.length > 0) {
+                'Existen cambios sin guardar. ¿Deseas salir del formulario?'
 
-                return mensajes.join(' ');
+            );
+
+            if (!confirmar) {
+                return;
             }
         }
+
+        const contrato =
+            this.contrato();
+
+        const empresaId =
+            this.empresaContexto.empresaId;
+
+        if (
+
+            contrato &&
+
+            empresaId &&
+
+            contrato.empresaId === empresaId &&
+
+            this.empresaFormulario() === empresaId
+
+        ) {
+
+            void this.router.navigate([
+
+                '/admin/contratos',
+
+                contrato.id,
+
+            ]);
+
+            return;
+        }
+
+        void this.router.navigate([
+
+            '/admin/contratos',
+
+        ]);
     }
 
-    return fallback;
-}
+    private mensajeError(
+        error: unknown,
+        fallback: string
+    ): string {
+
+        if (error instanceof HttpErrorResponse) {
+
+            if (
+                typeof error.error?.message === 'string'
+            ) {
+                return error.error.message;
+            }
+
+            const errores =
+                error.error?.errors;
+
+            if (
+                errores &&
+                typeof errores === 'object'
+            ) {
+
+                const mensajes = Object
+                    .values(errores)
+                    .flat()
+                    .filter(
+                        (x): x is string =>
+                            typeof x === 'string'
+                    );
+
+                if (mensajes.length > 0) {
+
+                    return mensajes.join(' ');
+                }
+            }
+        }
+
+        return fallback;
+    }
 
 
 }

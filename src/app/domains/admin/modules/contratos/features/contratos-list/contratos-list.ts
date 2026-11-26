@@ -326,6 +326,36 @@ export default class ContratosList {
         ]);
     }
 
+    protected editarContrato(
+        contrato: ContratoList
+    ): void {
+
+        const empresaId =
+            this.empresaContexto.empresaId;
+
+        if (
+
+            !empresaId ||
+
+            contrato.empresaId !== empresaId ||
+
+            !this.puedeEditarContrato(contrato)
+
+        ) {
+            return;
+        }
+
+        void this.router.navigate([
+
+            '/admin/contratos',
+
+            contrato.id,
+
+            'editar',
+
+        ]);
+    }
+
     protected abrirContrato(
         contrato: ContratoList
     ): void {
@@ -334,19 +364,23 @@ export default class ContratosList {
             this.empresaContexto.empresaId;
 
         if (
+
             !empresaId ||
+
             contrato.empresaId !== empresaId
+
         ) {
             return;
         }
 
         void this.router.navigate([
+
             '/admin/contratos',
+
             contrato.id,
-            'editar',
+
         ]);
     }
-
     protected puedeEditarContrato(
         contrato: ContratoList
     ): boolean {

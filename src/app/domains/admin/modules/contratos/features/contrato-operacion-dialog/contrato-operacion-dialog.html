@@ -1,0 +1,149 @@
+<div class="w-full">
+
+    <div mat-dialog-title>
+
+        <div class="flex items-center gap-3">
+
+            <div
+                class="flex size-11 shrink-0 items-center justify-center rounded-xl"
+                [class]="data.destructiva
+                    ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                    : 'bg-primary text-on-primary'">
+
+                <mat-icon
+                    [svgIcon]="data.destructiva
+                        ? 'circle-x'
+                        : 'clipboard-list'" />
+
+            </div>
+
+            <span class="text-xl font-semibold">
+
+                {{ data.titulo }}
+
+            </span>
+
+        </div>
+
+    </div>
+
+    <form
+        [formGroup]="form"
+        (ngSubmit)="confirmar()">
+
+        <mat-dialog-content>
+
+            <div class="flex flex-col gap-5">
+
+                <div class="rounded-xl border p-4">
+
+                    <div class="text-xs text-on-surface-variant">
+
+                        Contrato
+
+                    </div>
+
+                    <div class="mt-1 font-semibold">
+
+                        {{ data.nombreContrato }}
+
+                    </div>
+
+                    <div class="mt-1 text-sm text-primary">
+
+                        {{ data.numeroContrato }}
+
+                    </div>
+
+                </div>
+
+                <div class="text-sm leading-relaxed">
+
+                    {{ data.mensaje }}
+
+                </div>
+
+                @if (data.requiereMotivo) {
+
+                    <mat-form-field class="w-full">
+
+                        <mat-label>
+
+                            Motivo de cancelación
+
+                        </mat-label>
+
+                        <textarea
+                            matInput
+                            rows="5"
+                            formControlName="motivo"
+                            [maxlength]="maxMotivo"
+                            placeholder="Describe el motivo por el cual se cancela el contrato..."
+                            required>
+                        </textarea>
+
+                        <mat-hint align="end">
+
+                            {{ form.controls.motivo.value.length }}/{{ maxMotivo }}
+
+                        </mat-hint>
+
+                        @if (
+                            form.controls.motivo.hasError('required') ||
+                            form.controls.motivo.hasError('pattern')
+                        ) {
+
+                            <mat-error>
+
+                                El motivo de cancelación es obligatorio.
+
+                            </mat-error>
+
+                        }
+
+                        @if (form.controls.motivo.hasError('maxlength')) {
+
+                            <mat-error>
+
+                                Máximo {{ maxMotivo }} caracteres.
+
+                            </mat-error>
+
+                        }
+
+                    </mat-form-field>
+
+                }
+
+            </div>
+
+        </mat-dialog-content>
+
+        <mat-dialog-actions align="end">
+
+            <button
+                mat-stroked-button
+                type="button"
+                (click)="cancelar()">
+
+                Regresar
+
+            </button>
+
+            <button
+                mat-flat-button
+                type="submit"
+                [disabled]="form.invalid"
+                [class]="data.destructiva
+                    ? '!bg-red-700 !text-white'
+                    : ''">
+
+                {{ data.textoConfirmar }}
+
+            </button>
+
+        </mat-dialog-actions>
+
+    </form>
+
+</div>

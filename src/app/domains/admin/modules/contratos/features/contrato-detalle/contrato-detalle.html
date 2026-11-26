@@ -1,0 +1,1161 @@
+<div class="mx-auto flex w-full max-w-screen-2xl flex-auto flex-col p-6 sm:p-8">
+
+    <!-- Encabezado general -->
+
+    <div class="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+
+        <div class="flex items-center gap-4">
+
+            <button
+                matIconButton
+                aria-label="Regresar al listado"
+                [disabled]="confirmando() || operacionActual() !== null"
+                (click)="volver()">
+
+                <mat-icon svgIcon="arrow-left" />
+
+            </button>
+
+            <div class="flex size-12 shrink-0 items-center justify-center rounded-xl bg-primary text-on-primary shadow-sm">
+
+                <mat-icon svgIcon="clipboard-list" />
+
+            </div>
+
+            <div>
+
+                <h1 class="text-3xl font-bold tracking-tight">
+
+                    Detalle de contrato
+
+                </h1>
+
+                <p class="mt-1 text-on-surface-variant">
+
+                    {{ empresaContexto.seleccionada()?.nombre || 'Empresa seleccionada' }}
+
+                </p>
+
+            </div>
+
+        </div>
+
+        <button
+            mat-stroked-button
+            [disabled]="ocupado() || !empresaContexto.empresaId"
+            (click)="actualizar()">
+
+            Actualizar
+
+        </button>
+
+    </div>
+
+    <!-- Mensajes -->
+
+    @if (errorMessage()) {
+
+        <div class="mb-6 rounded-xl bg-red-50 p-4 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-400">
+
+            {{ errorMessage() }}
+
+        </div>
+
+    }
+
+    @if (successMessage()) {
+
+        <div class="mb-6 rounded-xl bg-green-50 p-4 text-sm text-green-700 dark:bg-green-900/20 dark:text-green-400">
+
+            {{ successMessage() }}
+
+        </div>
+
+    }
+
+    <!-- Estado de carga -->
+
+    @if (loading() || empresaContexto.cargando()) {
+
+        <div class="flex flex-col items-center gap-3 rounded-2xl border bg-surface p-12">
+
+            <mat-spinner diameter="36" />
+
+            <span>
+
+                Cargando información del contrato...
+
+            </span>
+
+        </div>
+
+    } @else if (!empresaContexto.empresaId) {
+
+        <div class="rounded-2xl border bg-surface p-12 text-center text-on-surface-variant">
+
+            <mat-icon svgIcon="building-2" />
+
+            <div class="mt-3 font-semibold">
+
+                Selecciona una empresa
+
+            </div>
+
+        </div>
+
+    } @else if (contrato(); as c) {
+
+        <!-- Encabezado del contrato -->
+
+        <section class="mb-6 rounded-2xl border bg-surface p-6 shadow-sm">
+
+            <div class="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+
+                <div>
+
+                    <div class="mb-2 text-sm font-semibold text-primary">
+
+                        {{ c.numeroContrato }}
+
+                    </div>
+
+                    <div class="text-2xl font-bold">
+
+                        {{ c.nombre }}
+
+                    </div>
+
+                    <div class="mt-2 text-sm text-on-surface-variant">
+
+                        {{ c.tipoContratoNombre }}
+
+                    </div>
+
+                    <div class="mt-4 flex flex-wrap items-center gap-3">
+
+                        <span
+                            class="inline-flex rounded-full px-4 py-2 text-sm font-semibold"
+                            [class]="claseEstado(c)">
+
+                            {{ nombreEstado(c) }}
+
+                        </span>
+
+                        @if (c.renovacionAutomatica) {
+
+                            <span class="rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+
+                                Renovación automática
+
+                            </span>
+
+                        }
+
+                        @if (coberturaVigente(c)) {
+
+                            <span class="rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700 dark:bg-green-900/30 dark:text-green-400">
+
+                                Cobertura vigente
+
+                            </span>
+
+                        }
+
+                    </div>
+
+                </div>
+
+                <!-- Acciones -->
+
+                @if (acciones(); as a) {
+
+                    <div class="flex flex-wrap items-center gap-3">
+
+                        @if (a.editar) {
+
+                            <button
+                                mat-stroked-button
+                                [disabled]="ocupado()"
+                                (click)="editar()">
+
+                                <mat-icon svgIcon="pencil" />
+
+                                <span class="ml-2">
+
+                                    Editar
+
+                                </span>
+
+                            </button>
+
+                        }
+
+                        @if (a.activar) {
+
+                            <button
+                                mat-flat-button
+                                [disabled]="ocupado()"
+                                (click)="solicitarOperacion('activar')">
+
+                                Activar
+
+                            </button>
+
+                        }
+
+                        @if (a.suspender) {
+
+                            <button
+                                mat-stroked-button
+                                [disabled]="ocupado()"
+                                (click)="solicitarOperacion('suspender')">
+
+                                Suspender
+
+                            </button>
+
+                        }
+
+                        @if (a.reanudar) {
+
+                            <button
+                                mat-flat-button
+                                [disabled]="ocupado()"
+                                (click)="solicitarOperacion('reanudar')">
+
+                                Reanudar
+
+                            </button>
+
+                        }
+
+                        @if (a.finalizar) {
+
+                            <button
+                                mat-stroked-button
+                                [disabled]="ocupado()"
+                                (click)="solicitarOperacion('finalizar')">
+
+                                Finalizar
+
+                            </button>
+
+                        }
+
+                        @if (a.cancelar) {
+
+                            <button
+                                mat-stroked-button
+                                class="!text-red-700 dark:!text-red-400"
+                                [disabled]="ocupado()"
+                                (click)="solicitarOperacion('cancelar')">
+
+                                Cancelar
+
+                            </button>
+
+                        }
+
+                        @if (a.eliminar) {
+
+                            <button
+                                mat-stroked-button
+                                class="!text-red-700 dark:!text-red-400"
+                                [disabled]="ocupado()"
+                                (click)="solicitarOperacion('eliminar')">
+
+                                Eliminar
+
+                            </button>
+
+                        }
+
+                    </div>
+
+                }
+
+            </div>
+
+            @if (operacionActual()) {
+
+                <div class="mt-5 flex items-center gap-3 rounded-xl border p-4">
+
+                    <mat-spinner diameter="20" />
+
+                    <span class="text-sm">
+
+                        Procesando operación...
+
+                    </span>
+
+                </div>
+
+            }
+
+            @if (estadoCalculado()) {
+
+                <div class="mt-5 rounded-xl bg-orange-50 p-4 text-sm text-orange-800 dark:bg-orange-900/20 dark:text-orange-400">
+
+                    El contrato ha vencido por fecha, aunque su estado registrado todavía es {{ c.estadoContratoNombre }}.
+
+                </div>
+
+            }
+
+            @if (motivoNoActivacion(); as motivo) {
+
+                <div class="mt-5 rounded-xl bg-amber-50 p-4 text-sm text-amber-800 dark:bg-amber-900/20 dark:text-amber-400">
+
+                    <strong>No es posible activar:</strong>
+
+                    {{ motivo }}
+
+                </div>
+
+            }
+
+            @if (motivoNoEliminacion(); as motivo) {
+
+                <div class="mt-4 text-sm text-on-surface-variant">
+
+                    {{ motivo }}
+
+                </div>
+
+            }
+
+            @if (!c.activo) {
+
+                <div class="mt-5 rounded-xl bg-neutral-100 p-4 text-sm dark:bg-neutral-800">
+
+                    Este contrato fue dado de baja. Su información se conserva exclusivamente para consulta.
+
+                </div>
+
+            }
+
+        </section>
+
+        <!-- Indicadores -->
+
+        <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+
+            <div class="rounded-2xl border bg-surface p-5 shadow-sm">
+
+                <div class="text-sm text-on-surface-variant">
+
+                    Vigencia
+
+                </div>
+
+                <div
+                    class="mt-3 text-lg font-bold"
+                    [class]="claseVigencia(c)">
+
+                    {{ textoVigencia(c) }}
+
+                </div>
+
+            </div>
+
+            <div class="rounded-2xl border bg-surface p-5 shadow-sm">
+
+                <div class="text-sm text-on-surface-variant">
+
+                    Monto contractual
+
+                </div>
+
+                <div class="mt-3 text-xl font-bold">
+
+                    {{ formatoMonto(c.monto, c.moneda) }}
+
+                </div>
+
+                <div class="mt-1 text-xs text-on-surface-variant">
+
+                    {{ nombrePeriodicidad(c.periodicidadPago) }}
+
+                </div>
+
+            </div>
+
+            <div class="rounded-2xl border bg-surface p-5 shadow-sm">
+
+                <div class="text-sm text-on-surface-variant">
+
+                    Activos asociados
+
+                </div>
+
+                <div class="mt-3 text-3xl font-bold">
+
+                    {{ c.totalActivosAsociados }}
+
+                </div>
+
+                <div class="mt-1 text-xs text-on-surface-variant">
+
+                    Asociaciones sin exclusión
+
+                </div>
+
+            </div>
+
+            <div class="rounded-2xl border bg-surface p-5 shadow-sm">
+
+                <div class="text-sm text-on-surface-variant">
+
+                    Renovaciones
+
+                </div>
+
+                <div class="mt-3 text-3xl font-bold">
+
+                    {{ c.totalRenovaciones }}
+
+                </div>
+
+                <div class="mt-1 text-xs text-on-surface-variant">
+
+                    Renovaciones registradas
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- Pestañas -->
+
+        <section class="overflow-hidden rounded-2xl border bg-surface shadow-sm">
+
+            <mat-tab-group
+                [selectedIndex]="pestanaSeleccionada()"
+                (selectedIndexChange)="cambiarPestana($event)">
+
+                <!-- Resumen general -->
+
+                <mat-tab label="Resumen general">
+
+                    <div class="grid grid-cols-1 gap-6 p-6 xl:grid-cols-2">
+
+                        <!-- Información general -->
+
+                        <div class="rounded-xl border p-5">
+
+                            <div class="mb-5 text-lg font-semibold">
+
+                                Información general
+
+                            </div>
+
+                            <dl class="grid grid-cols-1 gap-4 md:grid-cols-2">
+
+                                <div>
+
+                                    <dt class="text-sm text-on-surface-variant">
+
+                                        Número de contrato
+
+                                    </dt>
+
+                                    <dd class="mt-1 font-medium">
+
+                                        {{ c.numeroContrato }}
+
+                                    </dd>
+
+                                </div>
+
+                                <div>
+
+                                    <dt class="text-sm text-on-surface-variant">
+
+                                        Tipo de contrato
+
+                                    </dt>
+
+                                    <dd class="mt-1 font-medium">
+
+                                        {{ c.tipoContratoNombre }}
+
+                                    </dd>
+
+                                </div>
+
+                                <div class="md:col-span-2">
+
+                                    <dt class="text-sm text-on-surface-variant">
+
+                                        Nombre
+
+                                    </dt>
+
+                                    <dd class="mt-1 font-medium">
+
+                                        {{ c.nombre }}
+
+                                    </dd>
+
+                                </div>
+
+                                <div class="md:col-span-2">
+
+                                    <dt class="text-sm text-on-surface-variant">
+
+                                        Descripción
+
+                                    </dt>
+
+                                    <dd class="mt-2 whitespace-pre-wrap break-words">
+
+                                        {{ c.descripcion || 'Sin descripción' }}
+
+                                    </dd>
+
+                                </div>
+
+                            </dl>
+
+                        </div>
+
+                        <!-- Vigencia -->
+
+                        <div class="rounded-xl border p-5">
+
+                            <div class="mb-5 text-lg font-semibold">
+
+                                Vigencia
+
+                            </div>
+
+                            <dl class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+
+                                <div>
+
+                                    <dt class="text-sm text-on-surface-variant">
+
+                                        Fecha de inicio
+
+                                    </dt>
+
+                                    <dd class="mt-1 font-medium">
+
+                                        {{ formatoFecha(c.fechaInicio) }}
+
+                                    </dd>
+
+                                </div>
+
+                                <div>
+
+                                    <dt class="text-sm text-on-surface-variant">
+
+                                        Fecha de fin
+
+                                    </dt>
+
+                                    <dd class="mt-1 font-medium">
+
+                                        {{ c.fechaFin
+                                            ? formatoFecha(c.fechaFin)
+                                            : 'Indefinida' }}
+
+                                    </dd>
+
+                                </div>
+
+                                <div>
+
+                                    <dt class="text-sm text-on-surface-variant">
+
+                                        Fecha de firma
+
+                                    </dt>
+
+                                    <dd class="mt-1 font-medium">
+
+                                        {{ formatoFecha(c.fechaFirma) }}
+
+                                    </dd>
+
+                                </div>
+
+                                <div>
+
+                                    <dt class="text-sm text-on-surface-variant">
+
+                                        Situación actual
+
+                                    </dt>
+
+                                    <dd
+                                        class="mt-1"
+                                        [class]="claseVigencia(c)">
+
+                                        {{ textoVigencia(c) }}
+
+                                    </dd>
+
+                                </div>
+
+                            </dl>
+
+                        </div>
+
+                        <!-- Relaciones comerciales -->
+
+                        <div class="rounded-xl border p-5">
+
+                            <div class="mb-5 text-lg font-semibold">
+
+                                Relaciones comerciales
+
+                            </div>
+
+                            <dl class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+
+                                <div>
+
+                                    <dt class="text-sm text-on-surface-variant">
+
+                                        Cliente
+
+                                    </dt>
+
+                                    <dd class="mt-1 font-medium">
+
+                                        {{ c.clienteNombre || 'Sin cliente asociado' }}
+
+                                    </dd>
+
+                                </div>
+
+                                <div>
+
+                                    <dt class="text-sm text-on-surface-variant">
+
+                                        Proveedor
+
+                                    </dt>
+
+                                    <dd class="mt-1 font-medium">
+
+                                        {{ c.proveedorNombre || 'Sin proveedor asociado' }}
+
+                                    </dd>
+
+                                </div>
+
+                            </dl>
+
+                        </div>
+
+                        <!-- Renovación -->
+
+                        <div class="rounded-xl border p-5">
+
+                            <div class="mb-5 text-lg font-semibold">
+
+                                Renovación
+
+                            </div>
+
+                            <dl class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+
+                                <div>
+
+                                    <dt class="text-sm text-on-surface-variant">
+
+                                        Renovación automática
+
+                                    </dt>
+
+                                    <dd class="mt-1 font-medium">
+
+                                        {{ textoBooleano(c.renovacionAutomatica) }}
+
+                                    </dd>
+
+                                </div>
+
+                                <div>
+
+                                    <dt class="text-sm text-on-surface-variant">
+
+                                        Días de aviso de no renovación
+
+                                    </dt>
+
+                                    <dd class="mt-1 font-medium">
+
+                                        {{ c.diasAvisoNoRenovacion ?? 'No definido' }}
+
+                                    </dd>
+
+                                </div>
+
+                                <div class="sm:col-span-2">
+
+                                    <div class="text-sm text-on-surface-variant">
+
+                                        La renovación automática corresponde a una condición contractual. Nextag no modificará automáticamente las fechas de vigencia.
+
+                                    </div>
+
+                                </div>
+
+                            </dl>
+
+                        </div>
+
+                        <!-- Cancelación y finalización -->
+
+                        @if (c.fechaCancelacion || c.fechaFinalizacion) {
+
+                            <div class="rounded-xl border p-5 xl:col-span-2">
+
+                                <div class="mb-5 text-lg font-semibold">
+
+                                    Cierre del contrato
+
+                                </div>
+
+                                @if (c.fechaCancelacion) {
+
+                                    <div class="mb-4">
+
+                                        <div class="text-sm text-on-surface-variant">
+
+                                            Fecha de cancelación
+
+                                        </div>
+
+                                        <div class="mt-1 font-medium">
+
+                                            {{ formatoFechaHora(c.fechaCancelacion) }}
+
+                                        </div>
+
+                                    </div>
+
+                                    <div class="rounded-lg bg-red-50 p-4 dark:bg-red-900/20">
+
+                                        <div class="font-semibold text-red-700 dark:text-red-400">
+
+                                            Motivo de cancelación
+
+                                        </div>
+
+                                        <div class="mt-2 whitespace-pre-wrap break-words">
+
+                                            {{ c.motivoCancelacion || 'Sin motivo registrado' }}
+
+                                        </div>
+
+                                    </div>
+
+                                }
+
+                                @if (c.fechaFinalizacion) {
+
+                                    <div class="mt-4">
+
+                                        <div class="text-sm text-on-surface-variant">
+
+                                            Fecha de finalización
+
+                                        </div>
+
+                                        <div class="mt-1 font-medium">
+
+                                            {{ formatoFechaHora(c.fechaFinalizacion) }}
+
+                                        </div>
+
+                                    </div>
+
+                                }
+
+                            </div>
+
+                        }
+
+                    </div>
+
+                </mat-tab>
+
+                <!-- Información contractual -->
+
+                <mat-tab label="Información contractual">
+
+                    <div class="grid grid-cols-1 gap-6 p-6 xl:grid-cols-2">
+
+                        <!-- Condiciones económicas -->
+
+                        <div class="rounded-xl border p-5">
+
+                            <div class="mb-5 text-lg font-semibold">
+
+                                Condiciones económicas
+
+                            </div>
+
+                            <dl class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+
+                                <div>
+
+                                    <dt class="text-sm text-on-surface-variant">
+
+                                        Monto
+
+                                    </dt>
+
+                                    <dd class="mt-1 text-lg font-semibold">
+
+                                        {{ formatoMonto(c.monto, c.moneda) }}
+
+                                    </dd>
+
+                                </div>
+
+                                <div>
+
+                                    <dt class="text-sm text-on-surface-variant">
+
+                                        Moneda
+
+                                    </dt>
+
+                                    <dd class="mt-1 font-medium">
+
+                                        {{ c.moneda }}
+
+                                    </dd>
+
+                                </div>
+
+                                <div>
+
+                                    <dt class="text-sm text-on-surface-variant">
+
+                                        Periodicidad de pago
+
+                                    </dt>
+
+                                    <dd class="mt-1 font-medium">
+
+                                        {{ nombrePeriodicidad(c.periodicidadPago) }}
+
+                                    </dd>
+
+                                </div>
+
+                                <div>
+
+                                    <dt class="text-sm text-on-surface-variant">
+
+                                        Día de pago
+
+                                    </dt>
+
+                                    <dd class="mt-1 font-medium">
+
+                                        {{ c.diaPago ?? 'No definido' }}
+
+                                    </dd>
+
+                                </div>
+
+                                <div>
+
+                                    <dt class="text-sm text-on-surface-variant">
+
+                                        Incluye impuestos
+
+                                    </dt>
+
+                                    <dd class="mt-1 font-medium">
+
+                                        {{ textoBooleano(c.incluyeImpuestos) }}
+
+                                    </dd>
+
+                                </div>
+
+                            </dl>
+
+                        </div>
+
+                        <!-- Cobertura -->
+
+                        <div class="rounded-xl border p-5">
+
+                            <div class="mb-5 text-lg font-semibold">
+
+                                Cobertura de servicios
+
+                            </div>
+
+                            <div class="flex flex-col divide-y">
+
+                                <div class="flex items-center justify-between gap-3 py-3">
+
+                                    <span>
+
+                                        Mantenimiento preventivo
+
+                                    </span>
+
+                                    <span class="font-semibold">
+
+                                        {{ textoBooleano(c.incluyePreventivo) }}
+
+                                    </span>
+
+                                </div>
+
+                                <div class="flex items-center justify-between gap-3 py-3">
+
+                                    <span>
+
+                                        Mantenimiento correctivo
+
+                                    </span>
+
+                                    <span class="font-semibold">
+
+                                        {{ textoBooleano(c.incluyeCorrectivo) }}
+
+                                    </span>
+
+                                </div>
+
+                                <div class="flex items-center justify-between gap-3 py-3">
+
+                                    <span>
+
+                                        Refacciones
+
+                                    </span>
+
+                                    <span class="font-semibold">
+
+                                        {{ textoBooleano(c.incluyeRefacciones) }}
+
+                                    </span>
+
+                                </div>
+
+                                <div class="flex items-center justify-between gap-3 py-3">
+
+                                    <span>
+
+                                        Mano de obra
+
+                                    </span>
+
+                                    <span class="font-semibold">
+
+                                        {{ textoBooleano(c.incluyeManoObra) }}
+
+                                    </span>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        <!-- SLA -->
+
+                        <div class="rounded-xl border p-5 xl:col-span-2">
+
+                            <div class="mb-5 text-lg font-semibold">
+
+                                Niveles de servicio (SLA)
+
+                            </div>
+
+                            <dl class="grid grid-cols-1 gap-4 md:grid-cols-3">
+
+                                <div>
+
+                                    <dt class="text-sm text-on-surface-variant">
+
+                                        Tiempo de respuesta
+
+                                    </dt>
+
+                                    <dd class="mt-1 font-medium">
+
+                                        {{ c.tiempoRespuestaHoras !== null
+                                            ? c.tiempoRespuestaHoras + ' horas'
+                                            : 'No definido' }}
+
+                                    </dd>
+
+                                </div>
+
+                                <div>
+
+                                    <dt class="text-sm text-on-surface-variant">
+
+                                        Horario de atención
+
+                                    </dt>
+
+                                    <dd class="mt-1 font-medium">
+
+                                        {{ c.horarioAtencion || 'No definido' }}
+
+                                    </dd>
+
+                                </div>
+
+                                <div>
+
+                                    <dt class="text-sm text-on-surface-variant">
+
+                                        Servicios incluidos
+
+                                    </dt>
+
+                                    <dd class="mt-1 font-medium">
+
+                                        {{ c.serviciosIncluidos ?? 'No definido' }}
+
+                                    </dd>
+
+                                </div>
+
+                            </dl>
+
+                        </div>
+
+                        <!-- Condiciones de servicio -->
+
+                        <div class="rounded-xl border p-5 xl:col-span-2">
+
+                            <div class="mb-4 text-lg font-semibold">
+
+                                Condiciones del servicio
+
+                            </div>
+
+                            <div class="whitespace-pre-wrap break-words">
+
+                                {{ c.condicionesServicio || 'Sin condiciones adicionales registradas.' }}
+
+                            </div>
+
+                        </div>
+
+                        <!-- Observaciones -->
+
+                        <div class="rounded-xl border p-5 xl:col-span-2">
+
+                            <div class="mb-4 text-lg font-semibold">
+
+                                Observaciones
+
+                            </div>
+
+                            <div class="whitespace-pre-wrap break-words">
+
+                                {{ c.observaciones || 'Sin observaciones.' }}
+
+                            </div>
+
+                        </div>
+
+                        <!-- Auditoría -->
+
+                        <div class="rounded-xl border p-5 xl:col-span-2">
+
+                            <div class="mb-5 text-lg font-semibold">
+
+                                Información de auditoría
+
+                            </div>
+
+                            <dl class="grid grid-cols-1 gap-4 md:grid-cols-2">
+
+                                <div>
+
+                                    <dt class="text-sm text-on-surface-variant">
+
+                                        Fecha de creación
+
+                                    </dt>
+
+                                    <dd class="mt-1 font-medium">
+
+                                        {{ formatoFechaHora(c.fechaCreacion) }}
+
+                                    </dd>
+
+                                </div>
+
+                                <div>
+
+                                    <dt class="text-sm text-on-surface-variant">
+
+                                        Última actualización
+
+                                    </dt>
+
+                                    <dd class="mt-1 font-medium">
+
+                                        {{ formatoFechaHora(c.fechaActualizacion) }}
+
+                                    </dd>
+
+                                </div>
+
+                            </dl>
+
+                        </div>
+
+                    </div>
+
+                </mat-tab>
+
+                <!-- Próximos módulos -->
+
+                <mat-tab
+                    label="Activos asociados"
+                    disabled>
+                </mat-tab>
+
+                <mat-tab
+                    label="Renovaciones"
+                    disabled>
+                </mat-tab>
+
+                <mat-tab
+                    label="Documentos adjuntos"
+                    disabled>
+                </mat-tab>
+
+                <mat-tab
+                    label="Alertas"
+                    disabled>
+                </mat-tab>
+
+            </mat-tab-group>
+
+        </section>
+
+    } @else if (!errorMessage()) {
+
+        <div class="rounded-2xl border bg-surface p-12 text-center text-on-surface-variant">
+
+            No hay información disponible del contrato.
+
+        </div>
+
+    }
+
+</div>
