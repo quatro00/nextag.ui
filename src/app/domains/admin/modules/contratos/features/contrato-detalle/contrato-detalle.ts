@@ -92,915 +92,1009 @@ export default class ContratoDetalleComponent {
 
     // Agregar aquí las siguientes secciones.
     private readonly route =
-    inject(ActivatedRoute);
+        inject(ActivatedRoute);
 
-private readonly router =
-    inject(Router);
+    private readonly router =
+        inject(Router);
 
-private readonly auth =
-    inject(AuthService);
+    private readonly auth =
+        inject(AuthService);
 
-private readonly dialog =
-    inject(MatDialog);
+    private readonly dialog =
+        inject(MatDialog);
 
-private readonly destroyRef =
-    inject(DestroyRef);
+    private readonly destroyRef =
+        inject(DestroyRef);
 
-private readonly contratosService =
-    inject(ContratosService);
+    private readonly contratosService =
+        inject(ContratosService);
 
-protected readonly empresaContexto =
-    inject(EmpresaContextoService);
+    protected readonly empresaContexto =
+        inject(EmpresaContextoService);
 
     protected readonly id = toSignal(
 
-    this.route.paramMap.pipe(
-        map(params => params.get('id'))
-    ),
+        this.route.paramMap.pipe(
+            map(params => params.get('id'))
+        ),
 
-    {
-        initialValue:
-            this.route.snapshot.paramMap.get('id'),
-    }
-);
+        {
+            initialValue:
+                this.route.snapshot.paramMap.get('id'),
+        }
+    );
 
-protected readonly contrato =
-    signal<ContratoDetalle | null>(null);
+    protected readonly contrato =
+        signal<ContratoDetalle | null>(null);
 
-protected readonly loading =
-    signal(false);
+    protected readonly loading =
+        signal(false);
 
-protected readonly confirmando =
-    signal(false);
+    protected readonly confirmando =
+        signal(false);
 
-protected readonly operacionActual =
-    signal<ContratoOperacion | null>(null);
+    protected readonly operacionActual =
+        signal<ContratoOperacion | null>(null);
 
-protected readonly errorMessage =
-    signal<string | null>(null);
+    protected readonly errorMessage =
+        signal<string | null>(null);
 
-protected readonly successMessage =
-    signal<string | null>(null);
+    protected readonly successMessage =
+        signal<string | null>(null);
 
-protected readonly pestanaSeleccionada =
-    signal(0);
+    protected readonly pestanaSeleccionada =
+        signal(0);
 
-private readonly empresaDetalle =
-    signal<string | null>(null);
+    private readonly empresaDetalle =
+        signal<string | null>(null);
 
-private cargaSub?: Subscription;
+    private cargaSub?: Subscription;
 
-private secuenciaCarga = 0;
+    private secuenciaCarga = 0;
 
-private destruido = false;
+    private destruido = false;
 
-protected readonly estados =
-    ESTADOS_CONTRATO;
+    protected readonly estados =
+        ESTADOS_CONTRATO;
 
-protected readonly nombreEstado =
-    obtenerNombreEstadoContrato;
+    protected readonly nombreEstado =
+        obtenerNombreEstadoContrato;
 
-protected readonly claseEstado =
-    obtenerClaseEstadoContrato;
+    protected readonly claseEstado =
+        obtenerClaseEstadoContrato;
 
-protected readonly textoVigencia =
-    obtenerTextoVigenciaContrato;
+    protected readonly textoVigencia =
+        obtenerTextoVigenciaContrato;
 
-protected readonly claseVigencia =
-    obtenerClaseVigenciaContrato;
+    protected readonly claseVigencia =
+        obtenerClaseVigenciaContrato;
 
-protected readonly formatoFecha =
-    formatearFechaContrato;
+    protected readonly formatoFecha =
+        formatearFechaContrato;
 
-protected readonly formatoMonto =
-    formatearMontoContrato;
+    protected readonly formatoMonto =
+        formatearMontoContrato;
 
-protected readonly textoBooleano =
-    obtenerTextoBooleanoContrato;
+    protected readonly textoBooleano =
+        obtenerTextoBooleanoContrato;
 
-protected readonly nombrePeriodicidad =
-    obtenerNombrePeriodicidad;
+    protected readonly nombrePeriodicidad =
+        obtenerNombrePeriodicidad;
 
-protected readonly coberturaVigente =
-    contratoTieneCoberturaVigente;
+    protected readonly coberturaVigente =
+        contratoTieneCoberturaVigente;
 
     protected readonly puedeGestionar = computed(() =>
-    this.auth.hasAnyRole([
-        AUTH_ROLES.ADMINISTRADOR,
-        AUTH_ROLES.ADMIN_EMPRESA,
-    ])
-);
-
-protected readonly acciones = computed(() => {
-
-    const contrato =
-        this.contrato();
-
-    if (!contrato) {
-        return null;
-    }
-
-    return obtenerAccionesPermitidasContratoDetalle(
-
-        contrato,
-
-        this.puedeGestionar()
-
-    );
-});
-
-protected readonly ocupado = computed(() =>
-
-    this.loading() ||
-
-    this.confirmando() ||
-
-    this.operacionActual() !== null
-
-);
-
-protected readonly estadoCalculado = computed(() => {
-
-    const contrato =
-        this.contrato();
-
-    if (
-        !contrato ||
-        !contrato.activo
-    ) {
-        return false;
-    }
-
-    return obtenerEstadoEfectivoContrato(contrato) !==
-        contrato.estadoContratoId;
-});
-
-protected readonly motivoNoActivacion = computed(() => {
-
-    const contrato =
-        this.contrato();
-
-    if (
-        !contrato ||
-        !contrato.activo ||
-        !this.puedeGestionar() ||
-        contrato.estadoContratoId !==
-            ESTADOS_CONTRATO.BORRADOR
-    ) {
-        return null;
-    }
-
-    if (contrato.pendienteInicio) {
-
-        return 'El contrato todavía no ha iniciado su vigencia.';
-    }
-
-    if (
-        contrato.diasRestantes !== null &&
-        contrato.diasRestantes < 0
-    ) {
-
-        return 'La fecha de fin del contrato ya transcurrió.';
-    }
-
-    return null;
-});
-
-protected readonly motivoNoEliminacion = computed(() => {
-
-    const contrato =
-        this.contrato();
-
-    if (
-        !contrato ||
-        !contrato.activo ||
-        !this.puedeGestionar() ||
-        contrato.estadoContratoId !==
-            ESTADOS_CONTRATO.BORRADOR
-    ) {
-        return null;
-    }
-
-    if (contrato.totalActivosAsociados > 0) {
-
-        return 'No se puede eliminar mientras tenga activos asociados.';
-    }
-
-    if (contrato.totalRenovaciones > 0) {
-
-        return 'No se puede eliminar porque tiene historial de renovaciones.';
-    }
-
-    return null;
-});
-
-private cargarContrato(
-    empresaId: string | null,
-    contratoId: string | null,
-    conservarMensaje: boolean
-): void {
-
-    this.cargaSub?.unsubscribe();
-
-    const secuencia =
-        ++this.secuenciaCarga;
-
-    this.contrato.set(null);
-
-    this.empresaDetalle.set(null);
-
-    this.errorMessage.set(null);
-
-    if (!conservarMensaje) {
-
-        this.successMessage.set(null);
-    }
-
-    this.loading.set(
-        !!empresaId && !!contratoId
+        this.auth.hasAnyRole([
+            AUTH_ROLES.ADMINISTRADOR,
+            AUTH_ROLES.ADMIN_EMPRESA,
+        ])
     );
 
-    if (
-        !empresaId ||
-        !contratoId
-    ) {
-        return;
-    }
+    protected readonly acciones = computed(() => {
 
-    this.cargaSub = this.contratosService
+        const contrato =
+            this.contrato();
 
-        .getById(contratoId)
+        if (!contrato) {
+            return null;
+        }
 
-        .subscribe({
-
-            next: contrato => {
-
-                if (!this.contextoVigente(
-
-                    empresaId,
-
-                    contratoId,
-
-                    secuencia
-
-                )) {
-                    return;
-                }
-
-                if (
-
-                    contrato.empresaId !== empresaId ||
-
-                    contrato.id !== contratoId
-
-                ) {
-
-                    this.errorMessage.set(
-
-                        'La información recibida no corresponde al contrato o empresa seleccionados.'
-
-                    );
-
-                    this.loading.set(false);
-
-                    return;
-                }
-
-                this.contrato.set(contrato);
-
-                this.empresaDetalle.set(empresaId);
-
-                this.loading.set(false);
-
-                if (
-
-                    !conservarMensaje &&
-
-                    this.consumirMensajeCreacion(
-                        empresaId,
-                        contratoId
-                    )
-
-                ) {
-
-                    this.successMessage.set(
-
-                        'Contrato registrado correctamente.'
-
-                    );
-                }
-            },
-
-            error: (error: unknown) => {
-
-                if (!this.contextoVigente(
-
-                    empresaId,
-
-                    contratoId,
-
-                    secuencia
-
-                )) {
-                    return;
-                }
-
-                this.errorMessage.set(
-
-                    this.mensajeError(
-
-                        error,
-
-                        'No fue posible cargar la información del contrato.'
-
-                    )
-
-                );
-
-                this.loading.set(false);
-            },
-
-        });
-}
-
-private contextoVigente(
-    empresaId: string,
-    contratoId: string,
-    secuencia: number
-): boolean {
-
-    return !this.destruido &&
-
-        this.empresaContexto.empresaId === empresaId &&
-
-        this.id() === contratoId &&
-
-        this.secuenciaCarga === secuencia;
-}
-
-private consumirMensajeCreacion(
-    empresaId: string,
-    contratoId: string
-): boolean {
-
-    const state =
-        window.history.state;
-
-    if (
-
-        !state?.contratoCreado ||
-
-        state.empresaId !== empresaId ||
-
-        state.contratoId !== contratoId
-
-    ) {
-        return false;
-    }
-
-    const nuevoState = {
-        ...state,
-    };
-
-    delete nuevoState.contratoCreado;
-
-    delete nuevoState.empresaId;
-
-    delete nuevoState.contratoId;
-
-    window.history.replaceState(
-
-        nuevoState,
-
-        ''
-
-    );
-
-    return true;
-}
-
-protected actualizar(): void {
-
-    if (this.ocupado()) {
-        return;
-    }
-
-    this.cargarContrato(
-
-        this.empresaContexto.empresaId,
-
-        this.id(),
-
-        false
-
-    );
-}
-
-protected volver(): void {
-
-    if (
-
-        this.confirmando() ||
-
-        this.operacionActual() !== null
-
-    ) {
-        return;
-    }
-
-    void this.router.navigate([
-        '/admin/contratos',
-    ]);
-}
-
-protected editar(): void {
-
-    const contrato =
-        this.contrato();
-
-    if (
-
-        !contrato ||
-
-        this.ocupado() ||
-
-        !this.acciones()?.editar ||
-
-        contrato.empresaId !==
-            this.empresaContexto.empresaId
-
-    ) {
-        return;
-    }
-
-    void this.router.navigate([
-
-        '/admin/contratos',
-
-        contrato.id,
-
-        'editar',
-
-    ]);
-}
-
-protected cambiarPestana(
-    indice: number
-): void {
-
-    this.pestanaSeleccionada.set(
-        indice
-    );
-}
-
-private obtenerConfiguracionOperacion(
-    operacion: ContratoOperacion,
-    contrato: ContratoDetalle
-): ContratoOperacionDialogData {
-
-    const base = {
-
-        operacion,
-
-        numeroContrato:
-            contrato.numeroContrato,
-
-        nombreContrato:
-            contrato.nombre,
-
-        requiereMotivo: false,
-
-        destructiva: false,
-
-    };
-
-    switch (operacion) {
-
-        case 'activar':
-
-            return {
-
-                ...base,
-
-                titulo: 'Activar contrato',
-
-                mensaje:
-                    'El contrato cambiará a estado Vigente. A partir de este momento su vigencia y cobertura podrán considerarse operativas. ¿Deseas continuar?',
-
-                textoConfirmar: 'Activar contrato',
-
-            };
-
-        case 'suspender':
-
-            return {
-
-                ...base,
-
-                titulo: 'Suspender contrato',
-
-                mensaje:
-                    'El contrato cambiará a estado Suspendido. Se conservarán sus activos asociados y su información, pero dejará de considerarse una cobertura vigente mientras permanezca suspendido.',
-
-                textoConfirmar: 'Suspender contrato',
-
-            };
-
-        case 'reanudar':
-
-            return {
-
-                ...base,
-
-                titulo: 'Reanudar contrato',
-
-                mensaje:
-                    'El contrato regresará al estado Vigente, siempre que sus fechas permitan la reanudación.',
-
-                textoConfirmar: 'Reanudar contrato',
-
-            };
-
-        case 'cancelar':
-
-            return {
-
-                ...base,
-
-                titulo: 'Cancelar contrato',
-
-                mensaje:
-                    'El contrato será cancelado definitivamente. Se conservará su información histórica, pero ya no podrá editarse ni renovarse. Esta operación requiere un motivo.',
-
-                textoConfirmar: 'Cancelar contrato',
-
-                requiereMotivo: true,
-
-                destructiva: true,
-
-            };
-
-        case 'finalizar':
-
-            return {
-
-                ...base,
-
-                titulo: 'Finalizar contrato',
-
-                mensaje:
-                    'El contrato cambiará a estado Finalizado. Se conservará su historial, pero ya no podrá editarse ni renovarse.',
-
-                textoConfirmar: 'Finalizar contrato',
-
-                destructiva: true,
-
-            };
-
-        case 'eliminar':
-
-            return {
-
-                ...base,
-
-                titulo: 'Eliminar contrato',
-
-                mensaje:
-                    'El contrato será dado de baja y dejará de aparecer en el listado principal. Su registro se conservará en la base de datos. Esta operación únicamente está permitida para contratos en borrador sin activos asociados ni renovaciones.',
-
-                textoConfirmar: 'Eliminar contrato',
-
-                destructiva: true,
-
-            };
-    }
-}
-
-private operacionPermitida(
-    operacion: ContratoOperacion,
-    contrato: ContratoDetalle
-): boolean {
-
-    const acciones =
-        obtenerAccionesPermitidasContratoDetalle(
+        return obtenerAccionesPermitidasContratoDetalle(
 
             contrato,
 
             this.puedeGestionar()
 
         );
+    });
 
-    return acciones[operacion] === true;
-}
+    protected readonly ocupado = computed(() =>
 
-protected async solicitarOperacion(
-    operacion: ContratoOperacion
-): Promise<void> {
+        this.loading() ||
 
-    const contrato =
-        this.contrato();
+        this.confirmando() ||
 
-    const empresaId =
-        this.empresaContexto.empresaId;
-
-    if (
-
-        this.ocupado() ||
-
-        !contrato ||
-
-        !empresaId ||
-
-        this.empresaDetalle() !== empresaId ||
-
-        contrato.empresaId !== empresaId ||
-
-        !this.operacionPermitida(
-            operacion,
-            contrato
-        )
-
-    ) {
-        return;
-    }
-
-    const contratoId =
-        contrato.id;
-
-    const secuencia =
-        this.secuenciaCarga;
-
-    const configuracion =
-        this.obtenerConfiguracionOperacion(
-
-            operacion,
-
-            contrato
-
-        );
-
-    this.confirmando.set(true);
-
-    this.errorMessage.set(null);
-
-    this.successMessage.set(null);
-
-    const dialogRef = this.dialog.open<
-
-        ContratoOperacionDialog,
-
-        ContratoOperacionDialogData,
-
-        ContratoOperacionDialogResult
-
-    >(
-
-        ContratoOperacionDialog,
-
-        {
-
-            width: '520px',
-
-            maxWidth: '95vw',
-
-            autoFocus: false,
-
-            disableClose: true,
-
-            data: configuracion,
-
-        }
+        this.operacionActual() !== null
 
     );
 
-    let resultado:
-        ContratoOperacionDialogResult | undefined;
+    protected readonly estadoCalculado = computed(() => {
 
-    try {
+        const contrato =
+            this.contrato();
 
-        resultado = await firstValueFrom(
+        if (
+            !contrato ||
+            !contrato.activo
+        ) {
+            return false;
+        }
 
-            dialogRef.afterClosed().pipe(
+        return obtenerEstadoEfectivoContrato(contrato) !==
+            contrato.estadoContratoId;
+    });
 
-                takeUntilDestroyed(
-                    this.destroyRef
-                )
+    protected readonly motivoNoActivacion = computed(() => {
 
-            ),
+        const contrato =
+            this.contrato();
+
+        if (
+            !contrato ||
+            !contrato.activo ||
+            !this.puedeGestionar() ||
+            contrato.estadoContratoId !==
+            ESTADOS_CONTRATO.BORRADOR
+        ) {
+            return null;
+        }
+
+        if (contrato.pendienteInicio) {
+
+            return 'El contrato todavía no ha iniciado su vigencia.';
+        }
+
+        if (
+            contrato.diasRestantes !== null &&
+            contrato.diasRestantes < 0
+        ) {
+
+            return 'La fecha de fin del contrato ya transcurrió.';
+        }
+
+        return null;
+    });
+
+    protected readonly motivoNoEliminacion = computed(() => {
+
+        const contrato =
+            this.contrato();
+
+        if (
+            !contrato ||
+            !contrato.activo ||
+            !this.puedeGestionar() ||
+            contrato.estadoContratoId !==
+            ESTADOS_CONTRATO.BORRADOR
+        ) {
+            return null;
+        }
+
+        if (contrato.totalActivosAsociados > 0) {
+
+            return 'No se puede eliminar mientras tenga activos asociados.';
+        }
+
+        if (contrato.totalRenovaciones > 0) {
+
+            return 'No se puede eliminar porque tiene historial de renovaciones.';
+        }
+
+        return null;
+    });
+
+    constructor() {
+
+        effect(onCleanup => {
+
+            const empresaId =
+                this.empresaContexto.seleccionada()?.id ??
+                null;
+
+            const contratoId =
+                this.id();
+
+            untracked(() => {
+
+                this.pestanaSeleccionada.set(0);
+
+                this.cargarContrato(
+                    empresaId,
+                    contratoId,
+                    false
+                );
+            });
+
+            onCleanup(() => {
+
+                this.secuenciaCarga++;
+
+                this.cargaSub?.unsubscribe();
+
+            });
+        });
+
+        this.destroyRef.onDestroy(() => {
+
+            this.destruido = true;
+
+            this.secuenciaCarga++;
+
+            this.cargaSub?.unsubscribe();
+
+        });
+    }
+
+    private cargarContrato(
+        empresaId: string | null,
+        contratoId: string | null,
+        conservarMensaje: boolean
+    ): void {
+
+        this.cargaSub?.unsubscribe();
+
+        const secuencia =
+            ++this.secuenciaCarga;
+
+        this.contrato.set(null);
+
+        this.empresaDetalle.set(null);
+
+        this.errorMessage.set(null);
+
+        if (!conservarMensaje) {
+
+            this.successMessage.set(null);
+        }
+
+        this.loading.set(
+            !!empresaId && !!contratoId
+        );
+
+        if (
+            !empresaId ||
+            !contratoId
+        ) {
+            return;
+        }
+
+        this.cargaSub = this.contratosService
+
+            .getById(contratoId)
+
+            .subscribe({
+
+                next: contrato => {
+
+                    if (!this.contextoVigente(
+
+                        empresaId,
+
+                        contratoId,
+
+                        secuencia
+
+                    )) {
+                        return;
+                    }
+
+                    if (
+
+                        contrato.empresaId !== empresaId ||
+
+                        contrato.id !== contratoId
+
+                    ) {
+
+                        this.errorMessage.set(
+
+                            'La información recibida no corresponde al contrato o empresa seleccionados.'
+
+                        );
+
+                        this.loading.set(false);
+
+                        return;
+                    }
+
+                    this.contrato.set(contrato);
+
+                    this.empresaDetalle.set(empresaId);
+
+                    this.loading.set(false);
+
+                    if (
+
+                        !conservarMensaje &&
+
+                        this.consumirMensajeCreacion(
+                            empresaId,
+                            contratoId
+                        )
+
+                    ) {
+
+                        this.successMessage.set(
+
+                            'Contrato registrado correctamente.'
+
+                        );
+                    }
+                },
+
+                error: (error: unknown) => {
+
+                    if (!this.contextoVigente(
+
+                        empresaId,
+
+                        contratoId,
+
+                        secuencia
+
+                    )) {
+                        return;
+                    }
+
+                    this.errorMessage.set(
+
+                        this.mensajeError(
+
+                            error,
+
+                            'No fue posible cargar la información del contrato.'
+
+                        )
+
+                    );
+
+                    this.loading.set(false);
+                },
+
+            });
+    }
+
+    private contextoVigente(
+        empresaId: string,
+        contratoId: string,
+        secuencia: number
+    ): boolean {
+
+        return !this.destruido &&
+
+            this.empresaContexto.empresaId === empresaId &&
+
+            this.id() === contratoId &&
+
+            this.secuenciaCarga === secuencia;
+    }
+
+    private consumirMensajeCreacion(
+        empresaId: string,
+        contratoId: string
+    ): boolean {
+
+        const state =
+            window.history.state;
+
+        if (
+
+            !state?.contratoCreado ||
+
+            state.empresaId !== empresaId ||
+
+            state.contratoId !== contratoId
+
+        ) {
+            return false;
+        }
+
+        const nuevoState = {
+            ...state,
+        };
+
+        delete nuevoState.contratoCreado;
+
+        delete nuevoState.empresaId;
+
+        delete nuevoState.contratoId;
+
+        window.history.replaceState(
+
+            nuevoState,
+
+            ''
+
+        );
+
+        return true;
+    }
+
+    protected actualizar(): void {
+
+        if (this.ocupado()) {
+            return;
+        }
+
+        this.cargarContrato(
+
+            this.empresaContexto.empresaId,
+
+            this.id(),
+
+            false
+
+        );
+    }
+
+    protected volver(): void {
+
+        if (
+
+            this.confirmando() ||
+
+            this.operacionActual() !== null
+
+        ) {
+            return;
+        }
+
+        void this.router.navigate([
+            '/admin/contratos',
+        ]);
+    }
+
+    protected editar(): void {
+
+        const contrato =
+            this.contrato();
+
+        if (
+
+            !contrato ||
+
+            this.ocupado() ||
+
+            !this.acciones()?.editar ||
+
+            contrato.empresaId !==
+            this.empresaContexto.empresaId
+
+        ) {
+            return;
+        }
+
+        void this.router.navigate([
+
+            '/admin/contratos',
+
+            contrato.id,
+
+            'editar',
+
+        ]);
+    }
+
+    protected cambiarPestana(
+        indice: number
+    ): void {
+
+        this.pestanaSeleccionada.set(
+            indice
+        );
+    }
+
+    private obtenerConfiguracionOperacion(
+        operacion: ContratoOperacion,
+        contrato: ContratoDetalle
+    ): ContratoOperacionDialogData {
+
+        const base = {
+
+            operacion,
+
+            numeroContrato:
+                contrato.numeroContrato,
+
+            nombreContrato:
+                contrato.nombre,
+
+            requiereMotivo: false,
+
+            destructiva: false,
+
+        };
+
+        switch (operacion) {
+
+            case 'activar':
+
+                return {
+
+                    ...base,
+
+                    titulo: 'Activar contrato',
+
+                    mensaje:
+                        'El contrato cambiará a estado Vigente. A partir de este momento su vigencia y cobertura podrán considerarse operativas. ¿Deseas continuar?',
+
+                    textoConfirmar: 'Activar contrato',
+
+                };
+
+            case 'suspender':
+
+                return {
+
+                    ...base,
+
+                    titulo: 'Suspender contrato',
+
+                    mensaje:
+                        'El contrato cambiará a estado Suspendido. Se conservarán sus activos asociados y su información, pero dejará de considerarse una cobertura vigente mientras permanezca suspendido.',
+
+                    textoConfirmar: 'Suspender contrato',
+
+                };
+
+            case 'reanudar':
+
+                return {
+
+                    ...base,
+
+                    titulo: 'Reanudar contrato',
+
+                    mensaje:
+                        'El contrato regresará al estado Vigente, siempre que sus fechas permitan la reanudación.',
+
+                    textoConfirmar: 'Reanudar contrato',
+
+                };
+
+            case 'cancelar':
+
+                return {
+
+                    ...base,
+
+                    titulo: 'Cancelar contrato',
+
+                    mensaje:
+                        'El contrato será cancelado definitivamente. Se conservará su información histórica, pero ya no podrá editarse ni renovarse. Esta operación requiere un motivo.',
+
+                    textoConfirmar: 'Cancelar contrato',
+
+                    requiereMotivo: true,
+
+                    destructiva: true,
+
+                };
+
+            case 'finalizar':
+
+                return {
+
+                    ...base,
+
+                    titulo: 'Finalizar contrato',
+
+                    mensaje:
+                        'El contrato cambiará a estado Finalizado. Se conservará su historial, pero ya no podrá editarse ni renovarse.',
+
+                    textoConfirmar: 'Finalizar contrato',
+
+                    destructiva: true,
+
+                };
+
+            case 'eliminar':
+
+                return {
+
+                    ...base,
+
+                    titulo: 'Eliminar contrato',
+
+                    mensaje:
+                        'El contrato será dado de baja y dejará de aparecer en el listado principal. Su registro se conservará en la base de datos. Esta operación únicamente está permitida para contratos en borrador sin activos asociados ni renovaciones.',
+
+                    textoConfirmar: 'Eliminar contrato',
+
+                    destructiva: true,
+
+                };
+        }
+    }
+
+    private operacionPermitida(
+        operacion: ContratoOperacion,
+        contrato: ContratoDetalle
+    ): boolean {
+
+        const acciones =
+            obtenerAccionesPermitidasContratoDetalle(
+
+                contrato,
+
+                this.puedeGestionar()
+
+            );
+
+        return acciones[operacion] === true;
+    }
+
+    protected async solicitarOperacion(
+        operacion: ContratoOperacion
+    ): Promise<void> {
+
+        const contrato =
+            this.contrato();
+
+        const empresaId =
+            this.empresaContexto.empresaId;
+
+        if (
+
+            this.ocupado() ||
+
+            !contrato ||
+
+            !empresaId ||
+
+            this.empresaDetalle() !== empresaId ||
+
+            contrato.empresaId !== empresaId ||
+
+            !this.operacionPermitida(
+                operacion,
+                contrato
+            )
+
+        ) {
+            return;
+        }
+
+        const contratoId =
+            contrato.id;
+
+        const secuencia =
+            this.secuenciaCarga;
+
+        const configuracion =
+            this.obtenerConfiguracionOperacion(
+
+                operacion,
+
+                contrato
+
+            );
+
+        this.confirmando.set(true);
+
+        this.errorMessage.set(null);
+
+        this.successMessage.set(null);
+
+        const dialogRef = this.dialog.open<
+
+            ContratoOperacionDialog,
+
+            ContratoOperacionDialogData,
+
+            ContratoOperacionDialogResult
+
+        >(
+
+            ContratoOperacionDialog,
 
             {
-                defaultValue: undefined,
+
+                width: '520px',
+
+                maxWidth: '95vw',
+
+                autoFocus: false,
+
+                disableClose: true,
+
+                data: configuracion,
+
             }
 
         );
 
-    } finally {
+        let resultado:
+            ContratoOperacionDialogResult | undefined;
 
-        if (!this.destruido) {
+        try {
 
-            this.confirmando.set(false);
-        }
-    }
+            resultado = await firstValueFrom(
 
-    if (
+                dialogRef.afterClosed().pipe(
 
-        !resultado?.confirmado ||
+                    takeUntilDestroyed(
+                        this.destroyRef
+                    )
 
-        !this.contextoVigente(
-
-            empresaId,
-
-            contratoId,
-
-            secuencia
-
-        )
-
-    ) {
-        return;
-    }
-
-    const actual =
-        this.contrato();
-
-    if (
-
-        !actual ||
-
-        actual.id !== contratoId ||
-
-        actual.empresaId !== empresaId ||
-
-        this.empresaDetalle() !== empresaId ||
-
-        !this.operacionPermitida(
-            operacion,
-            actual
-        )
-
-    ) {
-
-        this.errorMessage.set(
-
-            'La operación ya no está disponible para el contrato seleccionado.'
-
-        );
-
-        return;
-    }
-
-    await this.ejecutarOperacion(
-
-        operacion,
-
-        actual,
-
-        resultado.motivo,
-
-        empresaId,
-
-        secuencia
-
-    );
-}
-
-private obtenerPeticionOperacion(
-    operacion: Exclude<ContratoOperacion, 'eliminar'>,
-    id: string,
-    motivo: string | null
-): Observable<ContratoDetalle> {
-
-    switch (operacion) {
-
-        case 'activar':
-
-            return this.contratosService.activar(id);
-
-        case 'suspender':
-
-            return this.contratosService.suspender(id);
-
-        case 'reanudar':
-
-            return this.contratosService.reanudar(id);
-
-        case 'cancelar':
-
-            return this.contratosService.cancelar(
-
-                id,
+                ),
 
                 {
-                    motivo: motivo ?? '',
+                    defaultValue: undefined,
                 }
 
             );
 
-        case 'finalizar':
+        } finally {
 
-            return this.contratosService.finalizar(id);
-    }
-}
+            if (!this.destruido) {
 
-private obtenerMensajeOperacion(
-    operacion: ContratoOperacion
-): string {
+                this.confirmando.set(false);
+            }
+        }
 
-    switch (operacion) {
+        if (
 
-        case 'activar':
+            !resultado?.confirmado ||
 
-            return 'Contrato activado correctamente.';
+            !this.contextoVigente(
 
-        case 'suspender':
+                empresaId,
 
-            return 'Contrato suspendido correctamente.';
+                contratoId,
 
-        case 'reanudar':
+                secuencia
 
-            return 'Contrato reanudado correctamente.';
+            )
 
-        case 'cancelar':
+        ) {
+            return;
+        }
 
-            return 'Contrato cancelado correctamente.';
+        const actual =
+            this.contrato();
 
-        case 'finalizar':
+        if (
 
-            return 'Contrato finalizado correctamente.';
+            !actual ||
 
-        case 'eliminar':
+            actual.id !== contratoId ||
 
-            return 'Contrato eliminado correctamente.';
-    }
-}
+            actual.empresaId !== empresaId ||
 
-private async ejecutarOperacion(
-    operacion: ContratoOperacion,
-    contrato: ContratoDetalle,
-    motivo: string | null,
-    empresaId: string,
-    secuencia: number
-): Promise<void> {
+            this.empresaDetalle() !== empresaId ||
 
-    if (
+            !this.operacionPermitida(
+                operacion,
+                actual
+            )
 
-        this.ocupado() ||
+        ) {
 
-        !this.contextoVigente(
+            this.errorMessage.set(
+
+                'La operación ya no está disponible para el contrato seleccionado.'
+
+            );
+
+            return;
+        }
+
+        await this.ejecutarOperacion(
+
+            operacion,
+
+            actual,
+
+            resultado.motivo,
 
             empresaId,
 
-            contrato.id,
-
             secuencia
 
-        ) ||
-
-        !this.operacionPermitida(
-            operacion,
-            contrato
-        )
-
-    ) {
-        return;
-    }
-
-    if (
-
-        operacion === 'cancelar' &&
-
-        !motivo?.trim()
-
-    ) {
-
-        this.errorMessage.set(
-
-            'El motivo de cancelación es obligatorio.'
-
         );
-
-        return;
     }
 
-    this.operacionActual.set(
-        operacion
-    );
+    private obtenerPeticionOperacion(
+        operacion: Exclude<ContratoOperacion, 'eliminar'>,
+        id: string,
+        motivo: string | null
+    ): Observable<ContratoDetalle> {
 
-    this.errorMessage.set(null);
+        switch (operacion) {
 
-    this.successMessage.set(null);
+            case 'activar':
 
-    try {
+                return this.contratosService.activar(id);
 
-        if (operacion === 'eliminar') {
+            case 'suspender':
 
-            await firstValueFrom(
+                return this.contratosService.suspender(id);
 
-                this.contratosService.delete(
-                    contrato.id
-                )
+            case 'reanudar':
+
+                return this.contratosService.reanudar(id);
+
+            case 'cancelar':
+
+                return this.contratosService.cancelar(
+
+                    id,
+
+                    {
+                        motivo: motivo ?? '',
+                    }
+
+                );
+
+            case 'finalizar':
+
+                return this.contratosService.finalizar(id);
+        }
+    }
+
+    private obtenerMensajeOperacion(
+        operacion: ContratoOperacion
+    ): string {
+
+        switch (operacion) {
+
+            case 'activar':
+
+                return 'Contrato activado correctamente.';
+
+            case 'suspender':
+
+                return 'Contrato suspendido correctamente.';
+
+            case 'reanudar':
+
+                return 'Contrato reanudado correctamente.';
+
+            case 'cancelar':
+
+                return 'Contrato cancelado correctamente.';
+
+            case 'finalizar':
+
+                return 'Contrato finalizado correctamente.';
+
+            case 'eliminar':
+
+                return 'Contrato eliminado correctamente.';
+        }
+    }
+
+    private async ejecutarOperacion(
+        operacion: ContratoOperacion,
+        contrato: ContratoDetalle,
+        motivo: string | null,
+        empresaId: string,
+        secuencia: number
+    ): Promise<void> {
+
+        if (
+
+            this.ocupado() ||
+
+            !this.contextoVigente(
+
+                empresaId,
+
+                contrato.id,
+
+                secuencia
+
+            ) ||
+
+            !this.operacionPermitida(
+                operacion,
+                contrato
+            )
+
+        ) {
+            return;
+        }
+
+        if (
+
+            operacion === 'cancelar' &&
+
+            !motivo?.trim()
+
+        ) {
+
+            this.errorMessage.set(
+
+                'El motivo de cancelación es obligatorio.'
 
             );
+
+            return;
+        }
+
+        this.operacionActual.set(
+            operacion
+        );
+
+        this.errorMessage.set(null);
+
+        this.successMessage.set(null);
+
+        try {
+
+            if (operacion === 'eliminar') {
+
+                await firstValueFrom(
+
+                    this.contratosService.delete(
+                        contrato.id
+                    )
+
+                );
+
+                if (!this.contextoVigente(
+
+                    empresaId,
+
+                    contrato.id,
+
+                    secuencia
+
+                )) {
+                    return;
+                }
+
+                this.successMessage.set(
+
+                    this.obtenerMensajeOperacion(
+                        operacion
+                    )
+
+                );
+
+                // Recargar el contrato después de
+                // la baja lógica. El detalle seguirá
+                // disponible en modo de solo lectura.
+
+                this.cargarContrato(
+
+                    empresaId,
+
+                    contrato.id,
+
+                    true
+
+                );
+
+                return;
+            }
+
+            const actualizado =
+                await firstValueFrom(
+
+                    this.obtenerPeticionOperacion(
+
+                        operacion,
+
+                        contrato.id,
+
+                        motivo
+
+                    )
+
+                );
 
             if (!this.contextoVigente(
 
@@ -1014,6 +1108,27 @@ private async ejecutarOperacion(
                 return;
             }
 
+            if (
+
+                actualizado.empresaId !== empresaId ||
+
+                actualizado.id !== contrato.id
+
+            ) {
+
+                this.errorMessage.set(
+
+                    'La respuesta recibida no corresponde al contrato seleccionado.'
+
+                );
+
+                return;
+            }
+
+            this.contrato.set(
+                actualizado
+            );
+
             this.successMessage.set(
 
                 this.obtenerMensajeOperacion(
@@ -1022,212 +1137,139 @@ private async ejecutarOperacion(
 
             );
 
-            // Recargar el contrato después de
-            // la baja lógica. El detalle seguirá
-            // disponible en modo de solo lectura.
+        } catch (error) {
 
-            this.cargarContrato(
+            if (this.contextoVigente(
 
                 empresaId,
 
                 contrato.id,
 
-                true
+                secuencia
 
-            );
+            )) {
 
-            return;
-        }
+                this.errorMessage.set(
 
-        const actualizado =
-            await firstValueFrom(
+                    this.mensajeError(
 
-                this.obtenerPeticionOperacion(
+                        error,
 
-                    operacion,
+                        'No fue posible realizar la operación solicitada.'
 
-                    contrato.id,
-
-                    motivo
-
-                )
-
-            );
-
-        if (!this.contextoVigente(
-
-            empresaId,
-
-            contrato.id,
-
-            secuencia
-
-        )) {
-            return;
-        }
-
-        if (
-
-            actualizado.empresaId !== empresaId ||
-
-            actualizado.id !== contrato.id
-
-        ) {
-
-            this.errorMessage.set(
-
-                'La respuesta recibida no corresponde al contrato seleccionado.'
-
-            );
-
-            return;
-        }
-
-        this.contrato.set(
-            actualizado
-        );
-
-        this.successMessage.set(
-
-            this.obtenerMensajeOperacion(
-                operacion
-            )
-
-        );
-
-    } catch (error) {
-
-        if (this.contextoVigente(
-
-            empresaId,
-
-            contrato.id,
-
-            secuencia
-
-        )) {
-
-            this.errorMessage.set(
-
-                this.mensajeError(
-
-                    error,
-
-                    'No fue posible realizar la operación solicitada.'
-
-                )
-
-            );
-        }
-
-    } finally {
-
-        if (!this.destruido) {
-
-            this.operacionActual.set(null);
-        }
-    }
-}
-
-protected formatoFechaHora(
-    valor: string | null | undefined
-): string {
-
-    if (!valor) {
-
-        return '—';
-    }
-
-    // Los campos de auditoría se almacenan en UTC.
-    // SQL Server puede devolverlos sin información
-    // explícita de zona horaria.
-
-    const tieneZonaHoraria =
-        /(?:Z|[+-]\d{2}:\d{2})$/i.test(
-            valor
-        );
-
-    const valorUtc =
-        tieneZonaHoraria
-            ? valor
-            : `${valor}Z`;
-
-    const fecha =
-        new Date(valorUtc);
-
-    if (
-        Number.isNaN(
-            fecha.getTime()
-        )
-    ) {
-        return '—';
-    }
-
-    return new Intl.DateTimeFormat(
-
-        'es-MX',
-
-        {
-
-            dateStyle: 'medium',
-
-            timeStyle: 'short',
-
-            timeZone:
-                'America/Monterrey',
-
-        }
-
-    ).format(fecha);
-}
-
-private mensajeError(
-    error: unknown,
-    fallback: string
-): string {
-
-    if (error instanceof HttpErrorResponse) {
-
-        if (
-            typeof error.error?.message === 'string'
-        ) {
-
-            return error.error.message;
-        }
-
-        const errores =
-            error.error?.errors;
-
-        if (
-
-            errores &&
-
-            typeof errores === 'object'
-
-        ) {
-
-            const mensajes = Object
-
-                .values(errores)
-
-                .flat()
-
-                .filter(
-
-                    (x): x is string =>
-                        typeof x === 'string'
+                    )
 
                 );
+            }
 
-            if (mensajes.length > 0) {
+        } finally {
 
-                return mensajes.join(' ');
+            if (!this.destruido) {
+
+                this.operacionActual.set(null);
             }
         }
     }
 
-    return fallback;
-}
+    protected formatoFechaHora(
+        valor: string | null | undefined
+    ): string {
+
+        if (!valor) {
+
+            return '—';
+        }
+
+        // Los campos de auditoría se almacenan en UTC.
+        // SQL Server puede devolverlos sin información
+        // explícita de zona horaria.
+
+        const tieneZonaHoraria =
+            /(?:Z|[+-]\d{2}:\d{2})$/i.test(
+                valor
+            );
+
+        const valorUtc =
+            tieneZonaHoraria
+                ? valor
+                : `${valor}Z`;
+
+        const fecha =
+            new Date(valorUtc);
+
+        if (
+            Number.isNaN(
+                fecha.getTime()
+            )
+        ) {
+            return '—';
+        }
+
+        return new Intl.DateTimeFormat(
+
+            'es-MX',
+
+            {
+
+                dateStyle: 'medium',
+
+                timeStyle: 'short',
+
+                timeZone:
+                    'America/Monterrey',
+
+            }
+
+        ).format(fecha);
+    }
+
+    private mensajeError(
+        error: unknown,
+        fallback: string
+    ): string {
+
+        if (error instanceof HttpErrorResponse) {
+
+            if (
+                typeof error.error?.message === 'string'
+            ) {
+
+                return error.error.message;
+            }
+
+            const errores =
+                error.error?.errors;
+
+            if (
+
+                errores &&
+
+                typeof errores === 'object'
+
+            ) {
+
+                const mensajes = Object
+
+                    .values(errores)
+
+                    .flat()
+
+                    .filter(
+
+                        (x): x is string =>
+                            typeof x === 'string'
+
+                    );
+
+                if (mensajes.length > 0) {
+
+                    return mensajes.join(' ');
+                }
+            }
+        }
+
+        return fallback;
+    }
 
 
 }
