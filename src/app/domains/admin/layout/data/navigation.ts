@@ -201,20 +201,33 @@ export const NAVIGATION: NavigationItem[] = [
     id: 'contratos',
     label: 'Contratos',
     children: [
-      {
-        id: 'contratos/tipos-contrato',
-        label: 'Tipos de contrato',
-        icon: 'tags',
-        route: '/admin/tipos-contrato',
-        roles: [
-          AUTH_ROLES.ADMINISTRADOR,
-          AUTH_ROLES.ADMIN_EMPRESA,
-          AUTH_ROLES.OPERADOR,
-          AUTH_ROLES.CONSULTA,
-        ],
-      },
+        {
+            id: 'contratos/listado',
+            label: 'Contratos',
+            icon: 'clipboard-list',
+            route: '/admin/contratos',
+            roles: [
+                AUTH_ROLES.ADMINISTRADOR,
+                AUTH_ROLES.ADMIN_EMPRESA,
+                AUTH_ROLES.OPERADOR,
+                AUTH_ROLES.CONSULTA,
+            ],
+        },
+        {
+            id: 'contratos/tipos-contrato',
+            label: 'Tipos de contrato',
+            icon: 'tags',
+            route: '/admin/tipos-contrato',
+            roles: [
+                AUTH_ROLES.ADMINISTRADOR,
+                AUTH_ROLES.ADMIN_EMPRESA,
+                AUTH_ROLES.OPERADOR,
+                AUTH_ROLES.CONSULTA,
+            ],
+        },
+
     ],
-  },
+},
   {
     id: 'soporte',
     label: 'Soporte técnico',
